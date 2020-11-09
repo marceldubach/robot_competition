@@ -8,19 +8,19 @@ if __name__=='__main__':
     ser.flush()
 
     start_time = time.time()
-    print("Start time:" + str(start_time))
+    print("Program started")
     running = True
-    ser.write(b"led\n")
+    # Arduino replies to any commands. Give an initial command
+    ser.write("led\n".encode('utf-8'))
 
     while(running):
         line = ser.readline().decode('utf-8').rstrip()
         # rstrip removes the '\n' at the end of the line
-        print("received some string")
-        print(line)
+        print("Received potentiometer value: "+line)
         try:
             potential = float(line)
         except ValueError:
-            print("Not a float")
+            print("Not a float - set potential to zero")
             potential = 0
 
         if (potential > 500):
@@ -28,10 +28,10 @@ if __name__=='__main__':
         else:
             ser.write("led2\n".encode('utf-8'))
 
-        time.sleep(0.1)
+        time.sleep(0.2)
         end_time = time.time()
 
-        print("End time:" + str(end_time))
+        print("Elapsed time" + str(end_time-start_time))
         if(end_time-start_time>20):
             running = False
 
