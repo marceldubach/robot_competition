@@ -8,7 +8,7 @@ camera.rotation = 180
 print("Hello world!")
 
 now  = datetime.now()
-date_time = now.strftime("%Y/%m/%d-%H/%M/%S")
+date_time = now.strftime("%Y/%m/%d_%H/%M/%S")
 
 import time
 #camera.capture("image-"+date_time+".jpg")
