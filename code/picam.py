@@ -10,5 +10,6 @@ now  = datetime.now()
 date_time = now.strftime("%Y/%m/%d-%S:%M:%S")
 
 import time
-camera.capture("image-"+date_time+".jpg")
+#camera.capture("image-"+date_time+".jpg")
 
+camera.capture("foo.jpg")
