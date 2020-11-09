@@ -3,7 +3,7 @@ from picamera import PiCamera
 from datetime import datetime
 
 camera = PiCamera()
-camera.rotation = 180
+camera.rotation = 0
 
 print("Hello world!")
 
@@ -14,4 +14,6 @@ import time
 #camera.capture("image-"+date_time+".jpg")
 print(date_time+".jpg")
 camera.capture("images/foo.jpg")
-camera.capture("images/"+date_time+".jpg")
+
+# this doesn't work for some stupid reason
+# camera.capture("images/"+date_time+".jpg")
