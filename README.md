@@ -3,22 +3,19 @@ Code repository for the bottle bot project
 
 
 ## Create a virtual environment called 'venv':
-on the py: run 'virtualenv venv'
+On the raspberry pi run:
+`virtualenv venv`
+This creates a virtual environment. (The environment may be created inside the git
+  repository, the directory venv is included in the .gitignore and will not be synced)
 
-## If additional libraries have been installed in venv:
-Generate a new requirements as follows:
-1) activate the virtual environment as follows:
-   navigate to bottlebot directory and run
+All required libraries can be installed in the virtual environment (once it is activated!) running
+`pip install -r requirements.txt`
 
-   .\venv\Scripts\activate (for windows)
-   source venv/bin/activate (for linux)
-   
-2) create the new requirements.txt file running:
-   pip freeze > requirements.txt
-   
-3) run 'deactivate' to quit the virtual environment
+### How to activate the virtual environment
+On Windows, run `\venv\Scripts\activate`
+On Linux, run `source venv/bin/activate`
 
+In order to deactivate the virtual environment, just run `deactivate`
 
-## installing requirements:
-install the requirements on another machine (venv should be activated!) running:
-pip install -r requirements.txt
+If additional libraries have been installed, create a the new requirements running
+`pip freeze > requirements.txt`
