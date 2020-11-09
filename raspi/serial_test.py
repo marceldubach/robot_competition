@@ -9,18 +9,18 @@ if __name__=='__main__':
     start_time = time.time()
     print("Start time:" + str(start_time))
     running = True
+    ser.write(b"led\n")
 
     while(running):
-        if ser.in_waiting>0:
-            line = ser.readline().decode('utf-8').rstrip()
-            # rstrip removes the '\n' at the end of the line
-            print("received some string")
-            print(line)
-            potential = float(line)
-            if (potential > 500):
-                ser.write(b"led\n")
-            else:
-                ser.write(b"led2\n")
+        line = ser.readline().decode('utf-8').rstrip()
+        # rstrip removes the '\n' at the end of the line
+        print("received some string")
+        print(line)
+        potential = float(line)
+        if (potential > 500):
+            ser.write(b"led\n")
+        else:
+            ser.write(b"led2\n")
 
         time.sleep(0.1)
         end_time = time.time()
