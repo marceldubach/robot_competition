@@ -16,7 +16,12 @@ if __name__=='__main__':
         # rstrip removes the '\n' at the end of the line
         print("received some string")
         print(line)
-        potential = float(line)
+        try:
+            potential = float(line)
+        except ValueError:
+            print("Not a float")
+            potential = 0
+
         if (potential > 500):
             ser.write(b"led\n")
         else:
