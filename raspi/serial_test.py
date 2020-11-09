@@ -1,12 +1,22 @@
 import serial
+import time
+
 
 if __name__=='__main__':
     ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
     ser.flush()
 
-    while(True):
+    start_time = time.time()
+    running = True
+
+    while(running):
         if ser.in_waiting>0:
             line = ser.readline().decode('utf-8').rstrip()
             # rstrip removes the '\n' at the end of the line
             print(line)
+
+            end_time = time.time()
+
+            if(end_time-start_time>1e6):
+                running = False
 
