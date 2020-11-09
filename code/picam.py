@@ -11,5 +11,5 @@ date_time = now.strftime("%Y/%m/%d-%S:%M:%S")
 
 import time
 #camera.capture("image-"+date_time+".jpg")
-print("image-"+date_time+".jpg")
-camera.capture("images/foo.jpg")
+print(date_time+".jpg")
+camera.capture(date_time+"jpg")
