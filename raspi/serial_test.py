@@ -4,6 +4,7 @@ import time
 
 if __name__=='__main__':
     ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
+    time.sleep(0.1)
     ser.flush()
 
     start_time = time.time()
@@ -23,9 +24,9 @@ if __name__=='__main__':
             potential = 0
 
         if (potential > 500):
-            ser.write(b"led1\n")
+            ser.write("led1\n".encode('utf-8'))
         else:
-            ser.write(b"led2\n")
+            ser.write("led2\n".encode('utf-8'))
 
         time.sleep(0.1)
         end_time = time.time()
