@@ -14,3 +14,4 @@ import time
 #camera.capture("image-"+date_time+".jpg")
 print(date_time+".jpg")
 camera.capture("images/foo.jpg")
+camera.capture(date_time+".jpg")
