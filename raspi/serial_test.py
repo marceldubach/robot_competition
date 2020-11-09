@@ -7,6 +7,7 @@ if __name__=='__main__':
     ser.flush()
 
     start_time = time.time()
+    print("Start time:" + str(start_time))
     running = True
 
     while(running):
@@ -16,7 +17,7 @@ if __name__=='__main__':
             print(line)
 
             end_time = time.time()
-
-            if(end_time-start_time>1e6):
+            print("End time:" + str(end_time))
+            if(end_time-start_time>10):
                 running = False
 
