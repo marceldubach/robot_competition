@@ -23,7 +23,7 @@ if __name__=='__main__':
             potential = 0
 
         if (potential > 500):
-            ser.write(b"led\n")
+            ser.write(b"led1\n")
         else:
             ser.write(b"led2\n")
 
