@@ -31,6 +31,6 @@ if __name__=='__main__':
         end_time = time.time()
 
         print("End time:" + str(end_time))
-        if(end_time-start_time>10):
+        if(end_time-start_time>20):
             running = False
 
