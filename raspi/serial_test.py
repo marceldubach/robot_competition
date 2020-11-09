@@ -22,6 +22,7 @@ if __name__=='__main__':
             else:
                 ser.write(b"led2\n")
 
+        time.sleep(0.1)
         end_time = time.time()
 
         print("End time:" + str(end_time))
