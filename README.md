@@ -3,7 +3,7 @@ Code repository for the bottle bot project
 
 
 ## Create a virtual environment called 'venv':
-On the raspberry pi run: ``$ virtualenv venv`
+On the raspberry pi run: `$ virtualenv venv`
 
 This creates a virtual environment. (The environment may be created inside the git
   repository, the directory venv is included in the .gitignore and will not be synced)
