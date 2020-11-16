@@ -13,7 +13,7 @@ date_time = now.strftime("%Y/%m/%d_%H/%M/%S")
 import time
 #camera.capture("image-"+date_time+".jpg")
 print(date_time+".jpg")
-camera.capture("images/foo.jpg")
+camera.capture("images/foo1.jpg")
 
 # this doesn't work for some stupid reason
 # camera.capture("images/"+date_time+".jpg")
