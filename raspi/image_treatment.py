@@ -13,7 +13,7 @@ img.item(10,10,2)
 
 # dim1: vertical (from top to bottom)
 # dim2: horizontal (from left to right)
-img = img[100:,:-160]
+img = img[100:, :-160]
 
 
 img_HSV = cv.cvtColor(img,cv.COLOR_BGR2HSV)
