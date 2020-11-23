@@ -1,6 +1,7 @@
 
 from picamera import PiCamera
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 
@@ -15,6 +16,9 @@ camera.rotation = 180
 cameraType = "noIR"
 if args.cam:
     cameraType = "normal"
+
+if not os.path.exists('images/'+cameraType):
+    os.makedirs('images/'+cameraType)
 
 camera.capture("images/"+cameraType+"/"+args.name+".jpg")
 print("Saved image to "+"images/"+cameraType+"/"+args.Name+".jpg")
