@@ -1,19 +1,18 @@
 
 from picamera import PiCamera
-from datetime import datetime
+import argparse
 
+parser = argparse.ArgumentParser()
+
+args = parser.add_argument()
+parser.parseargs("name",help="name the photo to save as .jpg")
+parser.parseargs("-c","--cam",help="camera type: set to 1 for normal camera",type=int)
 camera = PiCamera()
 camera.rotation = 180
 
-print("Hello world!")
+cameraType = "noIR"
+if args.cam == 1:
+    cameraType = "normal"
 
-now  = datetime.now()
-date_time = now.strftime("%Y/%m/%d_%H/%M/%S")
-
-import time
-#camera.capture("image-"+date_time+".jpg")
-print(date_time+".jpg")
-camera.capture("images/foo1.jpg")
-
-# this doesn't work for some stupid reason
-# camera.capture("images/"+date_time+".jpg")
+camera.capture("images/"+cameraType+"/"+args.name+".jpg")
+print("Saved image to "+"images/"+cameraType+"/"+args.Name+".jpg")
