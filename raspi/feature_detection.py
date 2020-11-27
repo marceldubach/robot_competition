@@ -1,77 +1,150 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
-
-# load image as BGR image
-img = cv.imread('images/image4.jpeg')
-#img = img[200:800,500:1500]
-img_grey = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
-
-# print("Wall colour min")
-# print(img_grey[0:200,0:200].min())
-# print("Wall colour max")
-# print(img_grey[0:200,0:200].max())
-#
-#
-# print("Carpet colour")
-# print(img_grey[400:550,0:400].max())
-#
-# print("Carpet colour min")
-# print(img_grey[400:550,0:400].min())
+import os
 
 
-thresh_img = img_grey
-# add a gaussian blur
-blurred = cv.GaussianBlur(thresh_img, (5,5), cv.BORDER_DEFAULT)
+#  TODO:  - detect bricks
+#         - remove the corners detected in brick region
 
-print("Wall colour min")
-print(blurred[0:200,0:200].min())
-print("Wall colour max")
-print(blurred[0:200,0:200].max())
+# Shi-Tomasi Corner detector
+def corner_detection(img_grey):
+    corners = cv.goodFeaturesToTrack(img_grey,20,0.01,10)
+    found_corner = False
+
+    if (len(corners)!=0):
+        found_corner = True
+
+    return found_corner, corners
+
+do_all = True
+
+if do_all:
+    img_name_list = os.listdir('images/noIR/')
+else:
+    img_name_list = ['1TileFromCoke.jpg']
+
+for img_name in img_name_list:
+    img = cv.imread('images/noIR/'+img_name)
+    if img is None:
+        print("Error opening image ", img_name_list)
+        continue
+
+# TODO continut with tutorial: https://docs.opencv.org/3.4/d2/d2c/tutorial_sobel_derivatives.html
+    img_blurred = cv.GaussianBlur(img, (9,9), 0)
+    gray_blurred = cv.cvtColor(img_blurred, cv.COLOR_BGR2GRAY)
+
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    print(img_gray.shape)
+
+    brick_grayscale = img_gray.copy()
+    ddepth = cv.CV_16S
+    scale = 1
+    ksize= 5
+    delta = 0
+
+    grad_x = cv.Scharr(gray_blurred, ddepth, 1, 0)
+    grad_y = cv.Scharr(gray_blurred, ddepth, 0,1)
+    # grad_x = cv.Sobel(gray_blurred, ddepth, 1, 0, ksize, scale, delta, cv.BORDER_DEFAULT)
+    # grad_y = cv.Sobel(gray_blurred, ddepth, 0, 1, ksize, scale, delta, cv.BORDER_DEFAULT)
+    abs_grad_x = cv.convertScaleAbs(grad_x)
+    abs_grad_y = cv.convertScaleAbs(grad_y)
+    grad = cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+    ret, grad_thresh = cv.threshold(grad,100,255,0)
+    # grad[grad_thresh] = 255
+    # grad[np.invert(grad_thresh)] = 0
+    # # grad[!grad_thresh] = 0
+    # grad = cv.GaussianBlur(grad, (11,11), 0)
+    # ret, grad_thresh = cv.threshold(grad, 90, 255, 0)
+
+    plt.figure()
+    plt.title("Gradient")
+    plt.imshow(grad)
+    plt.show()
 
 
-print("Carpet colour max")
-print(blurred[400:550,0:400].max())
-
-print("Carpet colour min")
-print(blurred[400:550,0:400].min())
 
 
-idx_array = (blurred>100)
-idx_array2 = (blurred<180)
+    # find the contours of a brick
+    contours, hierachy = cv.findContours(grad_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-idx = np.logical_and(idx_array,idx_array2)
-print(idx.shape)
-thresh_img[idx] = 0
+    cont = []
+    min_length = 10
+    for i in range(len(contours)):
+        if (cv.arcLength(contours[i],False)>50):
+            cont.append(contours[i])
+            # print("Length of contour:", cv.arcLength(contours[i],False))
+
+    cv.drawContours(brick_grayscale, cont, -1, (0, 255, 0), 3)
+    #
+    # plt.figure()
+    # plt.title("Contour Mask")
+    # plt.imshow(grad_thresh)
+    # plt.show()
+
+    plt.figure()
+    plt.title("Contour detection")
+    plt.imshow(brick_grayscale)
+    plt.show()
 
 
-# remove wall part
-# idx_wall = (blurred>210)
-# idx_wall2 = (blurred<220)
-# idx_w = np.logical_and(idx_wall,idx_wall2)
+    # # Try to find values for the floor region
+    # blue_min = np.min(img[150:220,:100,0])
+    # green_min = np.min(img[150:220,:100, 1])
+    # red_min = np.min(img[150:220,:100, 2])
+    # blue_max = np.max(img[150:220,:100,0])
+    # green_max = np.max(img[150:220,:100, 1])
+    # red_max = np.max(img[150:220,:100, 2])
+    #
+    # # Brick detection:
+    # print("Brick colors")
+    # print("min BGR: ", [blue_min, green_min, red_min])
+    # print("max BGR: ", [blue_max, green_max, red_max])
+    #
+    # brick_mask_b = np.logical_and(img[:, :, 0] > 110, img[:, :, 0] < 165)
+    # brick_mask_g = np.logical_and(img[:, :, 0] > 90, img[:, :, 0] < 140)
+    # brick_mask_r = np.logical_and(img[:, :, 0] > 100, img[:, :, 0] < 160)
+    # brick_mask = np.logical_and(np.logical_and(brick_mask_b, brick_mask_g), brick_mask_r)
+    #
+    # plt.figure()
+    # plt.title("Brick Mask")
+    # plt.imshow(brick_mask)
+    # plt.show()
 
-# thresh_img[idx_w] = 0
 
-plt.figure()
-plt.imshow(thresh_img)
-plt.show()
+    foundCorner, corners = corner_detection(img_gray)
 
-# plt.figure()
-# plt.imshow(img_grey)
-# plt.show()
+    # Try to exclude outliers
+    for i in range(len(corners)):
+        isOutlier = True
+        for i in
+
+    # Plot a bounding box around the bottle
+    plt.figure()
+    if foundCorner:
+        xmin = np.min(corners[:,:,0])
+        xmax = np.max(corners[:,:,0])
+        ymin = np.min(corners[:,:,1])
+        ymax = np.max(corners[:,:,1])
+
+        x_center = int((xmin+xmax)/2)
+        y_center = int((ymin+ymax)/2)
+
+        delta = 30
+        for i in corners:
+            x, y = i.ravel()
+            cv.circle(img_gray, (x, y), 10, 255, -1)
+
+        # img_gray = cv.rectangle(img_gray, (xmin-delta, ymin-delta), (xmax+delta, ymax+delta), 255, 3)
+        plt.title(img_name+ ': Bottle found at [x,y]=['+str(x_center)+','+str(y_center)+']')
+    else:
+        plt.title(img_name+ ': No Bottle Found')
+
+    plt.imshow(img_gray)
+    plt.show()
 
 # HARRIS CORNER DETECTION
-img_grey = np.float32(img_grey)
+# img_grey = np.float32(img_grey)
+# dest = cv.cornerHarris(img_grey,3,5,0.07)
 
-# arguments: (image, blockSize, kSize,freeParameter,borderType)
-# blockSize: neighbourhood size
-# ksize: aperture parameter for the Sobel() filter
-# freeParameter: ?
-# border type: pixel extrapolation method.
-dest = cv.cornerHarris(img_grey,3,5,0.07)
-
-# do thresholding
-# plt.figure()
-# plt.plot(dest>dest.max()*0.01)
-# plt.show()
 
