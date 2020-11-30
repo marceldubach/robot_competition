@@ -19,7 +19,9 @@ def corner_detection(img_grey):
 
 
 
-do_all = False
+do_all = True
+
+plotBrickMask = True
 
 # load images
 if do_all:
@@ -34,7 +36,6 @@ for img_name in img_name_list:
         continue
 
     # TODO continut with tutorial: https://docs.opencv.org/3.4/d2/d2c/tutorial_sobel_derivatives.html
-
 
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     print("Image size is: ", img_gray.shape)
@@ -75,7 +76,6 @@ for img_name in img_name_list:
     plt.imshow(grad_thresh)
     plt.show()
 
-
     # find the contours of a brick
     contours, hierachy = cv.findContours(grad_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
@@ -94,10 +94,11 @@ for img_name in img_name_list:
 
     cv.drawContours(brick_grayscale, cont, -1, (0, 255, 0), 3)
 
-    plt.figure()
-    plt.title("Contour detection")
-    plt.imshow(brick_grayscale)
-    plt.show()
+
+#    plt.figure()
+#    plt.title("Contour detection")
+#    plt.imshow(brick_grayscale)
+#    plt.show()
 
 
     # # not sure the following is a good idea...
@@ -114,17 +115,25 @@ for img_name in img_name_list:
     # print("min BGR: ", [blue_min, green_min, red_min])
     # print("max BGR: ", [blue_max, green_max, red_max])
 
+    # TODO do this in HSV!
     brick_mask_b = np.logical_and(img_blurred[:, :, 0] > 70, img_blurred[:, :, 0] < 165)
     brick_mask_g = np.logical_and(img_blurred[:, :, 0] > 70, img_blurred[:, :, 0] < 160)
     brick_mask_r = np.logical_and(img_blurred[:, :, 0] > 100, img_blurred[:, :, 0] < 180)
-    brick_mask = np.logical_and(np.logical_and(brick_mask_b, brick_mask_g), brick_mask_r)
+    brick_mask   = np.logical_and(np.logical_and(brick_mask_b, brick_mask_g), brick_mask_r)
 
+    img_mask = img_gray.copy();
+    img_mask[:,:] = 0
+    img_mask[brick_mask] = 255;
+
+    element = cv.getStructuringElement(cv.MORPH_RECT,(20,20))
+    img_mask = cv.erode(img_mask, element)
+    img_mask = cv.dilate(img_mask, element, iterations=2)
     #mask = np.logical_and(brick_mask, grad_thresh)
-
-    plt.figure()
-    plt.title("Brick Mask")
-    plt.imshow(brick_mask)
-    plt.show()
+    if plotBrickMask:
+        plt.figure()
+        plt.title("Img Mask")
+        plt.imshow(img_mask)
+        plt.show()
 
     # PART 2: Bottle detection
     # TODO remove all corners that lie inside the brick!
@@ -141,11 +150,17 @@ for img_name in img_name_list:
             if (i!=j):
                 d = corners[j].flatten()
 
+                # corner c must have at least 3 other corners in vicinity
                 if (np.sqrt((c[0]-d[0])**2 + (c[1]-d[1])**2)<100):
                     n += 1
-                    if (n>=3):
-                        cornerList.append(c)
-                        continue
+            if (n>=3):
+                isOutlier = False
+                break
+
+        if (not isOutlier):
+            #if (img_mask[int(c[1]),int(c[0])] != 255):
+            cornerList.append(c)
+
 
     # Plot a bounding box around the bottle
     plt.figure()
@@ -176,6 +191,8 @@ for img_name in img_name_list:
 
     plt.imshow(img_gray)
     plt.show()
+
+
 
 
 
