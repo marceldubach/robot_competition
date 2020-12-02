@@ -11,6 +11,7 @@ else:
     print("Serial not open")
 t_start = time.time()
 i = 0
+ser.flush()
 while True:
     print("send request")
     ser.write("poll".encode())
