@@ -14,7 +14,7 @@ i = 0
 ser.flush()
 while True:
     print("send request")
-    ser.write(bytes("poll"))
+    ser.write("poll".encode(encoding='UTF-8'))
     print("request sent")
     time.sleep(1)
     rcv = ser.readLine()
