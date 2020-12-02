@@ -2,7 +2,7 @@ import time
 import json
 import serial
 
-ser = serial.Serial(port='dev/ttyS0', baudrate=9600)
+ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
 
 print("start serial port connection...")
 t_start = time.time()
@@ -17,7 +17,7 @@ while True:
     if (t_current-t_start)>10:
         print("exciting")
         break
-        
+
 
 
 
