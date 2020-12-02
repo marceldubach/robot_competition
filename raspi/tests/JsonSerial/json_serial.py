@@ -1,9 +1,9 @@
 import time
 import json
-import serial
+from serial import Serial
 
-ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
-
+ser = Serial('/dev/ttyAMA0', 9600, timeout=1)
+print("using port: ", ser.name)
 print("start serial port connection...")
 t_start = time.time()
 while True:
