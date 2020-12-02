@@ -8,7 +8,7 @@ print("start serial port connection...")
 t_start = time.time()
 while True:
     print("send request")
-    ser.write("poll")
+    ser.write("poll".encode())
     rcv = ser.readLine()
     print(rcv)
     time.sleep(1)
