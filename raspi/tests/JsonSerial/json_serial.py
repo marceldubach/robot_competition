@@ -5,11 +5,16 @@ from serial import Serial
 ser = Serial('/dev/ttyAMA0', 9600, timeout=1)
 print("using port: ", ser.name)
 print("start serial port connection...")
+if (ser.isOpen()):
+    print("Serial is open")
+else:
+    print("Serial not open")
 t_start = time.time()
 i = 0
 while True:
     print("send request")
     ser.write("poll".encode())
+    print("request sent")
     time.sleep(0.1)
     rcv = ser.readLine()
     print(rcv)
