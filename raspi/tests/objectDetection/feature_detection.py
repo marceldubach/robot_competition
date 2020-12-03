@@ -19,7 +19,7 @@ def corner_detection(img_grey):
 
 
 
-do_all = True
+do_all = False
 
 plotBrickMask = True
 
@@ -27,7 +27,7 @@ plotBrickMask = True
 if do_all:
     img_name_list = os.listdir('images/noIR/')
 else:
-    img_name_list = ['1TileFromBrick.jpg']
+    img_name_list = ['1TileFromBottle.jpg']
 
 for img_name in img_name_list:
     img = cv.imread('images/noIR/'+img_name)
@@ -47,93 +47,101 @@ for img_name in img_name_list:
     img_blurred = cv.GaussianBlur(img, (9,9), 0)
     gray_blurred = cv.cvtColor(img_blurred, cv.COLOR_BGR2GRAY)
 
-    # brick_grayscale = img_gray.copy()
+    # EDGE DETECTION (MAYBE OMIT THIS)
     ddepth = cv.CV_16S
-    # scale = 1
-    # ksize= 5
-    # delta = 0
-
-    # Scharr filter works better than sobel?
+    # Scharr filter works better than sobel
     grad_x = cv.Scharr(gray_blurred, ddepth, 1, 0)
     grad_y = cv.Scharr(gray_blurred, ddepth, 0,1)
 
-    # grad_x = cv.Sobel(gray_blurred, ddepth, 1, 0, ksize, scale, delta, cv.BORDER_DEFAULT)
-    # grad_y = cv.Sobel(gray_blurred, ddepth, 0, 1, ksize, scale, delta, cv.BORDER_DEFAULT)
     abs_grad_x = cv.convertScaleAbs(grad_x)
     abs_grad_y = cv.convertScaleAbs(grad_y)
 
     grad = cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
     ret, grad_thresh = cv.threshold(grad,100,255,0)
-
-    # grad[grad_thresh] = 255
-    # grad[np.invert(grad_thresh)] = 0
-    # # grad[!grad_thresh] = 0
-    # grad = cv.GaussianBlur(grad, (11,11), 0)
-    # ret, grad_thresh = cv.threshold(grad, 90, 255, 0)
-
+    element = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
+    grad_thresh = cv.erode(grad_thresh, element)
     plt.figure()
     plt.title("Edge detection")
     plt.imshow(grad_thresh)
     plt.show()
 
     # find the contours of a brick
-    contours, hierachy = cv.findContours(grad_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-
-    cont = []
-    min_length = 50 # remove lines that are too short
-    for i in range(len(contours)):
-        if (cv.arcLength(contours[i],False)>min_length):
-            eps = 0.01*cv.arcLength(contours[i],False)
-            approx_contour = cv.approxPolyDP(contours[i], eps, False)
-            cont.append(approx_contour)
-            #cont.append(contours[i])
-            #print("Length of contour:", cv.arcLength(contours[i],False))
-
+    #contours, hierachy = cv.findContours(grad_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    """
+        cont = []
+        min_length = 50 # remove lines that are too short
+        for i in range(len(contours)):
+            if (cv.arcLength(contours[i],False)>min_length):
+                eps = 0.01*cv.arcLength(contours[i],False)
+                approx_contour = cv.approxPolyDP(contours[i], eps, False)
+                cont.append(approx_contour)
+                #cont.append(contours[i])
+                #print("Length of contour:", cv.arcLength(contours[i],False))
+    """
     # plot the contours on a copy of the blurred graysacle image
-    brick_grayscale = gray_blurred.copy()
+    # brick_grayscale = gray_blurred.copy()
 
-    cv.drawContours(brick_grayscale, cont, -1, (0, 255, 0), 3)
-
-
-#    plt.figure()
-#    plt.title("Contour detection")
-#    plt.imshow(brick_grayscale)
-#    plt.show()
+    # cv.drawContours(brick_grayscale, cont, -1, (0, 255, 0), 3)
 
 
-    # # not sure the following is a good idea...
-    # # Try to find values for the floor region
-    # blue_min = np.min(img[300:400,600:800,0])
-    # green_min = np.min(img[300:400,600:800,1])
-    # red_min = np.min(img[300:400,600:800,2])
-    # blue_max = np.max(img[300:400,600:800,0])
-    # green_max = np.max(img[300:400,600:800,1])
-    # red_max = np.max(img[300:400,600:800,2])
-    #
-    # # # Brick detection:
+
+
+    # find threshold values of brick in HSV image
+    # x1_min = 0
+    # x1_max = 200
+    # x2_min = 450
+    # x2_max = 800
+    # h_min = np.min(img_hsv[x1_min:x1_max,x2_min:x2_max,0])
+    # s_min = np.min(img_hsv[x1_min:x1_max,x2_min:x2_max,1])
+    # v_min = np.min(img_hsv[x1_min:x1_max,x2_min:x2_max,2])
+    # h_max = np.max(img_hsv[x1_min:x1_max,x2_min:x2_max,0])
+    # s_max = np.max(img_hsv[x1_min:x1_max,x2_min:x2_max,1])
+    # v_max = np.max(img_hsv[x1_min:x1_max,x2_min:x2_max,2])
+    # # # # Brick detection:
     # print("Brick colors")
-    # print("min BGR: ", [blue_min, green_min, red_min])
-    # print("max BGR: ", [blue_max, green_max, red_max])
+    # print("min HSV: ", [h_min, s_min, v_min])
+    # print("max HSV: ", [h_max, s_max, v_max])
 
-    # TODO do this in HSV!
-    brick_mask_b = np.logical_and(img_blurred[:, :, 0] > 70, img_blurred[:, :, 0] < 165)
-    brick_mask_g = np.logical_and(img_blurred[:, :, 0] > 70, img_blurred[:, :, 0] < 160)
-    brick_mask_r = np.logical_and(img_blurred[:, :, 0] > 100, img_blurred[:, :, 0] < 180)
-    brick_mask   = np.logical_and(np.logical_and(brick_mask_b, brick_mask_g), brick_mask_r)
+    img_hsv = cv.cvtColor(img_blurred, cv.COLOR_BGR2HSV)
+    erode_elem_brick = cv.getStructuringElement(cv.MORPH_RECT, (20,20))
 
-    img_mask = img_gray.copy();
-    img_mask[:,:] = 0
-    img_mask[brick_mask] = 255;
+    hsv_min = np.array([0, 33, 116])
+    hsv_max = np.array([179, 54, 166])
+    brick_mask = cv.inRange(img_hsv, hsv_min, hsv_max)
+    brick_mask = cv.erode(brick_mask, erode_elem_brick)
+    dilate_elem_brick  = cv.getStructuringElement(cv.MORPH_RECT, (10,10))
+    brick_mask = cv.dilate(brick_mask, dilate_elem_brick)
 
-    element = cv.getStructuringElement(cv.MORPH_RECT,(20,20))
-    img_mask = cv.erode(img_mask, element)
-    img_mask = cv.dilate(img_mask, element, iterations=2)
-    #mask = np.logical_and(brick_mask, grad_thresh)
     if plotBrickMask:
         plt.figure()
-        plt.title("Img Mask")
-        plt.imshow(img_mask)
+        plt.title("Brick mask")
+        plt.imshow(brick_mask)
         plt.show()
+
+    rectangles = []
+    b_contours, b_hierarchy = cv.findContours(brick_mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    for i in range(len(b_contours)):
+        if (cv.arcLength(b_contours[i],True))>900:
+            cnt = b_contours[i]
+            #cv.drawContours(img, [cnt],0, (0,255,0),3)
+            # x1: from top to bottom
+            # x2: from left to right
+            # w: width (horizontal), h: height
+            x2,x1,w,h = cv.boundingRect(cnt)
+            print("Found a brick at:", [x2,x1,w,h])
+            rectangles.append(np.array([x1,x2,x1+h,x2+w]))
+            #cv.drawContours(img, cnt, 0,(0,255,0), 3)
+            cv.rectangle(img, (x2,x1),(x2+w,x1+h), (255,0,0), 3)
+            #print(cv.arcLength(b_contours[i],True))
+
+    for rect in rectangles:
+        x1,x2,y1,y2 = rect
+        print("rectangle stored at (",x1,",",x2,") ",y1,",",y2,")")
+
+    plt.figure()
+    plt.imshow(img)
+    plt.show()
+
 
     # PART 2: Bottle detection
     # TODO remove all corners that lie inside the brick!
@@ -158,8 +166,18 @@ for img_name in img_name_list:
                 break
 
         if (not isOutlier):
+
+            isBrick = False
+            for rect in rectangles:
+                x1,x2,y1,y2 = rect
+                #print("rectangle stored at (",x1,",",x2,") ",y1,",",y2,")")
+                if ((x1<=c[0]) and (y1>=c[0])) and ((x2<=c[1]) and (x2>=c[1])):
+                    isBrick = True
+
             #if (img_mask[int(c[1]),int(c[0])] != 255):
-            cornerList.append(c)
+            if not isBrick:
+                #print("Append corner at  (x1, x2): (" , c[0], ", ", c[1],")")
+                cornerList.append(c)
 
 
     # Plot a bounding box around the bottle
