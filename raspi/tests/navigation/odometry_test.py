@@ -4,19 +4,20 @@ import time
 from odometry import odometry
 import numpy as np
 
-l = 0.144
-r = 0.04
+l = 0.144 # dimension of the robot axis
+r = 0.04  # dimension of the wheel diameter
 pose = np.array([[1, 1, 0]]).transpose()
 print(pose)
 t = 0.1
 time.sleep(1)
 
 if __name__ == '__main__':
-
     ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
     ser.flush()
     time_start = time.time()
     while True:
+        json.dumps({"command":[10,20]})
+
         if ser.in_waiting > 0:
             decoded = json.loads(ser.readline())
             # print(decoded)
