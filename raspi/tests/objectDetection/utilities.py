@@ -49,6 +49,15 @@ def find_rectangles_around_brick(brick_mask):
 
     return rectangles
 
+def corner_detection(img_grey):
+    corners = cv.goodFeaturesToTrack(img_grey,20,0.01,10)
+    found_corner = False
+
+    if (len(corners)!=0):
+        found_corner = True
+
+    return found_corner, corners
+
 def corner_in_rectangle(rect, c):
 
     x1, x2, y1, y2 = rect
@@ -74,8 +83,7 @@ def corner_is_outlier(corners, i,min_neighbours, max_distance):
             isOutlier = False
     return isOutlier
 
-def plot_corners(img, cornerList):
-
+def add_corners(img, cornerList):
     if (len(cornerList)>0):
         xmin = np.min([x[0] for x in cornerList])
         xmax = np.max([x[0] for x in cornerList])
@@ -90,12 +98,7 @@ def plot_corners(img, cornerList):
         for c in cornerList:
             x, y = c # extract components
             cv.circle(img, (x, y), 5, 0, -1)
-        plt.figure()
-        plt.imshow(img)
-        plt.title("Bottle found at [x,y]=["+str(x_center)+","+str(y_center)+"]")
-        plt.show()
+        return True, np.array([x_center, y_center]), img
     else:
-        plt.figure()
-        plt.imshow(img)
-        plt.title(": No bottle found")
-        plt.show()
+        return False, np.array([-1,-1]), img
+

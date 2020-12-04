@@ -9,14 +9,7 @@ from utilities import *
 #         - remove the corners detected in brick region
 
 # Shi-Tomasi Corner detector
-def corner_detection(img_grey):
-    corners = cv.goodFeaturesToTrack(img_grey,20,0.01,10)
-    found_corner = False
 
-    if (len(corners)!=0):
-        found_corner = True
-
-    return found_corner, corners
 
 
 
@@ -37,9 +30,6 @@ for img_name in img_name_list:
         continue
 
     # TODO continut with tutorial: https://docs.opencv.org/3.4/d2/d2c/tutorial_sobel_derivatives.html
-
-    height = img.shape[0]
-    width = img.shape[1]
 
     # find threshold values of brick in HSV image
     # x1_min = 200
@@ -113,7 +103,19 @@ for img_name in img_name_list:
     # TODO add the case where there are more than 1 bottle in the image!
 
     # Plot a bounding box around the bottle
-    plot_corners(img_out, cornerList)
+    has_bottle, center, img_out = add_corners(img_out, cornerList)
+    img_out = cv.cvtColor(img_out,cv.COLOR_BGR2RGB)
+    if has_bottle:
+        plt.figure()
+        plt.title("Bottle found")
+        plt.imshow(img_out)
+        plt.show()
+    else:
+        plt.figure()
+        plt.title("No bottle found")
+        plt.imshow(img_out)
+        plt.show()
+
 
 
 
