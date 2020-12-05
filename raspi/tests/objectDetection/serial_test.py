@@ -24,9 +24,10 @@ if __name__=='__main__':
         data["command"] = [10,30]
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
-        t = time.time()
 
-        if (ser.in_waiting) and ((t-t_old)>dt):
+        time.sleep(3)
+
+        if (ser.in_waiting):
 
             json_string= ser.readline().decode('utf-8').rstrip()
             # rstrip removes the '\n' at the end of the line
