@@ -14,7 +14,8 @@ if __name__=='__main__':
 
 
     while(running):
-        ser.write("where\n".encode('utf-8'))
+        print("{\\\"command\": [0.5, 0.5]}\}\n")
+        ser.write("{\\\"command\": [0.5, 0.5]}\}\n".encode('utf-8'))
         line = ser.readline().decode('utf-8').rstrip()
         # rstrip removes the '\n' at the end of the line
         print("Received odometry value: "+line)
@@ -29,7 +30,7 @@ if __name__=='__main__':
         # else:
         #     ser.write("led2\n".encode('utf-8'))
 
-        time.sleep(0.2)
+
         end_time = time.time()
 
         print("Elapsed time" + str(end_time-start_time))
