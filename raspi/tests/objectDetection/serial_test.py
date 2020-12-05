@@ -22,7 +22,7 @@ if __name__=='__main__':
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
 
-        time.sleep(0.5)
+        time.sleep(3)
         if (ser.in_waiting):
             #print({"command": [10,20]})
             arduino_received = ser.readline().decode('utf-8').rstrip()
