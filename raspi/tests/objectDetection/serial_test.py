@@ -16,7 +16,7 @@ if __name__=='__main__':
     while(running):
         serial_string = "{\\\"command\\\": [5, 10]}\}\n"
         print(serial_string)
-        ser.write(serial_string.encode('utf-8'))
+        ser.write("{\\\"command\\\": [5, 10]}\}\n".encode('utf-8'))
         arduino_received = ser.readline().decode('utf-8').rstrip()
         com_left= ser.readline().decode('utf-8').rstrip()
         com_right= ser.readline().decode('utf-8').rstrip()
