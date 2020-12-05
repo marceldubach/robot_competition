@@ -25,6 +25,7 @@ if __name__=='__main__':
     # Arduino replies to any commands. Give an initial command
     dt = 3
     t_old = time.time()-dt
+    i = 0
 
     while(running):
         #serial_string = "{\\\"command\\\": [5, 10]}\}\n"
@@ -33,6 +34,7 @@ if __name__=='__main__':
         #ser.write(b"{\\\"command\\\":[10, 20]}")
 
         camera.capture("images/image"+str(i)+".jpg")
+        i += 1
         #img = cv.imread("images/image"+str(i)+".jpg")
         img = cv.imread("images/noIR/1TileFromBottle.jpg") # TODO change this
         has_bottle, center, img_out = detect_bottle(img)
