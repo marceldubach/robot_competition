@@ -25,14 +25,14 @@ if __name__=='__main__':
         time.sleep(3)
         if (ser.in_waiting):
             #print({"command": [10,20]})
-            arduino_received = ser.readline().decode('utf-8').rstrip()
-            com_left= ser.readline().decode('utf-8').rstrip()
-            com_right= ser.readline().decode('utf-8').rstrip()
+            #arduino_received = ser.readline().decode('utf-8').rstrip()
+            #com_left= ser.readline().decode('utf-8').rstrip()
+            #com_right= ser.readline().decode('utf-8').rstrip()
             json_string= ser.readline().decode('utf-8').rstrip()
             # rstrip removes the '\n' at the end of the line
-            print("Arduino received: "+ arduino_received)
-            print("Command left: "+com_left)
-            print("Command right: " + com_right)
+            #print("Arduino received: "+ arduino_received)
+            #print("Command left: "+com_left)
+            #print("Command right: " + com_right)
             print("Received odometry value: " + json_string)
         # try:
         #     potential = float(line)

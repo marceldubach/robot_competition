@@ -33,8 +33,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   if (Serial.available()>0){
       String somestring = Serial.readString();
-      Serial.println("received: ");
-      Serial.println(somestring);
+      //Serial.println("received: ");
+      //Serial.println(somestring);
       deserializeJson(jsonBuffer, somestring);
 
       JsonObject obj = jsonBuffer.as<JsonObject>();
@@ -42,8 +42,8 @@ void loop() {
       double left = obj[String("command")][0];
       double right = obj[String("command")][1];
       
-      Serial.println(left);
-      Serial.println(right);
+      //Serial.println(left);
+      //Serial.println(right);
       StaticJsonDocument<200> doc;
 
       doc["sensor"] = "odometry";
