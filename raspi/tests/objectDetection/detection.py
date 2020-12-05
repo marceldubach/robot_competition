@@ -16,6 +16,7 @@ parser.add_argument("-n", "--name", help="enter aname of image")
 args = parser.parse_args()
 
 def detect_bottle(img=None):
+    t_start_det = time.time()
     if img is None:
         camera = PiCamera()
         camera.rotation = 180
@@ -69,8 +70,8 @@ def detect_bottle(img=None):
     else:
         print("Found no bottle on that image")
 
-    t_stop = time.time()
-    print("Detection finished after: ", t_stop - t_start, "seconds")
+    t_stop_det = time.time()
+    print("Detection time: ", t_stop_det - t_start_det, "seconds")
     return has_bottle, center, img_out
 
 if __name__ == '__main__':

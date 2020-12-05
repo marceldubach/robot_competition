@@ -44,8 +44,8 @@ if __name__=='__main__':
         command_left = 450
         center_x2 = center[1]
         if (has_bottle):
-            command_left = center_x2 / 1280 * 400
-            command_right = (1280-center_x2)/1280 * 400
+            command_left = 450 + (center_x2-640) /640 * 400
+            command_right = 450 + (640-center_x2)/640 * 400
 
         data = {}
         # this command should depend on the image detection!
