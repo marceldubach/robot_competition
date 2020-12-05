@@ -23,7 +23,7 @@ if __name__=='__main__':
         ser.write(data.encode('ascii'))
 
         time.sleep(0.5)
-        if (ser.in_waiting()):
+        if (ser.in_waiting):
             #print({"command": [10,20]})
             arduino_received = ser.readline().decode('utf-8').rstrip()
             com_left= ser.readline().decode('utf-8').rstrip()
