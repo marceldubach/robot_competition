@@ -14,7 +14,7 @@ if __name__=='__main__':
 
 
     while(running):
-        serial_string = "{\\\"command\\\": [0.5, 0.5]}\}\n"
+        serial_string = "{\\\"command\\\": [5, 10]}\}\n"
         print(serial_string)
         ser.write(serial_string.encode('utf-8'))
         line1= ser.readline().decode('utf-8').rstrip()

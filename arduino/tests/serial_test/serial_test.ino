@@ -51,6 +51,7 @@ void loop() {
       data.add(right);
     
       serializeJson(doc, Serial);
+      Serial.println();
   }
   //serializeJsonPretty(doc, Serial);
 
