@@ -22,8 +22,7 @@ void setup() {
   //digitalWrite(enable1, LOW ); //enable motor1
   //digitalWrite(enable2, LOW); //enable motor2
   
-  
-
+ 
   Serial.begin(9600);
   while(!Serial) continue;
 
@@ -58,5 +57,5 @@ void loop() {
   }
   //serializeJsonPretty(doc, Serial);
 
-  delay(10);
+  delay(1);
 }
