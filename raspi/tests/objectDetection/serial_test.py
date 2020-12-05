@@ -4,12 +4,12 @@ import json
 import numpy as np
 import cv2 as cv
 
-from picamera import Picamera
+from picamera import PiCamera
 
 from detection import detect_bottle
 if __name__=='__main__':
 
-    camera = Picamera()
+    camera = PiCamera()
     camera.rotation = 180
     camera.resulution = (1280, 720)
     img = np.empty((720, 1280, 3))
