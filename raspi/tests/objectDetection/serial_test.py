@@ -10,41 +10,29 @@ if __name__=='__main__':
     print("Program started")
     running = True
     # Arduino replies to any commands. Give an initial command
-
+    dt = 3
+    t_old = time.time()-dt
 
     while(running):
         #serial_string = "{\\\"command\\\": [5, 10]}\}\n"
         #print(serial_string)
         #ser.write(b"{\\\"command\\\": [5, 10]}\}\n") #.encode('utf-8'))
         #ser.write(b"{\\\"command\\\":[10, 20]}")
+
         data = {}
+        # this command should depend on the image detection!
         data["command"] = [10,30]
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
+        t = time.time()
 
-        time.sleep(3)
-        if (ser.in_waiting):
-            #print({"command": [10,20]})
-            #arduino_received = ser.readline().decode('utf-8').rstrip()
-            #com_left= ser.readline().decode('utf-8').rstrip()
-            #com_right= ser.readline().decode('utf-8').rstrip()
+        if (ser.in_waiting) and ((t-t_old)>dt):
+
             json_string= ser.readline().decode('utf-8').rstrip()
             # rstrip removes the '\n' at the end of the line
-            #print("Arduino received: "+ arduino_received)
-            #print("Command left: "+com_left)
-            #print("Command right: " + com_right)
+
             print("Received odometry value: " + json_string)
-        # try:
-        #     potential = float(line)
-        # except ValueError:
-        #     print("Not a float - set potential to zero")
-        #     potential = 0
-
-        # if (potential > 500):
-        #     ser.write("led1\n".encode('utf-8'))
-        # else:
-        #     ser.write("led2\n".encode('utf-8'))
-
+            t_old = time.time()
 
         end_time = time.time()
         print("Elapsed time" + str(end_time-start_time))
