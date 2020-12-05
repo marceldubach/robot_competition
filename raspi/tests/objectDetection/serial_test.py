@@ -20,7 +20,7 @@ if __name__=='__main__':
     ser.flush()
 
     start_time = time.time()
-    print("Program started")
+    print("[main] Program started")
     running = True
     # Arduino replies to any commands. Give an initial command
     dt = 3
@@ -60,11 +60,11 @@ if __name__=='__main__':
             json_string= ser.readline().decode('utf-8').rstrip()
             # rstrip removes the '\n' at the end of the line
 
-            print("Received odometry value: " + json_string)
+            print("[main] Received odometry value: " + json_string)
             t_old = time.time()
 
         end_time = time.time()
-        print("Elapsed time" + str(end_time-start_time))
+        print("[main] Elapsed time" + str(end_time-start_time))
         if(end_time-start_time>10):
             running = False
 
