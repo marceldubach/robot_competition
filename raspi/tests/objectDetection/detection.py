@@ -19,7 +19,7 @@ def detect_bottle(img=None):
     if img is None:
         camera = PiCamera()
         camera.rotation = 180
-        camera.resulution = (1280,720)
+        camera.resolution = (1280,720)
         img = np.empty((720,1280,3))
         camera.capture(img, 'rgb')
 
