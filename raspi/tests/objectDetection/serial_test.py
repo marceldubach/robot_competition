@@ -11,7 +11,7 @@ if __name__=='__main__':
 
     camera = PiCamera()
     camera.rotation = 180
-    camera.resulution = (1280, 720)
+    camera.resolution = (1280, 720)
     img = np.empty((720, 1280, 3))
 
 
