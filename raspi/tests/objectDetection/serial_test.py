@@ -44,7 +44,7 @@ if __name__=='__main__':
         command_left = 450
         center_x2 = center[1]
         if (has_bottle):
-            command_left = 450 + (center_x2-640) /640 * 400
+            command_left = 450 + (640-center_x2) /640 * 400
             command_right = 450 + (640-center_x2)/640 * 400
 
         data = {}
