@@ -42,7 +42,7 @@ if __name__=='__main__':
         # convert center to motor commands here
         command_left = 450
         command_left = 450
-        center_x2 = center[1]
+        center_x2 = center[0]
         if (has_bottle):
             command_left = 450 + (640-center_x2) /640 * 400
             command_right = 450 + (center_x2-640)/640 * 400
