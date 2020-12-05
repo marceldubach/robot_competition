@@ -71,7 +71,7 @@ def detect_bottle(img=None):
 
     t_stop = time.time()
     print("Detection finished after: ", t_stop - t_start, "seconds")
-    return has_bottle, img_out, center
+    return has_bottle, center, img_out
 
 if __name__ == '__main__':
     img_name = "image1.jpg"
