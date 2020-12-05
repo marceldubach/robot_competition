@@ -33,19 +33,26 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if (Serial.available()>0){
-      int somestring = Serial.read();
+      String somestring = Serial.readString();
+      deserializeJson(jsonBuffer, somestring);
+
+      JsonObject obj = jsonBuffer.as<JsonObject>();
+
+      double left = obj[String("command")][0];
+      double right = obj[String("command")][1];
+      Serial.println(left);
+      Serial.println(right);
       StaticJsonDocument<200> doc;
 
       doc["sensor"] = "odometry";
-      doc["time"] = 333;
     
       JsonArray data = doc.createNestedArray("data");
-      data.add(48.2342);
-      data.add(243.434);
+      data.add(left);
+      data.add(right);
     
       serializeJson(doc, Serial);
   }
   //serializeJsonPretty(doc, Serial);
 
-  delay(1);
+  delay(10);
 }
