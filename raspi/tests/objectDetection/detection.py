@@ -31,7 +31,7 @@ def detect_bottle(img=None):
     rectangles = find_rectangles_around_brick(brick_mask)
     img_out = img.copy()
     for rect in rectangles:
-        print(rect)
+        #print(rect)
         x1, x2, y1, y2 = rect
         cv.rectangle(img_out, (x2, x1), (y2, y1), (255, 0, 0), 3)
 
