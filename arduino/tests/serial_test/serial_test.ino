@@ -48,9 +48,17 @@ void loop() {
 
       doc["sensor"] = "odometry";
     
-      JsonArray data = doc.createNestedArray("data");
-      data.add(left);
-      data.add(right);
+      JsonArray command = doc.createNestedArray("cmd");
+      command.add(left);
+      command.add(right);
+
+      JsonArray vel = doc.createNestedArray("vel");
+
+      // read velocities here
+      int vel_left = 100;
+      int vel_right = 200;
+      vel.add(vel_left);
+      vel.add(vel_right);
     
       serializeJson(doc, Serial);
       Serial.println();

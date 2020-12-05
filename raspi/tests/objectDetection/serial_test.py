@@ -1,7 +1,20 @@
 import serial
 import time
 import json
+import numpy as np
+import cv2 as cv
+
+from picamera import Picamera
+
+from detection import detect_bottle
 if __name__=='__main__':
+
+    camera = Picamera()
+    camera.rotation = 180
+    camera.resulution = (1280, 720)
+    img = np.empty((720, 1280, 3))
+
+
     ser = serial.Serial('/dev/ttyACM0',9600,timeout=0.5)
     time.sleep(0.1)
     ser.flush()
@@ -19,9 +32,22 @@ if __name__=='__main__':
         #ser.write(b"{\\\"command\\\": [5, 10]}\}\n") #.encode('utf-8'))
         #ser.write(b"{\\\"command\\\":[10, 20]}")
 
+        camera.capture("images/image"+str(i)+".jpg")
+        #img = cv.imread("images/image"+str(i)+".jpg")
+        img = cv.imread("images/noIR/1TileFromBottle.jpg") # TODO change this
+        has_bottle, center, img_out = detect_bottle(img)
+        print(center)
+        # convert center to motor commands here
+        command_left = 450
+        command_left = 450
+        center_x2 = center[1]
+        if (has_bottle):
+            command_left = center_x2 / 1280 * 400
+            command_right = (1280-center_x2)/1280 * 400
+
         data = {}
         # this command should depend on the image detection!
-        data["command"] = [10,30]
+        data["command"] = [command_left,command_right]
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
 
