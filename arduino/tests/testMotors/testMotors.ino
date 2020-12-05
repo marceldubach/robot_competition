@@ -38,8 +38,8 @@ void setup() {
   pinMode(enable1, OUTPUT); //enable pin motor1
   pinMode(pwm2, OUTPUT); //PWM pin motor2
   pinMode(enable2, OUTPUT); //enable pin motor2
-  digitalWrite(enable1, LOW); //enable motor1                  //CHANGE
-  digitalWrite(enable2, LOW); //enable motor2
+  digitalWrite(enable1, HIGH); //enable motor1                  //CHANGE
+  digitalWrite(enable2, HIGH); //enable motor2
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
   while (!Serial) continue;
 }
@@ -75,8 +75,6 @@ void loop() {
     serializeJson(doc, Serial);
     Serial.println();
   
-   
- 
 
     delay(100);
     count++;

@@ -13,6 +13,7 @@ camera = PiCamera()
 camera.rotation = 180
 
 
+
 cameraType = "noIR"
 if args.cam:
     cameraType = "normal"

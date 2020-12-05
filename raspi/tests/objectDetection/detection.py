@@ -2,17 +2,28 @@ import os
 import argparse
 import cv2 as cv
 import time
+from picamera import PiCamera
 
 from utilities import *
+
+camera = PiCamera()
+camera.rotation = 180
+
 parser = argparse.ArgumentParser()
 
 t_start = time.time()
 parser.add_argument("-i", "--image", help="enter the name of the .jpg file for detection")
-
+parser.add_argument("-n", "--name", help="enter aname of image")
 args = parser.parse_args()
-print(args.image)
-img = cv.imread("images/noIR/"+args.image)
 
+img_name = "image1.jpg"
+if (parser.image is not None):
+    print(args.image)
+    img = cv.imread("images/noIR/"+args.image)
+else:
+    if (parser.name is not None):
+        img_name = parser.name
+    camera.capture("images/noIR/"+img_name)
 if img is None:
     print("Error opening image ", "images/noIR/"+args.image)
     pass
@@ -85,7 +96,7 @@ else:
     if not os.path.exists('images/noIR/results'):
         os.makedirs('images/noIR/results')
 
-    plt.imsave("images/noIR/results/result_"+args.image, img_out)
+    plt.imsave("images/noIR/results/result_"+img_name, img_out)
 
 
 

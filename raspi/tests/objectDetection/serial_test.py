@@ -11,27 +11,28 @@ if __name__=='__main__':
     print("Program started")
     running = True
     # Arduino replies to any commands. Give an initial command
-    ser.write("led\n".encode('utf-8'))
+
 
     while(running):
+        ser.write("where\n".encode('utf-8'))
         line = ser.readline().decode('utf-8').rstrip()
         # rstrip removes the '\n' at the end of the line
-        print("Received potentiometer value: "+line)
-        try:
-            potential = float(line)
-        except ValueError:
-            print("Not a float - set potential to zero")
-            potential = 0
+        print("Received odometry value: "+line)
+        # try:
+        #     potential = float(line)
+        # except ValueError:
+        #     print("Not a float - set potential to zero")
+        #     potential = 0
 
-        if (potential > 500):
-            ser.write("led1\n".encode('utf-8'))
-        else:
-            ser.write("led2\n".encode('utf-8'))
+        # if (potential > 500):
+        #     ser.write("led1\n".encode('utf-8'))
+        # else:
+        #     ser.write("led2\n".encode('utf-8'))
 
         time.sleep(0.2)
         end_time = time.time()
 
         print("Elapsed time" + str(end_time-start_time))
-        if(end_time-start_time>20):
+        if(end_time-start_time>10):
             running = False
 

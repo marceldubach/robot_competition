@@ -17,6 +17,7 @@ if __name__ == '__main__':
     ser.flush()
     time_start = time.time()
     while True:
+
         if ser.in_waiting > 0:
             decoded = json.loads(ser.readline())
             #print(decoded)
@@ -33,5 +34,6 @@ if __name__ == '__main__':
             t = time_end - time_start 
             pose = odometry(l, r, pose, omega, t)
             print(pose)
+
             time_start = time.time()
             time.sleep(0.1)

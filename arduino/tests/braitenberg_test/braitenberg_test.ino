@@ -51,7 +51,7 @@ void loop() {
   
   
   double distances[n_sensors] = {0,0,0,0,0,0,0};
-  //us_sensors.readUS(trigger, echo, distances, n_sensors); // Doesn't work
+  us_sensors.readUS(trigger, echo, distances, n_sensors); // Doesn't work
   
   // works for up to 3 sensors
   for(int i=0;i<2;i++){
