@@ -17,13 +17,15 @@ if __name__=='__main__':
         serial_string = "{\\\"command\\\": [5, 10]}\}\n"
         print(serial_string)
         ser.write(serial_string.encode('utf-8'))
-        line1= ser.readline().decode('utf-8').rstrip()
-        line2= ser.readline().decode('utf-8').rstrip()
-        line3= ser.readline().decode('utf-8').rstrip()
+        arduino_received = ser.readline().decode('utf-8').rstrip()
+        com_left= ser.readline().decode('utf-8').rstrip()
+        com_right= ser.readline().decode('utf-8').rstrip()
+        json_string= ser.readline().decode('utf-8').rstrip()
         # rstrip removes the '\n' at the end of the line
-        print("Received odometry value: "+line1)
-        print("Received odometry value: " + line2)
-        print("Received odometry value: " + line3)
+        print("Arduino received: "+ arduino_received)
+        print("Command left: "+com_left)
+        print("Command right: " + com_right)
+        print("Received odometry value: " + json_string)
         # try:
         #     potential = float(line)
         # except ValueError:
