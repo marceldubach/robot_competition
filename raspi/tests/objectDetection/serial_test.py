@@ -14,8 +14,9 @@ if __name__=='__main__':
 
 
     while(running):
-        print("{\\\"command\": [0.5, 0.5]}\}\n")
-        ser.write("{\\\"command\": [0.5, 0.5]}\}\n".encode('utf-8'))
+        serial_string = "{\\\"command\\\": [0.5, 0.5]}\}\n"
+        print(serial_string)
+        ser.write(serial_string.encode('utf-8'))
         line = ser.readline().decode('utf-8').rstrip()
         # rstrip removes the '\n' at the end of the line
         print("Received odometry value: "+line)
