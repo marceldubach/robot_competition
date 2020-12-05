@@ -43,7 +43,7 @@ def find_rectangles_around_brick(brick_mask):
                 y2= p2+w+delta
             else:
                 y2 = width
-            print("Found a brick at:", np.array([x1,x2,y1,y2]))
+            print("[DETECTION] Found a brick at:", np.array([x1,x2,y1,y2]))
             rectangles.append(np.array([x1,x2,y1,y2]))
 
 

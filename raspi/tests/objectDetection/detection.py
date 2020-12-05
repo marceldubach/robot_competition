@@ -66,12 +66,12 @@ def detect_bottle(img=None):
     has_bottle, center, img_out = add_corners(img_out, cornerList)
 
     if (has_bottle):
-        print("Found a bottle at position ", center)
+        print("[DETECTION] Found a bottle at position ", center)
     else:
-        print("Found no bottle on that image")
+        print("[DETECTION] Found no bottle ...")
 
     t_stop_det = time.time()
-    print("Detection time: ", t_stop_det - t_start_det, "seconds")
+    print("[DETECTION] detection time: ", t_stop_det - t_start_det, "seconds")
     return has_bottle, center, img_out
 
 if __name__ == '__main__':
