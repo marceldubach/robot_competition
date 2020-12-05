@@ -2,7 +2,7 @@ import serial
 import time
 import json
 if __name__=='__main__':
-    ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
+    ser = serial.Serial('/dev/ttyACM0',9600,timeout=0.5)
     time.sleep(0.1)
     ser.flush()
 
@@ -45,7 +45,7 @@ if __name__=='__main__':
 
 
         end_time = time.time()
-
+        time.sleep(0.2)
         print("Elapsed time" + str(end_time-start_time))
         if(end_time-start_time>10):
             running = False
