@@ -1,7 +1,6 @@
 import serial
 import time
-
-
+import json
 if __name__=='__main__':
     ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
     time.sleep(0.1)
@@ -14,9 +13,11 @@ if __name__=='__main__':
 
 
     while(running):
-        serial_string = "{\\\"command\\\": [5, 10]}\}\n"
+        #serial_string = "{\\\"command\\\": [5, 10]}\}\n"
         print(serial_string)
-        ser.write("{\\\"command\\\": [5, 10]}\}\n".encode('utf-8'))
+        #ser.write("{\\\"command\\\": [5, 10]}\}\n".encode('utf-8'))
+        json.dumps({"command": [10,20]})
+        print({"command": [10,20]})
         arduino_received = ser.readline().decode('utf-8').rstrip()
         com_left= ser.readline().decode('utf-8').rstrip()
         com_right= ser.readline().decode('utf-8').rstrip()
