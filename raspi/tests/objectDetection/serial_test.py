@@ -17,7 +17,11 @@ if __name__=='__main__':
         #print(serial_string)
         #ser.write(b"{\\\"command\\\": [5, 10]}\}\n") #.encode('utf-8'))
         #ser.write(b"{\\\"command\\\":[10, 20]}")
-        json.dumps({"command": [10,20]})
+        data = {}
+        data["command"] = [10,30]
+        data = json.dumps(data)
+        ser.write(data.encode('ascii'))
+
         #print({"command": [10,20]})
         arduino_received = ser.readline().decode('utf-8').rstrip()
         com_left= ser.readline().decode('utf-8').rstrip()
