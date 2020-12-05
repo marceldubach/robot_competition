@@ -22,16 +22,18 @@ if __name__=='__main__':
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
 
-        #print({"command": [10,20]})
-        arduino_received = ser.readline().decode('utf-8').rstrip()
-        com_left= ser.readline().decode('utf-8').rstrip()
-        com_right= ser.readline().decode('utf-8').rstrip()
-        json_string= ser.readline().decode('utf-8').rstrip()
-        # rstrip removes the '\n' at the end of the line
-        print("Arduino received: "+ arduino_received)
-        print("Command left: "+com_left)
-        print("Command right: " + com_right)
-        print("Received odometry value: " + json_string)
+        time.sleep(0.5)
+        if (ser.in_waiting()):
+            #print({"command": [10,20]})
+            arduino_received = ser.readline().decode('utf-8').rstrip()
+            com_left= ser.readline().decode('utf-8').rstrip()
+            com_right= ser.readline().decode('utf-8').rstrip()
+            json_string= ser.readline().decode('utf-8').rstrip()
+            # rstrip removes the '\n' at the end of the line
+            print("Arduino received: "+ arduino_received)
+            print("Command left: "+com_left)
+            print("Command right: " + com_right)
+            print("Received odometry value: " + json_string)
         # try:
         #     potential = float(line)
         # except ValueError:
@@ -45,7 +47,6 @@ if __name__=='__main__':
 
 
         end_time = time.time()
-        time.sleep(0.2)
         print("Elapsed time" + str(end_time-start_time))
         if(end_time-start_time>10):
             running = False
