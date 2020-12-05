@@ -38,7 +38,7 @@ if __name__=='__main__':
         #img = cv.imread("images/image"+str(i)+".jpg")
         img = cv.imread("images/noIR/2TileFromBottle.jpg") # TODO change this
         has_bottle, center, img_out = detect_bottle(img)
-        print(center)
+        #print(center)
         # convert center to motor commands here
         command_left = 450
         command_left = 450
