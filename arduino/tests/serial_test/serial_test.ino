@@ -34,6 +34,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   if (Serial.available()>0){
       String somestring = Serial.readString();
+      Serial.println("received: ");
       Serial.println(somestring);
       deserializeJson(jsonBuffer, somestring);
 
