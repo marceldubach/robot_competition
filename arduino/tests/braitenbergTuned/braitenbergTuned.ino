@@ -9,7 +9,7 @@ double distances[] = {0, 0, 0, 0, 0, 0, 0}; //initialize distances
 
 // define variables for millis()
 unsigned long previousMillis = 0; 
-const long interval = 100;  // ms
+const long interval = 20;  // ms
 
 // define pins and variables for motors
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
@@ -23,9 +23,12 @@ int threshold[] = {0, 0, 0, 0, 0, 0, 0};
 int commandLeft, commandRight, SumDotProd;
 
 // BRAITENBERG MATRIX - TO BE THUNED
-int braitenberg[14] = {  700, 100, 500,  -250, -350, 100, 230,
-                         600, 250, 50, -300, -200, 600, 120};
+// int braitenberg[14] = {  700, 100, 500,  -250, -350, 100, 230,
+//                         600, 250, 50, -300, -200, 600, 120};
 
+int braitenberg[14] = {  700, 100, 500,  -500, -500, 500, 10 // left
+                         600, 250, 50, -500, -500, 600, 120}; // right
+                         
 void setup() {  // initializing loop 
 
   Serial.begin(9600);
@@ -70,13 +73,12 @@ void loop() {
   }// end parenthesis for millis() timed loop
   
   for (int i = 0; i < n_US; i++) {
-    if (distances[i] < 100) {
+    if (distances[i] < 60) {
       threshold[i] = 1;
     }
     else {
       threshold[i] = 0;
     }
-   
   }
   
   commandLeft = 0;
@@ -97,10 +99,7 @@ void loop() {
       commandRight = SumDotProd;
       //Serial.print("CMD right: ");
       //Serial.println(commandRight);
-    }
-    if (j == 1){
-    }
-    
+    }   
   }
  
   commandLeft = 128 + commandLeft;
@@ -120,21 +119,14 @@ void loop() {
       commandRight = 10;
   }
   
-  byte cmdLeft = (byte)(commandLeft%255);
-  byte cmdRight =(byte)(commandRight%255);
-  
-  
+  /*
   Serial.println("Command left: ");
   Serial.println(commandLeft);
-  Serial.println(cmdLeft);
   Serial.println("Command right: ");
   Serial.println(commandRight);
-  Serial.println(cmdRight);
+  */
+  analogWrite(pwm2, commandLeft); // dutyCicle in (0,255)  //a digital signal(square wave) as output
+  analogWrite(pwm1, commandRight);
 
-  analogWrite(pwm2, cmdLeft); // dutyCicle in (0,255)  //a digital signal(square wave) as output
-  analogWrite(pwm1, cmdRight);
-
-  
-
-  delay(10);
+  //delayMicroseconds(10);
 }
