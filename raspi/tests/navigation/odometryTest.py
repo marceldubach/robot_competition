@@ -9,11 +9,11 @@ r = 0.04
 pose = np.array([[1, 1, 0]]).transpose()
 print(pose)
 t = 0.1
-time.sleep(1)
+time.sleep(3)
 
 if __name__ == '__main__':
     
-    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+    ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
     time_start = time.time()
     while True:
@@ -34,6 +34,5 @@ if __name__ == '__main__':
             t = time_end - time_start 
             pose = odometry(l, r, pose, omega, t)
             print(pose)
-
             time_start = time.time()
-            time.sleep(0.1)
+            time.sleep(0.02)

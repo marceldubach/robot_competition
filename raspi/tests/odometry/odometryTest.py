@@ -16,13 +16,13 @@ time.sleep(1)
 
 if __name__ == '__main__':
     
-    ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
+    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
     ser.flush()
     time_start = time.time()
     while True:
-        if ser.in_waiting > 0:
+        #if ser.in_waiting > 0:
             decoded = json.loads(ser.readline())
-            #print(decoded)
+            print(decoded)
             #print(decoded["motorSpeed"][0])
             #print(decoded["motorSpeed"][1])
             if (abs(decoded["motorSpeed"][0]-415)< 10):
@@ -32,12 +32,12 @@ if __name__ == '__main__':
             avSpeedR = -((float(decoded["motorSpeed"][0])-415.00)/415.00)*6.25 #rad/s
             avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
             omega = [avSpeedL, avSpeedR]
-            gz = decoded["gyro"]
+            #gz = decoded["gyro"]
             time_end = time.time()
             t = time_end - time_start 
             pose = odometry(l, r, pose, omega, t)
-            theta = angleComputation(theta, gz, t)
+            #theta = angleComputation(theta, gz, t)
             print(pose)
-            print(theta)
+            #print(theta)
             time_start = time.time()
             time.sleep(0.02)

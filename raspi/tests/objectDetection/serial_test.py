@@ -53,7 +53,7 @@ if __name__=='__main__':
         data = json.dumps(data)
         ser.write(data.encode('ascii'))
 
-        time.sleep(3)
+        #time.sleep(2)
 
         if (ser.in_waiting):
 
