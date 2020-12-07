@@ -2,8 +2,8 @@
 #include "UltrasoundSensors.h"
 
 
-UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[], int nSensors){
-   for(int i=0; i<nSensors; i++){
+UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[]){
+   for(int i=0; i < 7; i++){
         pinTrigger[i] = pTrigger[i];
         pinEcho[i] = pEcho[i];
 
@@ -12,7 +12,21 @@ UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[], int nSensors
    }
 }
 
-long UltrasoundSensors::readSensor(byte trigger, byte echo){
+void UltrasoundSensors::readUS(double results[7]){
+    for(int i=0; i < 7; i++){
+      digitalWrite(trigger[i], LOW);
+      delayMicroseconds(5);
+      digitalWrite(trigger[i], HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigger[i], LOW);
+
+      unsigned long duration = pulseIn(echo[i], HIGH);
+      results[i] = (duration / 2) / 29.1;
+    }
+}
+
+/* long UltrasoundSensors::readSensor(byte trigger, byte echo){
+    
     //digitalWrite(trigger,LOW);
     //delayMicroseconds(5);
     //digitalWrite(trigger,HIGH);
@@ -36,4 +50,4 @@ void UltrasoundSensors::readUS(byte pinTrigger[], byte pinEcho[], double results
         Serial.println(distance);
         results[i] = distance;
     }
-}
+} */
