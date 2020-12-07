@@ -17,21 +17,21 @@ int braitenberg[14];    // define variables for braitenberg
 int commands[2];        // define motor input LEFT then RIGHT
 enum states             // define states for state machine
 {
-  idling = 0 moving = 1,
+  idling = 0,
+  moving = 1,
   grabing = 2
 };
 
 UltrasoundSensors(pTrigger, pEcho, 7);
 
-void setup()
-{ // put your setup code here, to run once:
+void setup()  // put your setup code here, to run once:
+{ 
   Serial.begin(9600);
   uint8_t pTrigger[7] = {25, 23, 27, 29, 31, 33, 35};
   uint8_t pEcho[7] = {24, 22, 26, 28, 30, 32, 34};
   currentState = 1 commands = {0, 0};
   braitenberg = {700, 100, 500, -500, -500, 500, 10 // LEFT
-                 600,
-                 250, 50, -500, -500, 600, 120}; // RIGHT
+                 600, 250, 50, -500, -500, 600, 120}; // RIGHT
 }
 
 void loop()
