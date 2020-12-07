@@ -39,10 +39,12 @@ void loop()
   switch (currentState)
   {
   case idling:
-
+    // idling here   
+    break;
+        
   case moving:
-    readUS(commands, braitenberg, interval_ms)
-        analogWrite(pwm2, commands[0]); // dutyCicle in (0,255)  //a digital signal(square wave) as output
+    readUS(commands, braitenberg, interval_ms);
+    analogWrite(pwm2, commands[0]); // dutyCicle in (0,255)  //a digital signal(square wave) as output
     analogWrite(pwm1, commands[1]);
     break;
 
