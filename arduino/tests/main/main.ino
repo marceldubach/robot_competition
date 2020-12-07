@@ -30,7 +30,7 @@ void setup()  // put your setup code here, to run once:
   uint8_t pTrigger[7] = {25, 23, 27, 29, 31, 33, 35};
   uint8_t pEcho[7] = {24, 22, 26, 28, 30, 32, 34};
   currentState = 1 commands = {0, 0};
-  braitenberg = {700, 100, 500, -500, -500, 500, 10 // LEFT
+  braitenberg = {700, 100, 500, -500, -500, 500, 10, // LEFT
                  600, 250, 50, -500, -500, 600, 120}; // RIGHT
 }
 
