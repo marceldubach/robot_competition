@@ -16,7 +16,7 @@ const long interval_ms; // define interval between US sampling (default : 20ms)
 int braitenberg[14];    // define variables for braitenberg
 int commands[2];        // define motor input LEFT then RIGHT
 enum states             // define states for state machine
-{ 
+{
   idling = 0 moving = 1,
   grabing = 2
 };
@@ -45,13 +45,13 @@ void loop()
         analogWrite(pwm2, commands[0]); // dutyCicle in (0,255)  //a digital signal(square wave) as output
     analogWrite(pwm1, commands[1]);
     break;
-  }
-case grabing:
-  // grabbing sequence
-  break;
 
-case default:
-  // error here
-  break;
-}
+  case grabing:
+    // grabbing sequence
+    break;
+
+  case default:
+    // error here
+    break;
+  }
 }
