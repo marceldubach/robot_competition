@@ -1,7 +1,8 @@
 #include "Arduino.h"
 #include "UltrasoundSensors.h"
 
-UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[])
+// Constructor
+UltrasoundSensors::UltrasoundSensors(byte pTrigger[7], byte pEcho[7])
 {
     for (int i = 0; i < 7; i++)
     {
@@ -12,9 +13,16 @@ UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[])
         pinMode(pinEcho[i], INPUT);
     }
 }
-void UltrasoundSensors::readUS(int commands[2], int braitenberg[14], long interval_ms = 20, int thresholdUS = 100)
+
+// Method
+void UltrasoundSensors::readUS(int commands[2], int braitenberg[14], unsigned long interval_ms = 20, int thresholdUS = 100)
 {
-    unsigned long currentMillis = millis(); // retrieve current value of millis
+    unsigned long duration, currentMillis, previousMillis;
+    double distances[7];
+    int thresholdArray[7];
+    int commandLeft, commandRight, sumDotProd;
+
+    currentMillis = millis(); // retrieve current value of millis
     if (currentMillis - previousMillis >= interval_ms)
     {
 
@@ -24,13 +32,13 @@ void UltrasoundSensors::readUS(int commands[2], int braitenberg[14], long interv
 
         for (int i = 0; i < 7; i++)
         { // Loop through the 7 US to read the values
-            digitalWrite(trigger[i], LOW);
+            digitalWrite(pinTrigger[i], LOW);
             delayMicroseconds(5);
-            digitalWrite(trigger[i], HIGH);
+            digitalWrite(pinTrigger[i], HIGH);
             delayMicroseconds(10);
-            digitalWrite(trigger[i], LOW);
+            digitalWrite(pinTrigger[i], LOW);
 
-            unsigned long duration = pulseIn(echo[i], HIGH);
+            unsigned long duration = pulseIn(pinEcho[i], HIGH);
             distances[i] = (duration / 2) / 29.1;
         }
 
