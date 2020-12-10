@@ -27,16 +27,16 @@ Motors::Motors(bool MotorEnable = false)
     //TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
 }
 
-void Motors::commandMotors(int avgSpeedMotors[2], int commands[2], bool MotorEnable = false)
+void Motors::commandMotors(int &avgSpeedMotorLeft, int &avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false)
 {
     commandLeft = 0;
     commandRight = 0;
 
-    avgSpeedMotorLeft = 0;
-    avgSpeedMotorRight = 0;
+    avgSpeedLeft = 0;
+    avgSpeedRight = 0;
 
-    commandLeft = commands[0];
-    commandRight = commands[1];
+    commandLeft = commandMotorLeft;
+    commandRight = commandMotorRight;
 
     if (MotorEnable)
     {
@@ -46,8 +46,8 @@ void Motors::commandMotors(int avgSpeedMotors[2], int commands[2], bool MotorEna
         analogWrite(pwm1, commandLeft);
         analogWrite(pwm2, commandRight);
 
-        avgSpeedMotorLeft = analogRead(avSpeed1);
-        avgSpeedMotorRight = analogRead(avSpeed2);
+        avgSpeedLeft = analogRead(avSpeed1);
+        avgSpeedRight = analogRead(avSpeed2);
     }
     else
     {
@@ -58,6 +58,6 @@ void Motors::commandMotors(int avgSpeedMotors[2], int commands[2], bool MotorEna
         analogWrite(pwm2, commandRight);
     }
 
-    avgSpeedMotors[0] = avgSpeedMotorLeft;
-    avgSpeedMotors[1] = avgSpeedMotorRight;
+    avgSpeedMotorLeft = avgSpeedLeft;
+    avgSpeedMotorRight = avgSpeedRight;
 }

@@ -2,7 +2,7 @@
 #include "UltrasoundSensors.h"
 
 // Constructor
-UltrasoundSensors::UltrasoundSensors(byte pTrigger[7], byte pEcho[7])
+UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[])
 {
     for (int i = 0; i < 7; i++)
     {
@@ -15,92 +15,82 @@ UltrasoundSensors::UltrasoundSensors(byte pTrigger[7], byte pEcho[7])
 }
 
 // Method
-void UltrasoundSensors::readUS(int commands[2], int braitenberg[14], unsigned long interval_ms = 20, int thresholdUS = 100)
+void UltrasoundSensors::readUS(int &commandMotorLeft, int &commandMotorRight, int braitenberg[], int thresholdUS = 100)
 {
-    unsigned long duration, currentMillis, previousMillis;
     double distances[7];
     int thresholdArray[7];
     int commandLeft, commandRight, sumDotProd;
 
-    currentMillis = millis(); // retrieve current value of millis
-    if (currentMillis - previousMillis >= interval_ms)
+    cli(); //stop interrupts
+
+    for (int i = 0; i < 7; i++)
+    { // Loop through the 7 US to read the values
+        digitalWrite(pinTrigger[i], LOW);
+        delayMicroseconds(5);
+        digitalWrite(pinTrigger[i], HIGH);
+        delayMicroseconds(10);
+        digitalWrite(pinTrigger[i], LOW);
+
+        unsigned long duration = pulseIn(pinEcho[i], HIGH);
+        distances[i] = (duration / 2) / 29.1;
+    }
+
+    sei(); // restart interrupts
+
+    for (int i = 0; i < 7; i++)
     {
-
-        cli(); //stop interrupts
-
-        previousMillis = currentMillis;
-
-        for (int i = 0; i < 7; i++)
-        { // Loop through the 7 US to read the values
-            digitalWrite(pinTrigger[i], LOW);
-            delayMicroseconds(5);
-            digitalWrite(pinTrigger[i], HIGH);
-            delayMicroseconds(10);
-            digitalWrite(pinTrigger[i], LOW);
-
-            unsigned long duration = pulseIn(pinEcho[i], HIGH);
-            distances[i] = (duration / 2) / 29.1;
+        if (distances[i] < thresholdUS)
+        {
+            thresholdArray[i] = 1;
         }
+        else
+        {
+            thresholdArray[i] = 0;
+        }
+    }
+    commandLeft = 0;
+    commandRight = 0;
 
-        sei(); // restart interrupts
-
+    // multiplie sensor input by braitenberg array and get outputs using a threshold on the sensor values
+    for (int j = 0; j < 2; j++)
+    {
+        sumDotProd = 0; //reset for next row x col product
         for (int i = 0; i < 7; i++)
         {
-            if (distances[i] < thresholdUS)
-            {
-                thresholdArray[i] = 1;
-            }
-            else
-            {
-                thresholdArray[i] = 0;
-            }
+            sumDotProd += thresholdArray[i] / distances[i] * braitenberg[j * 7 + i]; // (j * 7 + i) gives array position
         }
-        commandLeft = 0;
-        commandRight = 0;
+        if (j == 0)
+        {
+            commandLeft = sumDotProd;
+            Serial.print("CMD left: ");
+            Serial.println(commandLeft);
+        }
+        else if (j == 1)
+        {
+            commandRight = sumDotProd;
+            Serial.print("CMD right: ");
+            Serial.println(commandRight);
+        }
+    }
+    commandLeft = 128 + commandLeft;
+    commandRight = 128 - commandRight;
 
-        // multiplie sensor input by braitenberg array and get outputs using a threshold on the sensor values
-        for (int j = 0; j < 2; j++)
-        {
-            sumDotProd = 0; //reset for next row x col product
-            for (int i = 0; i < 7; i++)
-            {
-                sumDotProd += thresholdArray[i] / distances[i] * braitenberg[j * 7 + i]; // (j * 7 + i) gives array position
-            }
-            if (j == 0)
-            {
-                commandLeft = sumDotProd;
-                //Serial.print("CMD left: ");
-                //Serial.println(commandLeft);
-            }
-            else if (j == 1)
-            {
-                commandRight = sumDotProd;
-                //Serial.print("CMD right: ");
-                //Serial.println(commandRight);
-            }
-        }
-        commandLeft = 128 + commandLeft;
-        commandRight = 128 - commandRight;
+    if (commandLeft > 240)
+    {
+        commandMotorLeft = 240;
+    }
+    if (commandLeft <= 10)
+    {
+        commandMotorLeft = 10;
+    }
 
-        if (commandLeft > 240)
-        {
-            commands[0] = 240;
-        }
-        if (commandLeft <= 10)
-        {
-            commands[0] = 10;
-        }
-
-        if (commandRight > 240)
-        {
-            commands[1] = 240;
-        }
-        if (commandRight < 10)
-        {
-            commands[1] = 10;
-        }
-
-        return;
+    if (commandRight > 240)
+    {
+        commandMotorRight= 240;
+    }
+    if (commandRight < 10)
+    {
+        commandMotorRight = 10;
     }
 }
 

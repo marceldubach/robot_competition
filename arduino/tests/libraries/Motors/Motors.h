@@ -15,11 +15,11 @@ class Motors
 {
 private:
     int commandLeft, commandRight;
-    int avgSpeedMotorLeft, avgSpeedMotorRight;
+    int avgSpeedLeft, avgSpeedRight;
 
 public:
     Motors(bool MotorEnable = false);
-    void commandMotors(int avgSpeedMotors[2], int commands[2] , bool MotorEnable = false);
+    void commandMotors(int &avgSpeedMotorLeft, int &avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false);
 };
 
 #endif

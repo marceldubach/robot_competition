@@ -14,11 +14,14 @@ int currentState = 1;                                                   // defin
 int thresholdUS = 100;                                                  // define the US max distance ( default : 100 cm)
 byte pTrigger[7] = {25, 23, 27, 29, 31, 33, 35};
 byte pEcho[7] = {24, 22, 26, 28, 30, 32, 34};                           // define TRIGGER & ECHO pins for US
-const unsigned long interval_ms = 20;                                   // define interval between US sampling (default : 20ms)
+const unsigned long interval_ms = 60;                                   // define interval between US sampling (lowest possible)
+unsigned long currentMillis, previousMillis;
 int braitenberg[14] = {700, 100, 500, -500, -500, 500, 10, // LEFT      // define variables for braitenberg
                        600, 250, 50, -500, -500, 600, 120}; // RIGHT;                      
-int commands[2] = {0, 0};                                               // define motor input LEFT then RIGHT
-int avgSpeedMotors[2];                                                  // store the motor average speed reading from Hall sensors          
+int commandMotorLeft;                                                   // define motor input LEFT then RIGHT
+int commandMotorRight;
+int avgSpeedMotorLeft;                                                  // store the motor average speed reading from Hall sensors
+int avgSpeedMotorRight;          
 bool MotorEnable;                                                       // toggles the Enable pins of both motors
 enum states                                                             // define states for state machine
 {
@@ -26,11 +29,14 @@ enum states                                                             // defin
   moving = 1,
   grabing = 2
 };
+unsigned long startTime;
 
 void setup()  // put your setup code here, to run once:
 { 
-  Serial.begin(9600);
-  MotorEnable = true;
+  Serial.begin(38400);
+  MotorEnable = false;
+  currentState = moving;
+  startTime = millis();
 }
 
 // CONSTRUCTORS
@@ -46,8 +52,20 @@ void loop()
     break;
         
   case moving:
-    MyUltrasoundSensors.readUS(commands, braitenberg, interval_ms, thresholdUS);
-    MyMotors.commandMotors(avgSpeedMotors, commands, MotorEnable);
+    currentMillis = millis(); // retrieve current value of millis
+    if (currentMillis - previousMillis >= interval_ms)
+    {
+      previousMillis = currentMillis;
+      MyUltrasoundSensors.readUS(commandMotorLeft, commandMotorRight, braitenberg, thresholdUS);
+    }
+    
+    MyMotors.commandMotors(avgSpeedMotorLeft, avgSpeedMotorRight, commandMotorLeft, commandMotorRight, MotorEnable);
+    /*
+    Serial.print("Left : ");
+    Serial.print(commandMotorLeft);
+    Serial.print("   Right :");
+    Serial.println(commandMotorRight);
+    */
     break;
 
   case grabing:
