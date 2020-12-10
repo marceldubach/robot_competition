@@ -19,7 +19,7 @@ private:
 
 public:
     Motors(bool MotorEnable = false);
-    void commandMotors(int &avgSpeedMotorLeft, int &avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false);
+    void commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false);
 };
 
 #endif

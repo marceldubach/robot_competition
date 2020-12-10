@@ -18,7 +18,7 @@ UltrasoundSensors::UltrasoundSensors()
 }
 
 // Method
-void UltrasoundSensors::readUS(int &commandMotorLeft, int &commandMotorRight, int braitenberg[], int thresholdUS = 100)
+void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS = 100)
 {
     double distances[7];
     int thresholdArray[7];
@@ -80,19 +80,22 @@ void UltrasoundSensors::readUS(int &commandMotorLeft, int &commandMotorRight, in
 
     if (commandLeft > 240)
     {
-        commandMotorLeft = 240;
+        commandLeft = 240;
     }
     if (commandLeft <= 10)
     {
-        commandMotorLeft = 10;
+        commandLeft = 10;
     }
 
     if (commandRight > 240)
     {
-        commandMotorRight= 240;
+        commandRight= 240;
     }
     if (commandRight < 10)
     {
-        commandMotorRight = 10;
+        commandRight = 10;
     }
+
+    commandMotorLeft = &commandLeft;       //assign the adress (&variable) of commandMotorX to the respective pointer => both point to the same value now
+    commandMotorRight = &commandRight;
 }

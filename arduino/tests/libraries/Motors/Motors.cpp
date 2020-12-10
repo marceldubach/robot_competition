@@ -27,7 +27,7 @@ Motors::Motors(bool MotorEnable = false)
     //TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
 }
 
-void Motors::commandMotors(int &avgSpeedMotorLeft, int &avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false)
+void Motors::commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false)
 {
     commandLeft = 0;
     commandRight = 0;
@@ -58,6 +58,6 @@ void Motors::commandMotors(int &avgSpeedMotorLeft, int &avgSpeedMotorRight, int 
         analogWrite(pwm2, commandRight);
     }
 
-    avgSpeedMotorLeft = avgSpeedLeft;
-    avgSpeedMotorRight = avgSpeedRight;
+    avgSpeedMotorLeft = &avgSpeedLeft;          // give avgSpeed address to the pointer => point to same value
+    avgSpeedMotorRight = &avgSpeedRight;
 }
