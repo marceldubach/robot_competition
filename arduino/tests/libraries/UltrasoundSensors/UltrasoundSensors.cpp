@@ -2,8 +2,11 @@
 #include "UltrasoundSensors.h"
 
 // Constructor
-UltrasoundSensors::UltrasoundSensors(byte pTrigger[], byte pEcho[])
+UltrasoundSensors::UltrasoundSensors()
 {
+    byte pTrigger[7] = {25, 23, 27, 29, 31, 33, 35};    // define TRIGGER pins
+    byte pEcho[7] = {24, 22, 26, 28, 30, 32, 34};       // define ECHO pins
+
     for (int i = 0; i < 7; i++)
     {
         pinTrigger[i] = pTrigger[i];
@@ -93,32 +96,3 @@ void UltrasoundSensors::readUS(int &commandMotorLeft, int &commandMotorRight, in
         commandMotorRight = 10;
     }
 }
-
-// OLD BRAITENBERG CODE FROM MARCEL BELOW
-
-/* long UltrasoundSensors::readSensor(byte trigger, byte echo){
-    
-    //digitalWrite(trigger,LOW);
-    //delayMicroseconds(5);
-    //digitalWrite(trigger,HIGH);
-    //delayMicroseconds(10);
-    //digitalWrite(trigger,LOW);
-    long duration = 1000; //pulseIn(echo, HIGH);
-    //Serial.println(duration);
-    return duration;
-}
-
-double UltrasoundSensors::convertToDistance(long duration){
-    double distance = (double) ((duration/2)/29.1);
-    return distance;
-}
-
-void UltrasoundSensors::readUS(byte pinTrigger[], byte pinEcho[], double results[], int r_size){
-    for(int i=0; i<r_size; i++){
-        long duration = readSensor(pinTrigger[i], pinEcho[i]);
-        double distance = convertToDistance(duration);
-        Serial.print("Distance");
-        Serial.println(distance);
-        results[i] = distance;
-    }
-} */
