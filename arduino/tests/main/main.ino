@@ -18,7 +18,7 @@ const unsigned long interval_ms = 20;                                   // defin
 int braitenberg[14] = {700, 100, 500, -500, -500, 500, 10, // LEFT      // define variables for braitenberg
                        600, 250, 50, -500, -500, 600, 120}; // RIGHT;                      
 int commands[2] = {0, 0};                                               // define motor input LEFT then RIGHT
-int avgSpeedMotors[2];                                       // store the motor average speed reading from Hall sensors          
+int avgSpeedMotors[2];                                                  // store the motor average speed reading from Hall sensors          
 bool MotorEnable;                                                       // toggles the Enable pins of both motors
 enum states                                                             // define states for state machine
 {
@@ -34,7 +34,7 @@ void setup()  // put your setup code here, to run once:
 }
 
 // CONSTRUCTORS
-UltrasoundSensors MyUltrasoundSensors(pTrigger[7], pEcho[7]);
+UltrasoundSensors MyUltrasoundSensors(pTrigger, pEcho);
 Motors MyMotors;
 
 void loop()
@@ -46,8 +46,8 @@ void loop()
     break;
         
   case moving:
-    MyUltrasoundSensors.readUS(commands[2], braitenberg[14], interval_ms, thresholdUS);
-    MyMotors.commandMotors(avgSpeedMotors[2], commands[2], MotorEnable);
+    MyUltrasoundSensors.readUS(commands, braitenberg, interval_ms, thresholdUS);
+    MyMotors.commandMotors(avgSpeedMotors, commands, MotorEnable);
     break;
 
   case grabing:
