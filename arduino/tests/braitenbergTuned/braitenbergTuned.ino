@@ -9,7 +9,7 @@ double distances[] = {0, 0, 0, 0, 0, 0, 0}; //initialize distances
 
 // define variables for millis()
 unsigned long previousMillis = 0; 
-const long interval = 20;  // ms
+const long interval = 60;  // ms
 
 // define pins and variables for motors
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
