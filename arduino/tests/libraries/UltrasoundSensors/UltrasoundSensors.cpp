@@ -4,8 +4,8 @@
 // Constructor
 UltrasoundSensors::UltrasoundSensors()
 {
-    byte pTrigger[7] = {25, 23, 27, 29, 31, 33, 35};    // define TRIGGER pins
-    byte pEcho[7] = {24, 22, 26, 28, 30, 32, 34};       // define ECHO pins
+    byte pTrigger[7] = {25, 23, 27, 29, 31, 33, 35}; // define TRIGGER pins
+    byte pEcho[7] = {24, 22, 26, 28, 30, 32, 34};    // define ECHO pins
 
     for (int i = 0; i < 7; i++)
     {
@@ -65,14 +65,10 @@ void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, in
         if (j == 0)
         {
             commandLeft = sumDotProd;
-            Serial.print("CMD left: ");
-            Serial.println(commandLeft);
         }
         else if (j == 1)
         {
             commandRight = sumDotProd;
-            Serial.print("CMD right: ");
-            Serial.println(commandRight);
         }
     }
     commandLeft = 128 + commandLeft;
@@ -89,13 +85,13 @@ void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, in
 
     if (commandRight > 240)
     {
-        commandRight= 240;
+        commandRight = 240;
     }
     if (commandRight < 10)
     {
         commandRight = 10;
     }
 
-    commandMotorLeft = &commandLeft;       //assign the adress (&variable) of commandMotorX to the respective pointer => both point to the same value now
-    commandMotorRight = &commandRight;
+    *commandMotorLeft = commandLeft;
+    *commandMotorRight = commandRight;
 }

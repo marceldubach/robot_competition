@@ -2,62 +2,42 @@
 #include "Arduino.h"
 
 // Constuctor
-Motors::Motors(bool MotorEnable = false)
+Motors::Motors()
 {
-    pinMode(avSpeed1, INPUT); //analog input -> average speed motor1
-    pinMode(avSpeed2, INPUT); //analog input -> average speed motor1
+    pinMode(avSpeedRight, INPUT); //analog input -> average speed motor1
+    pinMode(avSpeedLeft, INPUT);  //analog input -> average speed motor1
 
-    pinMode(pwm1, OUTPUT);    //PWM pin motor1
-    pinMode(enable1, OUTPUT); //enable pin motor1
+    pinMode(pwmRight, OUTPUT);    //PWM pin motor1
+    pinMode(enableRight, OUTPUT); //enable pin motor1
 
-    pinMode(pwm2, OUTPUT);    //PWM pin motor2
-    pinMode(enable2, OUTPUT); //enable pin motor2
+    pinMode(pwmLeft, OUTPUT);    //PWM pin motor2
+    pinMode(enableLeft, OUTPUT); //enable pin motor2
 
-    if (MotorEnable)
-    {
-        digitalWrite(enable1, HIGH); //enable motor1
-        digitalWrite(enable2, HIGH); //enable motor2
-    }
-    else
-    {
-        digitalWrite(enable1, LOW);
-        digitalWrite(enable2, LOW);
-    }
-
-    //TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
+    TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
 }
 
-void Motors::commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight , bool MotorEnable = false)
+void Motors::commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight, bool MotorEnable)
 {
-    commandLeft = 0;
-    commandRight = 0;
-
-    avgSpeedLeft = 0;
-    avgSpeedRight = 0;
-
     commandLeft = commandMotorLeft;
     commandRight = commandMotorRight;
 
     if (MotorEnable)
     {
-        digitalWrite(enable1, HIGH);
-        digitalWrite(enable2, HIGH);
+        digitalWrite(enableRight, HIGH);
+        digitalWrite(enableLeft, HIGH);
 
-        analogWrite(pwm1, commandLeft);
-        analogWrite(pwm2, commandRight);
-
-        avgSpeedLeft = analogRead(avSpeed1);
-        avgSpeedRight = analogRead(avSpeed2);
+        analogWrite(pwmLeft, commandLeft);
+        analogWrite(pwmRight, commandRight);
     }
-    else
+    else if (MotorEnable == false)
     {
-        digitalWrite(enable1, LOW);
-        digitalWrite(enable2, LOW);
-
-        analogWrite(pwm1, commandLeft);
-        analogWrite(pwm2, commandRight);
+        digitalWrite(enableRight, LOW);
+        digitalWrite(enableLeft, LOW);
     }
 
-    avgSpeedMotorLeft = &avgSpeedLeft;          // give avgSpeed address to the pointer => point to same value
-    avgSpeedMotorRight = &avgSpeedRight;
+    avgSpeedLeft = analogRead(avSpeedLeft);
+    avgSpeedRight = analogRead(avSpeedRight);
+
+    *avgSpeedMotorLeft = avgSpeedLeft;
+    *avgSpeedMotorRight = avgSpeedRight;
 }

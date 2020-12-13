@@ -1,2 +1,2 @@
-Motors = KEYWORD1
-commandMotors = KEYWORD2
+Motors KEYWORD1
+commandMotors KEYWORD2
