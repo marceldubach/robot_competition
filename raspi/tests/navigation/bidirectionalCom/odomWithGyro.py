@@ -33,9 +33,9 @@ if __name__ == '__main__':
             t = time_end - time_start 
             pose = odometryGyro(gz, r, pose, omega, t)
             theta = angleComputation(theta, gz, t)
-            #jsonString = json.dumps(theta)
-            #ser.write(jsonString)
-            if theta > 3:
+            jsonString = json.dumps(theta)
+            #ser.write(b"jsonString\n")
+            if theta < -3:
                 ser.write(b"stop\n")
             print(pose, theta)
             time_start = time.time()
