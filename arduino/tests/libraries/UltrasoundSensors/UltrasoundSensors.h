@@ -8,7 +8,7 @@ class UltrasoundSensors
 public:
     // size of 7 sensors hardcoded
     UltrasoundSensors();
-    void readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS = 100);
+    void readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS);
 
 private:
     byte pinTrigger[7];

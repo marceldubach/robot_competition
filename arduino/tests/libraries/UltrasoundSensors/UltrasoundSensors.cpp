@@ -18,7 +18,7 @@ UltrasoundSensors::UltrasoundSensors()
 }
 
 // Method
-void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS = 100)
+void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS)
 {
     double distances[7];
     int thresholdArray[7];
