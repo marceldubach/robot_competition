@@ -41,3 +41,12 @@ void Motors::commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int 
     *avgSpeedMotorLeft = avgSpeedLeft;
     *avgSpeedMotorRight = avgSpeedRight;
 }
+
+void Motors::getAvgSpeed(int *avgSpeedMotorLeft, int *avgSpeedMotorRight)
+{
+    avgSpeedLeft = analogRead(avSpeedLeft);
+    avgSpeedRight = analogRead(avSpeedRight);
+
+    *avgSpeedMotorLeft = avgSpeedLeft;
+    *avgSpeedMotorRight = avgSpeedRight;
+}

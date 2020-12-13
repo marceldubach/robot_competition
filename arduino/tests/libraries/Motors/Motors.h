@@ -20,6 +20,7 @@ private:
 public:
     Motors();
     void commandMotors(int *avgSpeedMotorLeft, int *avgSpeedMotorRight, int commandMotorLeft, int commandMotorRight, bool MotorEnable);
+    void getAvgSpeed(int *avgSpeedMotorLeft, int *avgSpeedMotorRight);
 };
 
 #endif
