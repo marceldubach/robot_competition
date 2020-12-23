@@ -24,7 +24,7 @@ if __name__ == '__main__':
             decoded = json.loads(ser.readline())
             gz = decoded["gyro"]
             ax = decoded["accel"]
-            t = decoded["dT"]
+            t = float(decoded["dT"])/1000.0
             if (abs(decoded["motorSpeed"][0]-415)< 10):
                 decoded["motorSpeed"][0] = 415
             if (abs(decoded["motorSpeed"][1]-415)< 10):
