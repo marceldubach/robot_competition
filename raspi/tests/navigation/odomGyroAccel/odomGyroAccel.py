@@ -17,6 +17,7 @@ if __name__ == '__main__':
     
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
+    ser.write(b"start\n")
     #time_start = time.time()
     while True:
         if ser.in_waiting > 0:
@@ -37,7 +38,7 @@ if __name__ == '__main__':
             theta = angleComputation(theta, gz, t)
             #jsonString = json.dumps(theta)
             #ser.write(jsonString)
-            if theta > 3:
+            if pose[0] > 3:
                 ser.write(b"stop\n")
             print(pose)
             #time_start = time.time()
