@@ -34,7 +34,7 @@ void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, in
         delayMicroseconds(10);
         digitalWrite(pinTrigger[i], LOW);
 
-        unsigned long duration = pulseIn(pinEcho[i], HIGH);
+        unsigned long duration = pulseIn(pinEcho[i], HIGH, 3000); // timeOut of 3000 microsec
         distances[i] = (duration / 2) / 29.1;
     }
 
