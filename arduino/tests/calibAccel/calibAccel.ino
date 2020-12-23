@@ -37,6 +37,7 @@ byte duty = dutyCycle;
 int count = 0;
 float sumAx = 0;
 float accNoiseMean;
+float Temp_accNoiseMean = -0.04;
 float aSensScaleFactor = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
 
 
@@ -71,7 +72,7 @@ void loop() {
   if (count < 1000){
 
       accelgyro.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
-      sumAx += ax/aSensScaleFactor;
+      sumAx += ax/aSensScaleFactor - Temp_accNoiseMean;
       StaticJsonDocument<60> doc;
       doc["raw accel"] = ax;
       doc["scaled accel"] = ax/aSensScaleFactor;

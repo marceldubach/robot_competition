@@ -5,7 +5,8 @@
    Lorenzo/Marcel/Olvier - Robot Contest 2020
 */
 
-#include "Arduino.h"
+#include <Arduino.h>
+#include <Servo.h>
 #include "UltrasoundSensors.h"
 #include "Motors.h"
 #include "Servos.h"
@@ -16,12 +17,12 @@ const unsigned long interval_ms = 60; // define interval between US sampling (lo
 unsigned long currentMillis, previousMillis;
 int braitenberg[14] = {1400, 200, 1000, -1000, -1000, 100, 500,  // LEFT      // define variables for braitenberg
                        1200, 500, 100, -1000, -1000, 1200, 240}; // RIGHT;
-int commandMotorLeft;   // define pointer for motor input LEFT and RIGHT
+int commandMotorLeft;   // define variable for motor input LEFT and RIGHT
 int commandMotorRight;
 int avgSpeedMotorLeft;  // define variable to store the motor average speed reading from Hall sensors
 int avgSpeedMotorRight;
-bool MotorEnable; // toggles the Enable pins of both motors
-enum states       // define states for state machine
+bool MotorEnable;       // toggles the Enable pins of both motors
+enum states             // define states for state machine
 {
   idling = 0,
   moving = 1,
@@ -29,17 +30,19 @@ enum states       // define states for state machine
 };
 unsigned long startTime;
 
+// CONSTRUCTORS
+UltrasoundSensors myUltrasoundSensors;
+Motors myMotors;
+Servos myServos; // problem here
+
+
 void setup() // put your setup code here, to run once:
 {
   Serial.begin(38400);
   MotorEnable = false;
-  currentState = moving;
+  currentState = grabing;
 }
 
-// CONSTRUCTORS
-UltrasoundSensors myUltrasoundSensors;
-Motors myMotors;
-//Servos myServos; // problem here
 
 void loop()
 {
@@ -63,8 +66,10 @@ void loop()
 
       currentState = moving;
       break;
-    /*
+    
       case grabing:
+        //myServos.approachBottle();
+      /*
         MyServos.approachBottle(); // lowers and opens claws for approach
         MyServos.grabBottle();     // tries to catch the bottle max 3 times
 
@@ -79,9 +84,9 @@ void loop()
         {
           currentState = idling; // we'll need to do smth else
         }
-
+        */
         break;
-    */
+    
     default:
       // error here
       break;

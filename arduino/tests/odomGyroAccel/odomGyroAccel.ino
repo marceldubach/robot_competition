@@ -27,13 +27,7 @@ float gSensScaleFactor = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFA
 float gNoiseMean = 0.86; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
 float scaledGz;
 float aSensScaleFactor = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
-
-
-
-float accNoiseMean = 0;  //CHANGE
-
-
-
+float accNoiseMean = -0.04; // mean noise on accelerometre ax lecture, averaged over 1000 data points 
 float scaledAx;
 
 int currentState = 1;                 // define current state of state machine
@@ -43,7 +37,7 @@ unsigned long currentMillis, previousMillis;
 int braitenberg[14] = {1400, 200, 1000, -1000, -1000, 100, 500,  // LEFT      // define variables for braitenberg
                        1200, 500, 100, -1000, -1000, 1200, 240
                       }; // RIGHT;
-int commandMotorLeft;                                      // define pointer for motor input LEFT and RIGHT
+int commandMotorLeft;  // define pointer for motor input LEFT and RIGHT
 int commandMotorRight;
 int avgSpeedMotorLeft; // define variable to store the motor average speed reading from Hall sensors
 int avgSpeedMotorRight;
