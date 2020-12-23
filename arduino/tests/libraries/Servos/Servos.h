@@ -3,9 +3,6 @@
 
 #include "Servo.h" //needed for sub-class
 
-#define oneSecond 1000000 //define second for better readability of delayMircoseconds() 0
-#define halfSecond 500000
-
 class Servos
 {
 private:
@@ -16,7 +13,7 @@ private:
     void lowerGripper(int value = 15);                           // lower gripper to given angle
     bool isBottleGrabbed();                                      // check US if there is a bottle in the gripper
 
-    // create sub classes
+    // sub classes
     Servo myHighTorqueServo; // create servo object to control high torque servo
     Servo myMicroServoLeft;  // create servo object to control micro left
     Servo myMicroServoRight; // create servo object to control micro right
@@ -27,6 +24,10 @@ private:
     byte pinTrigger;
     byte pinEcho;
     bool bottleCatched;
+
+    // define constants
+    const unsigned long oneSecond = 1000000; //define second for better readability of delayMircoseconds()
+    const unsigned long halfSecond = 500000;
 
 public:
     // constructor

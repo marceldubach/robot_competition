@@ -4,20 +4,28 @@
 //constructor
 Servos::Servos()
 {
-    //attach pins to the servo objects
+    /*
+    // create subclasses
+    myHighTorqueServo;  // create servo object to control high torque servo
+    myMicroServoLeft;   // create servo object to control micro left
+    myMicroServoRight;  // create servo object to control micro right
+    myCamServo;         // create servo object to control cam servo
+    myBackDoorServo;    // create servo object to control back door servo
+*/
+    // attach pins to the servo objects
     myHighTorqueServo.attach(11, 400, 2550); // 400us-2550us DFROBOT high torque
     myMicroServoLeft.attach(10, 900, 2100);  // (pin, min, max) for HC-82 left
     myMicroServoRight.attach(9, 900, 2100);  // (pin, min, max) for HC-82 right
     myCamServo.attach(8, 750, 2250);         // (pin, min, max) for cam
     myBackDoorServo.attach(7, 750, 2250);    // (pin, min, max) for back door
 
-    //define pins for Gripper Ultrasound Sensor
+    // define pins for Gripper Ultrasound Sensor
     byte pinTrigger = 37;
     byte pinEcho = 36;
     pinMode(pinTrigger, OUTPUT);
     pinMode(pinEcho, INPUT);
 
-    //initialise variables
+    // initialise variables
     bottleCount = 0;
     bottleCatchTries = 0;
 }
