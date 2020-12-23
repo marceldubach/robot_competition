@@ -18,12 +18,14 @@ if (ser.isOpen()):
     print("[SER] serial connection is open")
 else:
     print("[SER] serial connection failed")
+
 start_time = time.time()
 ser.flush()
 send_times = np.random.rand(10)+ np.arange(0,10)
+print("send times:", send_times)
 i = 0;
 while(time.time()<start_time+10):
-    if (ser.in_waiting>0):
+    if ser.in_waiting>0:
         decoded = json.loads(ser.readline())
         print(decoded)
 
