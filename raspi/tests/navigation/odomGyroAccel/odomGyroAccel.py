@@ -17,7 +17,7 @@ if __name__ == '__main__':
     
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
-    ser.write(b"start\n")
+    #ser.write(b"start\n")
     #time_start = time.time()
     while True:
         if ser.in_waiting > 0:
