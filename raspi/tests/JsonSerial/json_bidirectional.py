@@ -33,5 +33,7 @@ while(time.time()<start_time+10):
         print("send delay:", time.time()-send_times[i])
         i+=1
 
+ser.close()
+
 
 
