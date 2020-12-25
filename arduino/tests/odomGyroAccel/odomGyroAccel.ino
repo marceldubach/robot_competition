@@ -62,7 +62,7 @@ void setup() // put your setup code here, to run once:
   accelgyro.initialize();
   while(!accelgyro.testConnection()) continue;
   startTime = millis();
-  MotorEnable = true;
+  MotorEnable = false;
   currentState = moving;
 }
 
