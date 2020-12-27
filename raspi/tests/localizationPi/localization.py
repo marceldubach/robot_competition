@@ -26,9 +26,7 @@ def savePicture(webcam):
     try:
         check, frame = webcam.read()
         if check:
-            if not os.path.exists('images'):
-                os.makedirs('images')
-            cv.imwrite(filename='images/beacons.jpg', img=frame)
+            cv.imwrite(filename='beacons.jpg', img=frame)
             #webcam.release()
             print("Image saved!")
             return filename
