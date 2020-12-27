@@ -109,9 +109,14 @@ if __name__ == '__main__':
     ser.flush()
     
     # webcam object creation and setup
-    webcam = setupWebcam()
+    webcam = cv.VideoCapture(0) #ID 0
+    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
+    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
+    time.sleep(0.1)
     
     main()
+
+    webcam.release()
 
 
 
