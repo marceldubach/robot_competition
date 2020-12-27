@@ -9,20 +9,27 @@ import usb.core
 import usb.util 
 import imutils
 import time 
-from kalmanFilter import kalmanFilter
-from localization import setupWebcam, savePicture, extractCentroids, getReference, getAbsoluteAngle, computePosition
-from odometry import odometryGyroAccel, velocity
-from gyro import angleComputation
 if __name__ == '__main__':
-    yaw = np.pi
-    filename = '4_4pi.jpg'
-    centroids = extractCentroids(filename)
-    xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-    data = {"xCenterM": xCenterM, "yCenterM": yCenterM, "yaw": yaw}
+        
+    # webcam object creation and setup
+    webcam = cv.VideoCapture(0) #ID 0
+    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
+    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
+    time.sleep(1)
+    if not (webcam.isOpened()):
+        print("Could not open video device")
 
-
-
-
-
-
+    try:
+        check, frame = webcam.read()
+        if check:
+            if not os.path.exists('images'):
+                os.makedirs('images')
+            cv.imwrite(filename='images/beacons.jpg', img=frame)
+            #webcam.release()
+            print("Image saved!")
+        else:
+            savePicture(webcam)
+    except:
+        print("Problem saving image")
+    
    
