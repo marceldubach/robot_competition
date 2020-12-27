@@ -80,10 +80,13 @@ def main():
     pMain = Process(target=mainLoop, args=(queueMain, ser, kFilter, pose, v, gz, dt, ax, i, count))
     pMain.start()
     pMain.join()
+
     if(queueBeac.empty()):
         pBeac.start()
         measurements = json.loads(queueBeac.get(block=True, timeout=None))
+        print("measurements", measurements)
         pBeac.join()
+    """
     if(len(measurements) > 0):
         queueMain = Queue()
         pMain.start()
@@ -93,7 +96,7 @@ def main():
         measurements_vector = np.array([[measurements["xCenterM"], measurements["yCenterM"], measurements["yaw"]]]).transpose()
         dT = odometry["dT"]
         kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
-
+    """
     """
     pBeac.start()
     pMain.start()
