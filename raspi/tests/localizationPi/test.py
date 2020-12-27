@@ -19,17 +19,10 @@ if __name__ == '__main__':
     if not (webcam.isOpened()):
         print("Could not open video device")
 
-    try:
-        check, frame = webcam.read()
-        if check:
-            if not os.path.exists('images'):
-                os.makedirs('images')
-            cv.imwrite(filename='images/beacons.jpg', img=frame)
-            #webcam.release()
-            print("Image saved!")
-        else:
-            savePicture(webcam)
-    except:
-        print("Problem saving image")
+    check, frame = webcam.read()
+    cv.imwrite(filename='images/beacons.jpg', img=frame)
+    webcam.release()
+    print("Image saved!")
+    print(check)
     
    
