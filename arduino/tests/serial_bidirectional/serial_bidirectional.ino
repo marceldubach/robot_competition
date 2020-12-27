@@ -24,7 +24,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   state = 0;
-
+  while(!Serial) continue;
 }
 
 void loop() {
@@ -41,7 +41,20 @@ void loop() {
       state = s;
       cmdLeft = cLeft;
       cmdRight= cRight;
-    }
+
+      const int capacity=200;
+      StaticJsonDocument<capacity>send_msg;
+  
+      send_msg["state"] = state;
+      JsonArray position = send_msg.createNestedArray("pos");
+      position.add(x);
+      position.add(y);
+      position.add(theta);
+      JsonArray command = send_msg.createNestedArray("cmd");
+      command.add(cmdLeft);
+      command.add(cmdRight);
+      serializeJson(send_msg, Serial);   
+    }/*
 
     if (state==1){
       const int capacity=200;
@@ -57,6 +70,7 @@ void loop() {
       command.add(cmdRight);
       serializeJson(send_msg, Serial);
     }
+    */
     
   }
 
@@ -66,4 +80,5 @@ void loop() {
     y += 0.02;
     theta += 0.01;
   } 
+  delay(10);
 }

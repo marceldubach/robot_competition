@@ -20,6 +20,7 @@ if __name__=='__main__':
         print("{:6.2f}".format(get_time(t_s)) + " [SER] serial successfully initialized")
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [SER] connection failed")
+    time.sleep(3)
     ser.flush()
 
     state = 1
@@ -38,9 +39,12 @@ if __name__=='__main__':
 
         line = ser.readline().decode('ascii').rstrip()
         if (len(line)>0):
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] Received: ",line)
+            data = json.loads(line)
+            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", data["state"], " pos", data["pos"])
+            # print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"], " pos:", data["pos"])
         else:
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] Error: Received string of length "+str(len(line)))
+            #print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"][0], " pos:", data["pos"][0])
+            print("{:6.2f}".format(get_time(t_s)) + " [SER] Error: Received string of length " + str(len(line)))
 
         time.sleep(sleeping)
 
