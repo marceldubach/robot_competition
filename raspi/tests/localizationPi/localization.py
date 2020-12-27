@@ -29,11 +29,11 @@ def savePicture(webcam):
             cv.imwrite(filename='beacons.jpg', img=frame)
             #webcam.release()
             print("Image saved!")
-            return filename
         else:
             savePicture(webcam)
     except:
         print("Problem saving image")
+    return filename
 
 def extractCentroids(filename):
     # load image RGB
