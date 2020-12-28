@@ -27,7 +27,7 @@ Pk = np.identity(5) # TO COMPUTE
 Q = np.identity(5) # TO COMPUTE
 R = np.identity(3) # TO COMPUTE
 
-def triangulation(queue, e, yaw, webcam):
+def triangulation(queue, e, yaw):
     try:
         filename = savePicture(webcam)
     except:
@@ -73,7 +73,7 @@ def sensorFusion(pose, Pk, Q, R, ser, webcam):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
-        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2], webcam)) #update yaw
+        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2])) #update yaw
         pOdom = Process(target=odometry, args=(queueOdom, e, ser, pose, r))
         pOdom.start()
         pBeac.start()
@@ -103,12 +103,6 @@ if __name__ == '__main__':
     
     # serial object instantiation
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
-    ser.flush()
-
-    # webcam object creation and setup
-    webcam = cv.VideoCapture(0) 
-    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(3)
+    ser.flush() 
+    time.sleep(1)
     sensorFusion(pose0, Pk, Q, R, ser, webcam)
-    webcam.release()
