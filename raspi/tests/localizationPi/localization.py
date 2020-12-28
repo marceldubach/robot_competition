@@ -16,7 +16,7 @@ def setupWebcam():
     time.sleep(0.2)
     return webcam
 
-def savePicture(webcam):
+def savePicture():
     webcam = setupWebcam()
     if not (webcam.isOpened()):
         print("Could not open video device")
