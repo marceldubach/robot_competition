@@ -13,17 +13,13 @@ def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(0.1)
+    time.sleep(0.2)
     return webcam
 
-def savePicture(webcam):
-    #webcam = cv.VideoCapture(0) #ID 0
-    #webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    #webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    #time.sleep(0.5)
+def savePicture():
+    webcam = setupWebcam()
     if not (webcam.isOpened()):
         print("Could not open video device")
-
     try:
         check, frame = webcam.read()
         if check:
@@ -32,6 +28,7 @@ def savePicture(webcam):
             print("Image saved!")
     except:
         print("Problem saving image")
+    webcam.release()
     return filename
 
 def extractCentroids(filename):

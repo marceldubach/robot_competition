@@ -27,9 +27,9 @@ Pk = np.identity(5) # TO COMPUTE
 Q = np.identity(5) # TO COMPUTE
 R = np.identity(3) # TO COMPUTE
 
-def triangulation(queue, e, yaw, webcam):
+def triangulation(queue, e, yaw):
     try:
-        filename = savePicture(webcam)
+        filename = savePicture()
     except:
          print("Problem retrieving filename")
     else:
@@ -57,23 +57,24 @@ def odometry(queue, e, ser, pose, r):
             avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
             omega = [avSpeedL, avSpeedR]
             pose, v = odometryGyroAccel(gz, ax, r, pose, omega, dt)
+            data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
-    data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
+    #data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
     print(pose)
     print(data)
     queue.put(json.dumps(data))
     return  queue
 
-def sensorFusion(pose, Pk, Q, R, ser, webcam):
+def sensorFusion(pose, Pk, Q, R, ser):
 
     i = 0
     while(i < 5):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
-        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2], webcam)) #update yaw
+        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2])) #update yaw
         pOdom = Process(target=odometry, args=(queueOdom, e, ser, pose, r))
         pOdom.start()
         pBeac.start()
@@ -93,20 +94,17 @@ def sensorFusion(pose, Pk, Q, R, ser, webcam):
         except:
             print("not able to get state or measurement vector")
         else:
-            pose, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
-            print("kalman filter pose:", pose)
+            update, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
+            print("kalman filter pose:", update)
+            pose = np.array([[update[0][0], update[1][0], update[2][0]]]).transpose()
+            print("pose", pose)
         i += 1
 
 if __name__ == '__main__':
     
     # serial object instantiation
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
-    ser.flush()
+    ser.flush() 
 
-    # webcam object creation and setup
-    webcam = cv.VideoCapture(0) 
-    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(3)
-    sensorFusion(pose0, Pk, Q, R, ser, webcam)
-    webcam.release()
+    time.sleep(1)
+    sensorFusion(pose0, Pk, Q, R, ser)
