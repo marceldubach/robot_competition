@@ -22,9 +22,11 @@ int state = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(38400);
   state = 0;
   while(!Serial) continue;
+  delay(10000);
+  Serial.println("ready");
 }
 
 void loop() {
@@ -47,13 +49,17 @@ void loop() {
   
       send_msg["state"] = state;
       JsonArray position = send_msg.createNestedArray("pos");
-      position.add(x);
-      position.add(y);
-      position.add(theta);
+      String x_string = String(x,1);
+      String y_string = String(y,1);
+      String theta_string = String(theta,2);
+      position.add(x_string);
+      position.add(y_string);
+      position.add(theta_string);
       JsonArray command = send_msg.createNestedArray("cmd");
       command.add(cmdLeft);
       command.add(cmdRight);
-      serializeJson(send_msg, Serial);   
+      serializeJson(send_msg, Serial);
+      
     }/*
 
     if (state==1){
@@ -76,9 +82,22 @@ void loop() {
 
   // simulation: position changes over time...
   if (state == 1){
-    x += 0.01;
-    y += 0.02;
-    theta += 0.01;
-  } 
-  delay(10);
+    if (x<8){
+      x+=0.001;
+    } else {
+      x-=0.001;
+    }
+    if (y<8){
+      y+=0.001;
+    } else {
+      y-=0.001;
+    }
+    if (theta<6.28){
+      theta += 0.001;
+    } else {
+      theta -= 0.001;
+    }    
+  }
+  
+  //delay(10);
 }

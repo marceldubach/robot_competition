@@ -69,6 +69,7 @@ if __name__=='__main__':
         if (ser.in_waiting>0): #if (len(line)>0):
             t0 = time.time()
             line = ser.readline().decode('ascii').rstrip()
+            ser.reset_input_buffer()
             # line = ser.read(52).decode('utf-8').rstrip()
             #print("Time to read: ", time.time()-t0)
 
@@ -84,5 +85,9 @@ if __name__=='__main__':
 
         time.sleep(0.6) # doen't work for time sleep <0.6!
 
+    state = 0;
+    cmdLeft = 0;
+    cmdRight = 0;
+    write_to_serial(ser, state, cmdLeft, cmdRight)
     print("Time elapsed. Program ending.")
     ser.close() # close serial   port at the end of the code

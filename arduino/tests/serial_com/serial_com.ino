@@ -25,6 +25,7 @@ void loop() {
 if (Serial.available()>0){
     String line = Serial.readStringUntil('\n');
     DeserializationError error = deserializeJson(receive_msg, line);
+    Serial.flush();
     if (error){
       Serial.println("Deserialize failed");
     } else {
