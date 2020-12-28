@@ -35,7 +35,8 @@ def triangulation(queue, e, yaw, webcam):
     else:
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-        data = {"xCenterM": xCenterM, "yCenterM": yCenterM, "yaw": yaw}
+        data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
+        print(data)
         queue.put(json.dumps(data))
         e.set()
         return queue
@@ -56,10 +57,11 @@ def odometry(queue, e, ser, pose, r):
             avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
             omega = [avSpeedL, avSpeedR]
             pose, v = odometryGyroAccel(gz, ax, r, pose, omega, dt)
-            data = {"x": pose[0], "y": pose[1], "yaw": pose[2], "v": v, "gz": gz, "dT": dt, "ax": ax}
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
+    data = {"x": pose[0], "y": pose[1], "yaw": pose[2], "v": v, "gz": gz, "dT": dt, "ax": ax}
+    print(data)
     queue.put(json.dumps(data))
     return  queue
 

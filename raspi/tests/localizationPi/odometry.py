@@ -45,7 +45,7 @@ def odometryGyroAccel(gz, accel, r, pose, omega, dt):
     linearV = (vl+vr)/2
     rotV = gz*math.pi/180
     xDot = np.array([[linearV, 0, rotV]]).transpose()
-    xDotDot = np.array([accel, 0, 0]).transpose()
+    xDotDot = np.array([[accel, 0, 0]]).transpose()
     invRotMatrix = np.array([[math.cos(pose[2][0]), -math.sin(pose[2][0]), 0], [math.sin(pose[2][0]), math.cos(pose[2][0]), 0], [0, 0, 1]])
     newPose = pose + invRotMatrix.dot(xDot)*dt + 0.5*invRotMatrix.dot(xDotDot)*(dt**2)
     v = linearV + accel*dt
