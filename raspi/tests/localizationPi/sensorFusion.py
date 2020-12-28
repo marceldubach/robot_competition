@@ -91,6 +91,7 @@ def sensorFusion(pose, Pk, Q, R, ser, webcam):
             print("not able to get state or measurement vector")
         else:
             pose, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
+            print("kalman filter pose:", pose)
 
 
 if __name__ == '__main__':
@@ -106,8 +107,3 @@ if __name__ == '__main__':
     time.sleep(3)
     sensorFusion(pose0, Pk, Q, R, ser, webcam)
     webcam.release()
-
-
-        
-
-        
