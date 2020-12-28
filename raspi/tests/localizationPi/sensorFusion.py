@@ -61,6 +61,7 @@ def odometry(queue, e, ser, pose, r):
              pass
     # when the event is triggered, pass the state vector computed by odometry
     data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
+    print(pose)
     print(data)
     queue.put(json.dumps(data))
     return  queue
@@ -68,7 +69,7 @@ def odometry(queue, e, ser, pose, r):
 def sensorFusion(pose, Pk, Q, R, ser, webcam):
 
     i = 0
-    while(i < 1):
+    while(i < 5):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
