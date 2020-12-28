@@ -60,7 +60,7 @@ def odometry(queue, e, ser, pose, r):
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
-    data = {"x": pose[0], "y": pose[1], "yaw": pose[2], "v": v, "gz": gz, "dT": dt, "ax": ax}
+    data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
     print(data)
     queue.put(json.dumps(data))
     return  queue
@@ -94,7 +94,7 @@ def sensorFusion(pose, Pk, Q, R, ser, webcam):
         else:
             pose, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
             print("kalman filter pose:", pose)
-
+        i += 1
 
 if __name__ == '__main__':
     
