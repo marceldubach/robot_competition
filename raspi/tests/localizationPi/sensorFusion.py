@@ -66,7 +66,7 @@ def odometry(queue, e, ser, pose, r):
     queue.put(json.dumps(data))
     return  queue
 
-def sensorFusion(pose, Pk, Q, R, ser, webcam):
+def sensorFusion(pose, Pk, Q, R, ser):
 
     i = 0
     while(i < 5):
@@ -104,5 +104,6 @@ if __name__ == '__main__':
     # serial object instantiation
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush() 
+
     time.sleep(1)
-    sensorFusion(pose0, Pk, Q, R, ser, webcam)
+    sensorFusion(pose0, Pk, Q, R, ser)
