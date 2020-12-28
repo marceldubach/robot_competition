@@ -38,4 +38,4 @@ def kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R):
     K = (Pk.dot(C.transpose())).dot(np.linalg.inv((C.dot(Pk).dot(C.transpose()))+R))
     Pk = Pk - (K.dot(C)).dot(Pk)
     update = prediction + K.dot(measurements_vector - C.dot(prediction))
-    return update
+    return update , Pk

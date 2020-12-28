@@ -7,6 +7,7 @@ import usb.core
 import usb.util 
 import imutils
 import time 
+import os
 
 def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
@@ -26,9 +27,8 @@ def savePicture(webcam):
     try:
         check, frame = webcam.read()
         if check:
-            filename = 'beacons.jpg'
+            filename = 'img.jpg'
             cv.imwrite(filename, img=frame)
-            #webcam.release()
             print("Image saved!")
         else:
             savePicture(webcam)
