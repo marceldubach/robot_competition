@@ -30,8 +30,6 @@ def savePicture(webcam):
             filename = 'img.jpg'
             cv.imwrite(filename, img=frame)
             print("Image saved!")
-        else:
-            savePicture(webcam)
     except:
         print("Problem saving image")
     return filename

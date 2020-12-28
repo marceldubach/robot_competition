@@ -68,7 +68,7 @@ def odometry(queue, e, ser, pose, r):
 def sensorFusion(pose, Pk, Q, R, ser, webcam):
 
     i = 0
-    while(i < 10):
+    while(i < 1):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
