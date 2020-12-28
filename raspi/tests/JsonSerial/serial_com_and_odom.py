@@ -56,7 +56,13 @@ if __name__=='__main__':
         if (time.time()-t_s < 10):
             state = 1
             cmdLeft = 50
-            cmdRight = 200
+            cmdRight = 100
+
+        # elif ((time.time()-t_s>10) and (time.time()-t_s>13)):
+        #     state = 1
+        #     cmdRight = 100
+        #     cmdLeft = 100
+
         else:
             state = 0
             cmdLeft = 0
