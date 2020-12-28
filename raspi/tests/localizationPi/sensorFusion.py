@@ -93,8 +93,10 @@ def sensorFusion(pose, Pk, Q, R, ser, webcam):
         except:
             print("not able to get state or measurement vector")
         else:
-            pose, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
-            print("kalman filter pose:", pose)
+            update, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
+            print("kalman filter pose:", update)
+            pose = np.array([[update[0][0], update[1][0], update[2][0]]]).transpose()
+            print("pose", pose)
         i += 1
 
 if __name__ == '__main__':
