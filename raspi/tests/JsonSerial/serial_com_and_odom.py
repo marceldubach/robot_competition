@@ -3,17 +3,18 @@ import time
 import json
 
 """ This scripts implements a bidirectional communication at LOW RATE (around 1 Hz)
-    Run this script together with 'serial_com' on Arduino.
+    Run this script together with 'serial_com_and_odom' on Arduino.
     
     28.Dec.2020
-    
+    Done already:
+        - Bidirectional communication
+        - Odometry implemented on Arduino (serial_com_and_odom)
     TODO:
-        - Add odometry integration on the Arduino
-        - Add Localization update on python
+        - Implement the position controller (goal: by 29.12.20)
+        - Implement servo control (goal: by 29.12.20)
+        - Implement the state machine (goal: by 29.12.20)
+        - Add Localization update on python (camera)
         - Implement a Kalman Filter
-        - Implement the state machine
-        - Implement the gripper movement
-        - Implement the position controller
         """
 def get_time(time_start):
     return time.time() - time_start
