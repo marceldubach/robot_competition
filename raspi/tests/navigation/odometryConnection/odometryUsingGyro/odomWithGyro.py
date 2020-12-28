@@ -18,16 +18,21 @@ if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
     time_start = time.time()
-    while True:
+    stopped = False
+    while (True):
         if ser.in_waiting > 0:
-            decoded = json.loads(ser.readline())
-            gz = decoded["gyro"]
-            if (abs(decoded["motorSpeed"][0]-415)< 10):
-                decoded["motorSpeed"][0] = 415
-            if (abs(decoded["motorSpeed"][1]-415)< 10):
-                decoded["motorSpeed"][1] = 415
-            avSpeedR = -((float(decoded["motorSpeed"][0])-415.00)/415.00)*6.25 #rad/s
-            avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
+            print(ser.readline().decode('ascii').rstrip())
+            #decoded = json.loads(ser.readline())
+            # gz = decoded["gyro"]
+            # if (abs(decoded["motorSpeed"][0]-415)< 10):
+            #     decoded["motorSpeed"][0] = 415
+            # if (abs(decoded["motorSpeed"][1]-415)< 10):
+            #     decoded["motorSpeed"][1] = 415
+            # avSpeedR = -((float(decoded["motorSpeed"][0])-415.00)/415.00)*6.25 #rad/s
+            # avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
+            avSpeedL = 0.1
+            avSpeedR = 0.1
+            gz = 0.1
             omega = [avSpeedL, avSpeedR]
             time_end = time.time()
             t = time_end - time_start 
@@ -35,6 +40,10 @@ if __name__ == '__main__':
             theta = angleComputation(theta, gz, t)
             print(pose, theta)
             time_start = time.time()
+
+            if (theta>0.01):
+                ser.write(b"stop\n")
+                stopped = True
         else:
             #time_start = time.time()
             pass
