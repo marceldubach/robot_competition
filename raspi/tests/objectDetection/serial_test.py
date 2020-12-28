@@ -36,7 +36,7 @@ if __name__=='__main__':
         camera.capture("images/image"+str(i)+".jpg")
         i += 1
         #img = cv.imread("images/image"+str(i)+".jpg")
-        img = cv.imread("images/noIR/2TileFromBottle.jpg") # TODO change this
+        img = cv.imread("images/old/2TileFromBottle.jpg") # TODO change this
         has_bottle, center, img_out = detect_bottle(img)
         #print(center)
         # convert center to motor commands here

@@ -157,7 +157,7 @@ if (Serial.available()>0){
       omega = 0;
       omega_m1 = 0;
 
-      if (millis()-t0>100){
+      if (millis()-t0>20){
         // read motorspeeds
         speedRight = analogRead(avSpeedRight);
         speedLeft = analogRead(avSpeedLeft);
@@ -166,16 +166,18 @@ if (Serial.available()>0){
         t0 = millis();
         dt_sum += dt;
         IMU.getRotation(&gx, &gy, &gz);
-        if (omega_m1==0){
+        /*if (omega_m1==0){
           omega_m1 = omega;
           omega = gz/gyro_sf - gyro_mean;
         } else {
           omega_m1 = gz/gyro_sf - gyro_mean;
           omega = gz/gyro_sf - gyro_mean;
         }
+        */
+        omega = gz/gyro_sf - gyro_mean;
                 
         //acc_x = ax/acc_sf - acc_mean;
-        omega_mean += (omega+omega_m1)/2;
+        omega_mean += omega;
         cnt++;
   
         // rescale wheel speed to rad/s
@@ -189,7 +191,7 @@ if (Serial.available()>0){
   
         x = x + cos(theta)*v*dt;
         y = y + sin(theta)*v*dt;
-        theta = theta + (omega+omega_m1)/2/180*3.1415*dt;
+        theta = theta + omega/180*3.1415*dt;
       }
   }
 
