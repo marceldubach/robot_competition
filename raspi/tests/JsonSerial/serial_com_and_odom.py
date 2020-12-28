@@ -55,7 +55,7 @@ if __name__=='__main__':
         # TODO do this properly
         if (time.time()-t_s < 10):
             state = 1
-            cmdLeft = 200
+            cmdLeft = 50
             cmdRight = 200
         else:
             state = 0

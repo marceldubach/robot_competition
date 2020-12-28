@@ -42,7 +42,7 @@ void setup() {
   pinMode(avSpeed1, INPUT); //analog input -> average speed motor1
   pinMode(speed2, INPUT); //analog input -> actual speed motor1
   pinMode(avSpeed2, INPUT); //analog input -> average speed motor1
-  TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
+  //TCCR3B = TCCR3B & B11111000 | B00000010; // for PWM frequency of 3921.16 Hz on pin 5, 3, 2
   pinMode(pwm1, OUTPUT); //PWM pin motor1
   pinMode(enable1, OUTPUT); //enable pin motor1
   pinMode(pwm2, OUTPUT); //PWM pin motor2

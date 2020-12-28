@@ -15,14 +15,15 @@
 byte dutyCycle;
 
 // timestep variables (for integration of IMU)
-float t0 = 0;
-unsigned long dt;
+unsigned long t0 = 0;
+float dt;
+float dt_sum;
 
-float speedRight;
-float speedLeft;
-float v;
-float wLeft;
-float wRight;
+float speedRight = 0;
+float speedLeft = 0;
+float v = 0;
+float wLeft = 0;
+float wRight = 0;
 
 float radius = 0.04;
 float rotV;
@@ -35,6 +36,10 @@ int16_t mx, my, mz;
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.86; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
 float omega;
+float omega_m1;
+float omega_mean = 0;
+int cnt = 0;
+
 float acc_sf = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
 float acc_mean = -0.04; // mean noise on accelerometre ax lecture, averaged over 1000 data points 
 float acc_x;
@@ -113,16 +118,21 @@ if (Serial.available()>0){
       //String x_string = String(x,1);
       //String y_string = String(y,1);
       //String theta_string = String(theta,2);
+      omega_mean = omega_mean/cnt;
+      
       position.add(x);
       position.add(y);
-      position.add(theta);
-      position.add(dt);
+      position.add(theta*180/3.14);
+      position.add(omega_mean);
+      position.add(dt_sum);
+      cnt = 0;
+      omega_mean = 0;
+      dt_sum = 0;
       JsonArray command = send_msg.createNestedArray("cmd");
       command.add(cmdLeft);
       command.add(cmdRight);
       serializeJson(send_msg, Serial);
       Serial.println();
-      
     }
     
   }
@@ -144,21 +154,33 @@ if (Serial.available()>0){
       analogWrite(pwmRight, 255-cmdRight);
       analogWrite(pwmLeft, cmdLeft);
 
-      if (millis()-t0>20000){
+      omega = 0;
+      omega_m1 = 0;
+
+      if (millis()-t0>100){
         // read motorspeeds
         speedRight = analogRead(avSpeedRight);
         speedLeft = analogRead(avSpeedLeft);
   
         dt = (float) (millis() - t0)/1000; // TODO check if this cast works
         t0 = millis();
-        IMU.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
-        omega = gz/gyro_sf - gyro_mean;
-        acc_x = ax/acc_sf - acc_mean;
-  
+        dt_sum += dt;
+        IMU.getRotation(&gx, &gy, &gz);
+        if (omega_m1==0){
+          omega_m1 = omega;
+          omega = gz/gyro_sf - gyro_mean;
+        } else {
+          omega_m1 = gz/gyro_sf - gyro_mean;
+          omega = gz/gyro_sf - gyro_mean;
+        }
+                
+        //acc_x = ax/acc_sf - acc_mean;
+        omega_mean += (omega+omega_m1)/2;
+        cnt++;
   
         // rescale wheel speed to rad/s
         wLeft = ((speedLeft - 415.00)/415.00)*6.25;
-        wRight = ((speedRight - 415.00)/415.00)*6.25;
+        wRight = -((speedRight - 415.00)/415.00)*6.25;
         
         // mean forward speed in m/s
         v = (wLeft + wRight)*radius/2;
@@ -167,7 +189,7 @@ if (Serial.available()>0){
   
         x = x + cos(theta)*v*dt;
         y = y + sin(theta)*v*dt;
-        theta = theta + omega*dt;
+        theta = theta + (omega+omega_m1)/2/180*3.1415*dt;
       }
   }
 
