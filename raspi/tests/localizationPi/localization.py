@@ -337,7 +337,7 @@ def computePosition(centroids, yaw):
         xCenterM = x - l*np.cos(yaw)
         yCenterM = y - l*np.sin(yaw)
         yaw = getAbsoluteAngle(centroids, xCenterM, yCenterM)
-        return xCenterM, yCenterM, yaw
+        return xCenterM.tolist(), yCenterM.tolist(), yaw.tolist()
 
 def getAbsoluteAngle(centroids, xCenterM, yCenterM):
     """

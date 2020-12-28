@@ -53,59 +53,17 @@ def triangulation(queue, e, yaw, webcam):
         return queue
 
 def mainLoop(queueMain, e, ser, kFilter, pose, v, gz, dt, ax, i, count):
-    """
-    if ser.in_waiting > 0:
-        decoded = json.loads(ser.readline())
-        gz = decoded["gyro"]
-        ax = decoded["accel"]
-        dt = float(decoded["dT"])/1000.0
-        if (abs(decoded["motorSpeed"][0]-415)< 10):
-            decoded["motorSpeed"][0] = 415
-        if (abs(decoded["motorSpeed"][1]-415)< 10):
-            decoded["motorSpeed"][1] = 415
-        avSpeedR = -((float(decoded["motorSpeed"][0])-415.00)/415.00)*6.25 #rad/s
-        avSpeedL = ((float(decoded["motorSpeed"][1])-415.00)/415.00)*6.25  #rad/s
-        omega = [avSpeedL, avSpeedR]
-        pose = odometryGyroAccel(gz, ax, r, pose, omega, dt)
-        yaw = angleComputation(yaw, gz, dt)
-        v = velocity(v, ax, dt)
-        #jsonString = json.dumps(theta)
-        #ser.write(jsonString)
-        #if pose[0] > 3:
-        #    ser.write(b"stop\n")
-        data = {"x": pose[0], "y": pose[1], "yaw": pose[2], "v": v, "gz": gz, "dT": dt}
-        #print(data)
-        queue.put(json.dumps(data))
-    else:
-        pass 
-    """
+
     i = 0
     while(not e.is_set()):
         #print(1)
         #if (i== 5):
         #    e.set()
-        time.sleep(0.02)
+        time.sleep(0.2)
         #queueMain.put(i)
         i += 1
     return queueMain.put(i)
-"""
-def main():
-    i = 0
-    #while(i < 10):
-    queueBeac = Queue()
-    queueMain = Queue()
-    pBeac = Process(target=triangulation, args=(queueBeac, yaw, webcam)) #update yaw
-    pMain = Process(target=mainLoop, args=(queueMain, ser, kFilter, pose, v, gz, dt, ax, i, count))
-    pBeac.start()
-    pMain.start()
-    pBeac.join()
-    time.sleep(1)
-    pMain.terminate()
-    pMain.join()
-    while not queueMain.empty():
-        print("main", queueMain.get())
-    #i += 1
-"""  
+
 def triang():
     i = 0
     while i < 2:
@@ -138,17 +96,3 @@ if __name__ == '__main__':
             print(j, elem)
         j += 1
         time.sleep(0.01)
-
-
-
-    """
-    # webcam object creation and setup
-    ser = 0
-    webcam = 0
-    time.sleep(0.1)
-    main()
-    #webcam.release()
-    """
-
-
-        
