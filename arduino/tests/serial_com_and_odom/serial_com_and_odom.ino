@@ -15,7 +15,7 @@
 byte dutyCycle;
 
 // timestep variables (for integration of IMU)
-float t0;
+float t0 = 0;
 unsigned long dt;
 
 float speedRight;
@@ -116,6 +116,7 @@ if (Serial.available()>0){
       position.add(x);
       position.add(y);
       position.add(theta);
+      position.add(dt);
       JsonArray command = send_msg.createNestedArray("cmd");
       command.add(cmdLeft);
       command.add(cmdRight);
@@ -140,33 +141,34 @@ if (Serial.available()>0){
       digitalWrite(enableLeft, HIGH);
 
       // set motor speed (fixed speed)
-      analogWrite(pwmRight, 255-100);
-      analogWrite(pwmLeft, 100);
+      analogWrite(pwmRight, 255-cmdRight);
+      analogWrite(pwmLeft, cmdLeft);
 
-      // read motorspeeds
-      speedRight = analogRead(avSpeedRight);
-      speedLeft = analogRead(avSpeedLeft);
-
-      dt = (float) ((millis() - t0)/1000); // TODO check if this cast works
-      t0 = millis();
-      IMU.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
-      omega = gz/gyro_sf - gyro_mean;
-      acc_x = ax/acc_sf - acc_mean;
-
-
-      // rescale wheel speed to rad/s
-      wLeft = ((speedLeft - 415.00)/415.00)*6.25;
-      wRight = ((speedRight - 415.00)/415.00)*6.25;
-      
-      // mean forward speed in m/s
-      v = (wLeft + wRight)*radius/2;
-      
-      rotV = omega*3.1415/180; // convert rotation rate to rad/s
-
-      x = x + cos(theta)*v*dt;
-      y = y + sin(theta)*v*dt;
-      theta = theta + omega*dt;
+      if (millis()-t0>20000){
+        // read motorspeeds
+        speedRight = analogRead(avSpeedRight);
+        speedLeft = analogRead(avSpeedLeft);
+  
+        dt = (float) (millis() - t0)/1000; // TODO check if this cast works
+        t0 = millis();
+        IMU.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
+        omega = gz/gyro_sf - gyro_mean;
+        acc_x = ax/acc_sf - acc_mean;
+  
+  
+        // rescale wheel speed to rad/s
+        wLeft = ((speedLeft - 415.00)/415.00)*6.25;
+        wRight = ((speedRight - 415.00)/415.00)*6.25;
+        
+        // mean forward speed in m/s
+        v = (wLeft + wRight)*radius/2;
+        
+        rotV = omega*3.1415/180; // convert rotation rate to rad/s
+  
+        x = x + cos(theta)*v*dt;
+        y = y + sin(theta)*v*dt;
+        theta = theta + omega*dt;
+      }
   }
-  //delay(10);
 
 }

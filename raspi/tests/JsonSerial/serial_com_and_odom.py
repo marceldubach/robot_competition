@@ -53,10 +53,10 @@ if __name__=='__main__':
 
         # updated inputs and state here
         # TODO do this properly
-        if (time.time()-t_s < 5):
+        if (time.time()-t_s < 10):
             state = 1
-            cmdLeft = 50
-            cmdRight = 50
+            cmdLeft = 200
+            cmdRight = 200
         else:
             state = 0
             cmdLeft = 0
