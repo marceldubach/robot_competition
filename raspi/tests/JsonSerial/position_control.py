@@ -26,7 +26,7 @@ def write_to_serial(serial, state, waypoint):
     serial.write(json.dumps(message).encode('ascii'))
 
 if __name__=='__main__':
-    t_max = 30
+    t_max = 60
     # initalize time for display
     t_s = time.time()
 
@@ -53,21 +53,30 @@ if __name__=='__main__':
     waypoints = np.array([[2,1],[2,2]])
     i_wp = 0 # iterator over waypoints
     wp = np.array([0.5,0.5])
+
+    pose = np.empty(3) # estimated position
     # MAIN LOOP HERE
     while(time.time()-t_s < t_max):
 
         # TODO do this properly
-        if (time.time()-t_s < 20): # state = 1: track waypoints
+        if (time.time()-t_s < 50): # state = 1: track waypoints
             state = 1
-            wp = waypoints[i_wp]
+            if i_wp<len(waypoints):
+                wp = waypoints[i_wp]
+                if (abs(wp[0]-pose[0])<0.2) and (abs(wp[1]-pose[1])<0.2):
 
+                    print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] waypoint ", waypoints[i_wp], " reached!")
+                    i_wp += 1
+                    print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] new waypoint: ", waypoints[i_wp])
+            if i_wp==len(waypoints):
+                wp = np.array([0.5,0.5])
 
         else:
             # return to home station
             state = 1; # TODO state should be changed to homing (another number)
             wp = np.array([0.5,0.5])
 
-        print("{:6.2f}".format(get_time(t_s)) + "[P-CTRL] waypoint is: ", wp)
+        print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] waypoint is: ", wp)
         write_to_serial(ser, state, wp)
         ser.flush()
         time.sleep(0.5)
@@ -80,8 +89,10 @@ if __name__=='__main__':
             ser.reset_input_buffer()
             #print(line)
             data = json.loads(line)
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"], ", cmd:", data["cmd"])
+            pose = np.array(data["pos"])
+            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"], ", cmd:", data["cmd"],", ref:", data["ref"])
             # print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"], " pos:", data["pos"])
+
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 

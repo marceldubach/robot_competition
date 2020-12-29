@@ -64,14 +64,17 @@ double x = 0.5;
 double y = 0.5;
 double theta = 0;
 
+double dx = 0;
+double dy = 0;
+double dx2 = 0;
 double heading_ref = 0;
 double dist = 0;
 
 // variables for serial communication
 int state;
 // set default values
-double ref_x = 0.5;
-double ref_y = 0.5;
+double ref_x = 0.0;
+double ref_y = 0.0;
 int cmdRight = 128;
 int cmdLeft = 128;
 
@@ -112,8 +115,8 @@ if (Serial.available()>0){
       Serial.println("Deserialize failed");
     } else {
       int s = receive_msg["state"];
-      double ref_x = receive_msg["ref"][0];
-      double ref_y = receive_msg["ref"][1];
+      ref_x = receive_msg["ref"][0];
+      ref_y = receive_msg["ref"][1];
       state = s;
 
       const int capacity=200;
@@ -128,7 +131,7 @@ if (Serial.available()>0){
       
       position.add(x);
       position.add(y);
-      position.add(theta*180/3.14);
+      position.add(theta);
 
       JsonArray reference = send_msg.createNestedArray("ref");
       reference.add(ref_x);
@@ -137,6 +140,8 @@ if (Serial.available()>0){
       JsonArray command = send_msg.createNestedArray("cmd");
       command.add(cmdLeft);
       command.add(cmdRight);
+      command.add(heading_ref);
+      command.add(dist);
       serializeJson(send_msg, Serial);
 
       Serial.println();
@@ -154,9 +159,12 @@ if (Serial.available()>0){
     case 1:
       // update the motor speed
       heading_ref = atan2((ref_y-y), (ref_x-x));
+      dx = ref_x - x;
+      dy = ref_y - y;
+      dx2 = pow(dx,2);
       dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
 
-      if (fabs(heading_ref-theta)<0.5){
+      if (fabs(heading_ref-theta)<0.3){
         if (dist>0.5){
           cmdLeft = 200;
           cmdRight = 200;
@@ -167,14 +175,37 @@ if (Serial.available()>0){
       }else{
         if (heading_ref-theta>0){
           // turn left
-          cmdRight = 160;
-          cmdLeft = 96;
+          if (heading_ref-theta<0.5){
+            cmdRight = 140;
+            cmdLeft = 116;
+          }else{
+            cmdRight = 160;
+            cmdLeft = 96;
+          }
         } else {
           // turn right
-          cmdRight = 96;
-          cmdLeft = 160;
+          if (theta-heading_ref<0.5){
+            cmdRight = 116;
+            cmdLeft = 140;
+          } else {
+            cmdRight = 96;
+            cmdLeft = 160;
+          }
         }
       }
+
+      // saturation
+      if (cmdRight>255){
+        cmdRight = 255;
+      } else if (cmdRight<0){
+         cmdRight = 0;
+      }
+      if (cmdLeft>255){
+        cmdLeft = 255;
+      } else if (cmdLeft<0){
+         cmdLeft = 0;
+      }
+      
       // turn motors on
       enableMotors = true;
       break;
