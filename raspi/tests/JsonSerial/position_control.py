@@ -22,7 +22,7 @@ def get_time(time_start):
     return time.time() - time_start
 
 def write_to_serial(serial, state, waypoint):
-    message = {"state": state, "ref": [waypoint[0], waypoint[1]]}
+    message = {"state": state, "ref": [float(waypoint[0]), float(waypoint[1])]}
     serial.write(json.dumps(message).encode('ascii'))
 
 if __name__=='__main__':
@@ -61,6 +61,7 @@ if __name__=='__main__':
             state = 1
             wp = waypoints[i_wp]
 
+
         else:
             # return to home station
             state = 1; # TODO state should be changed to homing (another number)
@@ -79,7 +80,7 @@ if __name__=='__main__':
             ser.reset_input_buffer()
             #print(line)
             data = json.loads(line)
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"])
+            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"], ", cmd:", data["cmd"])
             # print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"], " pos:", data["pos"])
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
@@ -88,9 +89,8 @@ if __name__=='__main__':
 
     # shut down the Robot
     state = 0;
-    ref_x = 0.5;
-    ref_y = 0.5;
-    write_to_serial(ser, state, ref_x, ref_y)
+    wp_end = np.array([0.5,0.5])
+    write_to_serial(ser, state, wp_end)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
     time.sleep(1)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")

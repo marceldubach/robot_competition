@@ -156,7 +156,7 @@ if (Serial.available()>0){
       heading_ref = atan2((ref_y-y), (ref_x-x));
       dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
 
-      if (fabs(heading_ref-theta)<0.1){
+      if (fabs(heading_ref-theta)<0.5){
         if (dist>0.5){
           cmdLeft = 200;
           cmdRight = 200;
@@ -178,45 +178,44 @@ if (Serial.available()>0){
       // turn motors on
       enableMotors = true;
       break;
-
-    if (enableMotors){
-      digitalWrite(enableRight, HIGH);                
-      digitalWrite(enableLeft, HIGH);
-
-      // set motor speed (fixed speed)
-      analogWrite(pwmRight, 255-cmdRight);
-      analogWrite(pwmLeft, cmdLeft);
-    } else {
-      digitalWrite(enableRight, LOW);                
-      digitalWrite(enableLeft, LOW);
-    }
-    
-    if ((enableMotors) && (millis()-t0>20)){
-      // time interval
-      dt = (float) (millis() - t0)/1000;
-      t0 = millis();
-      
-      // read motorspeeds
-      speedRight = analogRead(avSpeedRight);
-      speedLeft = analogRead(avSpeedLeft);
-      
-      // rescale wheel speed to rad/s
-      wLeft = ((speedLeft - 415.00)/415.00)*6.25;
-      wRight = -((speedRight - 415.00)/415.00)*6.25;
-      
-      // mean forward speed in m/s
-      v = (wLeft + wRight)*radius/2;
-      
-      // gyro angular rate
-      IMU.getRotation(&gx, &gy, &gz);
-      omega_deg = gz/gyro_sf - gyro_mean; // deg/sec
-      omega_rad = omega_deg*3.1415/180;   // rad/s
-  
-      // update the position
-      x = x + cos(theta)*v*dt;
-      y = y + sin(theta)*v*dt;
-      theta = theta + omega_rad*dt;       // theta is in radians
-    }
   }
 
+  if (enableMotors){
+    digitalWrite(enableRight, HIGH);                
+    digitalWrite(enableLeft, HIGH);
+
+    // set motor speed (fixed speed)
+    analogWrite(pwmRight, 255-cmdRight);
+    analogWrite(pwmLeft, cmdLeft);
+  } else {
+    digitalWrite(enableRight, LOW);                
+    digitalWrite(enableLeft, LOW);
+  }
+    
+  if ((enableMotors) && (millis()-t0>20)){
+    // time interval
+    dt = (float) (millis() - t0)/1000;
+    t0 = millis();
+    
+    // read motorspeeds
+    speedRight = analogRead(avSpeedRight);
+    speedLeft = analogRead(avSpeedLeft);
+    
+    // rescale wheel speed to rad/s
+    wLeft = ((speedLeft - 415.00)/415.00)*6.25;
+    wRight = -((speedRight - 415.00)/415.00)*6.25;
+    
+    // mean forward speed in m/s
+    v = (wLeft + wRight)*radius/2;
+    
+    // gyro angular rate
+    IMU.getRotation(&gx, &gy, &gz);
+    omega_deg = gz/gyro_sf - gyro_mean; // deg/sec
+    omega_rad = omega_deg*3.1415/180;   // rad/s
+
+    // update the position
+    x = x + cos(theta)*v*dt;
+    y = y + sin(theta)*v*dt;
+    theta = theta + omega_rad*dt;       // theta is in radians
+  }
 }
