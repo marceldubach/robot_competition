@@ -25,43 +25,46 @@ Pk = np.identity(5) # TO COMPUTE
 Q = np.identity(5) # TO COMPUTE
 R = np.identity(3) # TO COMPUTE
 
-def triangulation(queue, e, yaw, webcam):
+def triangulation(queue, e, yaw):
     try:
-        filename = savePicture(webcam)
+        filename = savePicture()
+        # set event to tell the readingOdometry to read the serial information
+        e.set()
     except:
          print("Problem retrieving filename")
     else:
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-        data = {"xCenterM": xCenterM, "yCenterM": yCenterM, "yaw": yaw}
+        data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
+        print(data)
         queue.put(json.dumps(data))
-        e.set()
         return queue
 
 def readingOdometry(queue, e, ser):
 
     while (not e.is_set()):
         if ser.in_waiting > 0:
-            data = json.loads(ser.readline())
+            odom = json.loads(ser.readline())
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
+    data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
     queue.put(json.dumps(data))
     return  queue
 
-def sensorFusion(pose, Pk, Q, R, ser, webcam):
+def sensorFusion(pose, Pk, Q, R, ser):
 
     i = 0
     while(i < 10):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
-        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2], webcam))
         pOdom = Process(target=readingOdometry, args=(queueOdom, e, ser))
+        pBeac = Process(target=triangulation, args=(queueBeac, e, pose[2]))
         pOdom.start()
         pBeac.start()
-        pBeac.join()
         pOdom.join()
+        pBeac.join()
         try:
             state = json.loads(queueOdom.get())
             state_vector = np.array([[state["x"], state["y"], state["yaw"], state["v"], state["gz"]]]).transpose()
@@ -86,13 +89,9 @@ if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
 
-    # webcam object creation and setup
-    webcam = cv.VideoCapture(0) 
-    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(3)
-    sensorFusion(pose0, Pk, Q, R, ser, webcam)
-    webcam.release()
+    time.sleep(1)
+    sensorFusion(pose0, Pk, Q, R, ser)
+
 
 
         

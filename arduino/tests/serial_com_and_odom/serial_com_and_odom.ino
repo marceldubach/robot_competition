@@ -122,7 +122,7 @@ if (Serial.available()>0){
       
       position.add(x);
       position.add(y);
-      position.add(theta*180/3.14);
+      position.add(theta*3.14/180);
       position.add(omega_mean);
       position.add(dt_sum);
       cnt = 0;

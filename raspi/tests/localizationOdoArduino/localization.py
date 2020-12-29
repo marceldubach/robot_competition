@@ -13,7 +13,7 @@ def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(0.2)
+    time.sleep(0.3)
     return webcam
 
 def savePicture():
