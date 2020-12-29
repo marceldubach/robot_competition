@@ -3,7 +3,7 @@ import time
 import json
 import numpy as np
 
-""" This scripts implements a bidirectional communication at LOW RATE (around 1 Hz)
+""" This scripts implements a bidirectional communication at ca. 10 Hz
     Run this script together with 'positionControl' on Arduino.
     
     29.Dec.2020
@@ -26,7 +26,7 @@ def write_to_serial(serial, state, waypoint):
     serial.write(json.dumps(message).encode('ascii'))
 
 if __name__=='__main__':
-    t_max = 60
+    t_max = 15
     # initalize time for display
     t_s = time.time()
 
@@ -59,7 +59,7 @@ if __name__=='__main__':
     while(time.time()-t_s < t_max):
 
         # TODO do this properly
-        if (time.time()-t_s < 50): # state = 1: track waypoints
+        if (time.time()-t_s < 10): # state = 1: track waypoints
             state = 1
             if i_wp<len(waypoints):
                 wp = waypoints[i_wp]
@@ -79,7 +79,7 @@ if __name__=='__main__':
         print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] waypoint is: ", wp)
         write_to_serial(ser, state, wp)
         ser.flush()
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         if (ser.in_waiting>0): #if (len(line)>0):
             t0 = time.time()
@@ -96,7 +96,7 @@ if __name__=='__main__':
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
-        time.sleep(0.6) # doen't work for time sleep <0.6!
+        # time.sleep(0.1) # doen't work for time sleep <0.6!
 
     # shut down the Robot
     state = 0;

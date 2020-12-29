@@ -96,6 +96,7 @@ void setup() {
   digitalWrite(enableLeft, LOW);
 
   Serial.begin(38400);
+  Serial.setTimeout(50);
   while (!Serial) continue;
   IMU.initialize();
   while(!IMU.testConnection()) continue;
