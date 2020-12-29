@@ -23,12 +23,14 @@ def get_time(time_start):
 
 def write_to_serial(serial, state, waypoint):
     message = {"state": state, "ref": [float(waypoint[0]), float(waypoint[1])]}
+    # print(json.dumps(message))
     serial.write(json.dumps(message).encode('ascii'))
 
 if __name__=='__main__':
-    t_max = 15
+    t_max = 20
     # initalize time for display
     t_s = time.time()
+
 
     print("Start simulation. Duration: ", t_max ," seconds")
     t_s = time.time()
@@ -39,10 +41,10 @@ if __name__=='__main__':
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
 
-    time.sleep(2)
+    time.sleep(3)
 
     if (ser.in_waiting>0):
-        line = ser.readline().decode('ascii').rstrip()
+        line = ser.readline()
         print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino is not responding")
@@ -56,24 +58,20 @@ if __name__=='__main__':
     pose = np.empty(3) # estimated position
     # MAIN LOOP HERE
     while(time.time()-t_s < t_max):
-
-        # TODO do this properly
-        if (time.time()-t_s < 10): # state = 1: track waypoints
+        if (time.time()-t_s < 2):
             state = 0
+        # TODO do this properly
+        elif (time.time()-t_s < 20): # state = 1: track waypoints
+            state = 2
             if i_wp<len(waypoints):
                 wp = waypoints[i_wp]
                 if (abs(wp[0]-pose[0])<0.2) and (abs(wp[1]-pose[1])<0.2):
 
                     print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] waypoint ", waypoints[i_wp], " reached!")
                     i_wp += 1
-                    print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] new waypoint: ", waypoints[i_wp])
+                    # print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] new waypoint: ", waypoints[i_wp])
             if i_wp==len(waypoints):
                 wp = np.array([0.5,0.5])
-
-        else:
-            # return to home station
-            state = 0 # TODO state should be changed to homing (another number)
-            wp = np.array([0.5,0.5])
 
         print("{:6.2f}".format(get_time(t_s)) + " [P-CTRL] waypoint is: ", wp)
         write_to_serial(ser, state, wp)
@@ -86,19 +84,23 @@ if __name__=='__main__':
             # line = ser.read(52).decode('utf-8').rstrip()
             # print("Time to read: ", time.time()-t0)
             ser.reset_input_buffer()
-            #print(line)
-            data = json.loads(line)
-            pose = np.array(data["pos"])
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"], ", cmd:", data["cmd"],", ref:", data["ref"])
-            # print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"], " pos:", data["pos"])
+            # print(line)
+            try:
+                data = json.loads(line)
+                pose = np.array(data["pos"])
+                print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", int(data["state"]), " pos: ", data["pos"], ", cmd:", data["cmd"],", ref:", data["ref"])
+                # print("{:6.2f}".format(get_time(t_s)) + " [SER] state: ",data["state"], " pos:", data["pos"])
+            except:
+                print("[ERROR] cannot deserialize string from arduino")
+                print(line)
 
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
-        # time.sleep(0.1)
+        # time.sleep(0.5) # doen't work for time sleep <0.6!
 
     # shut down the Robot
-    state = 0;
+    state = 3
     wp_end = np.array([0.5,0.5])
     write_to_serial(ser, state, wp_end)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
