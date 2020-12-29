@@ -4,19 +4,19 @@ import json
 import numpy as np
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
-    Run this script together with 'positionControl' on Arduino.
+    Run this script together with 'gripper_test' on Arduino.
     
     29.Dec.2020
-    Done already:
+    Done:
         - Bidirectional communication
         - Odometry implemented on Arduino
-    Experimental:
-        - Implement the position controller (goal: by 29.12.20)
+        - Implement the position controller
+        - Implement servo control
     ToDo:
-        - Implement servo control (goal: by 29.12.20)
         - Implement the state machine (goal: by 29.12.20)
         - Add Localization update on python (camera)
         - Implement a Kalman Filter
+        - Add Bottle Detection to the Script
         """
 def get_time(time_start):
     return time.time() - time_start

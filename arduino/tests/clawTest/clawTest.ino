@@ -18,16 +18,19 @@ void setup() {
   myCamServo.attach(8,750,2250);  // (pin, min, max) // for cam
   myBackDoorServo.attach(7,750,2250);  // (pin, min, max) // for back door
   Serial.begin(9600);
+  state = LOWERGRIPPER;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  /*
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil('\n');
       if (data.equals("GO")){
           state = LOWERGRIPPER;
     }
   }
+  */
   switch(state)
   {
     case LOWERGRIPPER:
