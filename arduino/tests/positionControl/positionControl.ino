@@ -129,10 +129,17 @@ if (Serial.available()>0){
       //String theta_string = String(theta,2);
       omega_mean = omega_mean/cnt;
       
-      position.add(x);
-      position.add(y);
-      position.add(theta);
+      position.add(x); //[m]
+      position.add(y); //[m]
+      position.add(theta*180/3.1415); // remember to put [rad/s]
 
+      /* // info to add in the json document for Kalman filter
+      JsonArray info = send_msg.createNestedArray("info");
+      info.add(v); //[m/s]
+      info.add(omega_rad); //[rad/s]
+      info.add(dt); //[rad]
+      info.add(acc); //[m/s^2]
+      */
       JsonArray reference = send_msg.createNestedArray("ref");
       reference.add(ref_x);
       reference.add(ref_y);
@@ -205,7 +212,7 @@ if (Serial.available()>0){
       } else if (cmdLeft<0){
          cmdLeft = 0;
       }
-      
+
       // turn motors on
       enableMotors = true;
       break;
