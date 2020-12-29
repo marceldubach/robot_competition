@@ -10,6 +10,9 @@ import usb.util
 import imutils
 import time 
 import os
+import pandas as pd 
+from csv import writer
+from time import localtime, strftime
 from kalmanFilter import kalmanFilter
 from localization import setupWebcam, savePicture, extractCentroids, getReference, getAbsoluteAngle, computePosition
 import multiprocessing
@@ -24,6 +27,14 @@ pose0 = np.array([[x0, y0, yaw0]]).transpose()
 Pk = np.identity(5) # TO COMPUTE
 Q = np.identity(5) # TO COMPUTE
 R = np.identity(3) # TO COMPUTE
+
+def append_list_as_row(file_name, list_of_elem):
+    # open file in append mode
+    with open(file_name, 'a+', newline='') as write_obj:
+        # create a writer object from csv module
+        csv_writer = writer(write_obj)
+        # add contents of list as last row in the csv file
+        csv_writer.writerow(list_of_elem)
 
 def triangulation(queue, e, yaw):
     try:
@@ -48,14 +59,18 @@ def readingOdometry(queue, e, ser):
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
-    data = {"x": pose[0][0], "y": pose[1][0], "yaw": pose[2][0], "v": v, "gz": gz, "dT": dt, "ax": ax}
-    queue.put(json.dumps(data))
-    return  queue
+    try:
+        data = {"x": odom["pos"][0], "y": odom["pos"][1], "yaw": odom["pos"][2], "v": odom["info"][0], "gz": odom["info"][1], "dT": odom["info"][2], "ax": odom["info"][3]}
+    except:
+        print("did't manage to retrieve data")
+    else:
+        queue.put(json.dumps(data))
+        return  queue
 
 def sensorFusion(pose, Pk, Q, R, ser):
 
     i = 0
-    while(i < 10):
+    while(i < 1):
         e = multiprocessing.Event()
         queueBeac = Queue()
         queueOdom = Queue()
@@ -81,7 +96,14 @@ def sensorFusion(pose, Pk, Q, R, ser):
         else:
             pose, Pk = kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R)
             print("kalman filter pose:", pose)
-
+            # send pose back to Arduino that will reference its relative displacement to it
+            #  
+            # TO DO
+            # add sensor fusion result and state to log file 
+            row_contents = [strftime("%H:%M:%S", localtime()),str(pose[0][0]),str(pose[1][0]),str(pose[2][0]),'state']
+            # Append list as new line to log csv file
+            append_list_as_row('log.csv', row_contents)
+        i += 1
 
 if __name__ == '__main__':
     
@@ -89,6 +111,9 @@ if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout=1)
     ser.flush()
 
+    # initialize csv table 
+    df = pd.DataFrame({'time':[],'x': [],'y': [],'yaw': [],'state': []})
+    df.to_csv('log.csv', index = False)
     time.sleep(1)
     sensorFusion(pose0, Pk, Q, R, ser)
 
