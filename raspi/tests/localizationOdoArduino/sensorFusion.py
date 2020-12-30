@@ -10,7 +10,7 @@ import usb.util
 import imutils
 import time 
 import os
-import pandas as pd 
+# import pandas as pd
 from csv import writer
 from time import localtime, strftime
 from kalmanFilter import kalmanFilter
@@ -55,14 +55,23 @@ def readingOdometry(queue, e, ser):
 
     while (not e.is_set()):
         if ser.in_waiting > 0:
-            odom = json.loads(ser.readline())
+            line = ser.readline()
+            try:
+                odom = json.loads(line)
+            except:
+                print("[ERROR] JSON cannot decode string:", line)
         else:
              pass
     # when the event is triggered, pass the state vector computed by odometry
     try:
-        data = {"x": odom["pos"][0], "y": odom["pos"][1], "yaw": odom["pos"][2], "v": odom["info"][0], "gz": odom["info"][1], "dT": odom["info"][2], "ax": odom["info"][3]}
+        data = {"x": odom["pos"][0], "y": odom["pos"][1],
+                "yaw": odom["pos"][2], "v": odom["info"][0],
+                "gz": odom["info"][1], "dT": odom["info"][2],
+                "ax": odom["info"][3]}
+    #      TODO change dictionnary accordingly in Arduino File
     except:
         print("did't manage to retrieve data")
+        print(odom)
     else:
         queue.put(json.dumps(data))
         return  queue
@@ -80,6 +89,7 @@ def sensorFusion(pose, Pk, Q, R, ser):
         pBeac.start()
         pOdom.join()
         pBeac.join()
+
         try:
             state = json.loads(queueOdom.get())
             state_vector = np.array([[state["x"], state["y"], state["yaw"], state["v"], state["gz"]]]).transpose()
@@ -100,10 +110,11 @@ def sensorFusion(pose, Pk, Q, R, ser):
             #  
             # TO DO
             # add sensor fusion result and state to log file 
-            row_contents = [strftime("%H:%M:%S", localtime()),str(pose[0][0]),str(pose[1][0]),str(pose[2][0]),'state']
+            # row_contents = [strftime("%H:%M:%S", localtime()),str(pose[0][0]),str(pose[1][0]),str(pose[2][0]),'state']
             # Append list as new line to log csv file
-            append_list_as_row('log.csv', row_contents)
+            # append_list_as_row('log.csv', row_contents)
         i += 1
+    print("Finished sensorFusion")
 
 if __name__ == '__main__':
     
@@ -112,8 +123,8 @@ if __name__ == '__main__':
     ser.flush()
 
     # initialize csv table 
-    df = pd.DataFrame({'time':[],'x': [],'y': [],'yaw': [],'state': []})
-    df.to_csv('log.csv', index = False)
+    # df = pd.DataFrame({'time':[],'x': [],'y': [],'yaw': [],'state': []})
+    # df.to_csv('log.csv', index = False)
     time.sleep(1)
     sensorFusion(pose0, Pk, Q, R, ser)
 

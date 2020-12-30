@@ -121,13 +121,31 @@ void loop() {
       yaw = yaw + rotV*dT; // [rad]
       v = v + scaledAx*dT; // [m7s]
       if (count > 0){  //change condition with modulo to change frequency 
+        /*
         StaticJsonDocument<120> doc;
         doc["x"] = x;
         doc["y"] = y;
         doc["yaw"] = yaw;
         doc["v"] = v;
         doc["gz"] = gz;
+        doc["ax"] = scaledAx;
+        doc["dT"] = dT;
         // Send the JSON document over the serial port
+        */
+        //send_msg["state"] = macro_state;
+        StaticJsonDocument<120> doc;
+        JsonArray position = doc.createNestedArray("pos");
+        position.add(x); //[m]
+        position.add(y); //[m]
+        position.add(yaw); // remember to put [rad/s]
+    
+        // info to add in the json document for Kalman filter
+        JsonArray info = doc.createNestedArray("info");
+        info.add(v); //[m/s]
+        info.add(rotV); //[rad/s]
+        info.add(dT); //[rad]
+        info.add(scaledAx); //[m/s^2]
+
         serializeJson(doc, Serial);
         Serial.println();
       }
