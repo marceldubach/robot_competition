@@ -97,15 +97,15 @@ void UltrasoundSensors::readUS(int *commandMotorLeft, int *commandMotorRight, in
 }
 
 // reads the US in a non blocking fashion, function needs to be called non-stop, does timing itself and updates values
-double UltrasoundSensors::ReadOneUS(int currentUS, int thresholdUS)
+double UltrasoundSensors::readOneUS(int currentUS, int thresholdUS)
 {
-    digitalWrite(pinTrigger[i], LOW);
+    digitalWrite(pinTrigger[currentUS], LOW);
     delayMicroseconds(5);
-    digitalWrite(pinTrigger[i], HIGH);
+    digitalWrite(pinTrigger[currentUS], HIGH);
     delayMicroseconds(10);
-    digitalWrite(pinTrigger[i], LOW);
+    digitalWrite(pinTrigger[currentUS], LOW);
 
-    unsigned long duration = pulseIn(pinEcho[i], HIGH, 3000);   // timeOut of 3000 microsec ~ 50cm
+    unsigned long duration = pulseIn(pinEcho[currentUS], HIGH, 3000);   // timeOut of 3000 microsec ~ 50cm
     double distance = (duration / 2) / 29.1;                    // /!\ converting to double
     if(distance >= thresholdUS) distance = 0;                   // directly apply threshold
     return distance;

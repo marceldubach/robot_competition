@@ -9,7 +9,7 @@ public:
     // size of 7 sensors hardcoded
     UltrasoundSensors();
     void readUS(int *commandMotorLeft, int *commandMotorRight, int braitenberg[], int thresholdUS);
-    double ReadOneUSReadOneUS(int currentUS, int thresholdUS);
+    double readOneUS(int currentUS, int thresholdUS);
 
 private:
     byte pinTrigger[7];
