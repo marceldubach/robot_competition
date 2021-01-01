@@ -64,10 +64,11 @@ if __name__=='__main__':
     while(time.time()-t_s < t_max):
         # TODO do this properly
 
-        if (time.time()-t_s < 10): # state = 1: track waypoints
-            state = states.MOVING
-            wp = np.array([2,2]) # some random waypoint (doesn't matter)
-        elif (time.time()-t_s < 20):
+        #if (time.time()-t_s < 10): # state = 1: track waypoints
+        #    state = states.MOVING
+        #    wp = np.array([2,2]) # some random waypoint (doesn't matter)
+        # elif (time.time()-t_s < 20):
+        if (time.time()-t_s < 20):
             state = states.CATCH
             wp = np.array([0,0])
             """
