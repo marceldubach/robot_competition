@@ -30,7 +30,7 @@ def get_time(time_start):
 if __name__=='__main__':
     
     # initalize time for display
-    t_max = 10
+    t_max = 30
     print("Start simulation. Duration: ", t_max ," seconds")
     t_s = time.time()
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)
@@ -72,8 +72,8 @@ if __name__=='__main__':
             state_previous = state
 
         if (state == states.MOVING):
-            wp = np.array([[4.5,0.5]]) # need to define waypoints here
-            message["ref"] = wp[0] # conversion to float is necessary!
+            wp = np.array([4.5,0.5]) # need to define waypoints here
+            message["ref"] = [float(wp[0]), float(wp[1])] # conversion to float is necessary!
 
         # write message to serial
         print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
