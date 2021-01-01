@@ -24,9 +24,15 @@ x0 = 1
 y0 = 1
 yaw0 = 0
 pose0 = np.array([[x0, y0, yaw0]]).transpose()
-Pk = np.identity(5) # TO COMPUTE
-Q = np.identity(5) # TO COMPUTE
-R = np.identity(3) # TO COMPUTE
+Pk = np.array([[0.1, 0, 0.02, 0.02, 0], 
+                [0, 0.1, 0.02, 0.02, 0], 
+                [0.02, 0.02, 0.1, 0, 0.04], 
+                [0.02, 0.02, 0, 0.05, 0], 
+                [0, 0, 0.04, 0, 0.02]])
+Q = 0.005*np.identity(5) 
+R = np.array([[0.01, 0, 0],
+                [0, 0.01, 0],
+                [0, 0, 0.001]]) 
 
 def append_list_as_row(file_name, list_of_elem):
     # open file in append mode

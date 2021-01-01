@@ -30,9 +30,15 @@ def kalmanFilter(state_vector, measurements_vector, dT, ax, Pk, Q, R):
     """
     yaw = state_vector[2]
     uk = ax
-    A = np.array([[1, 0, 0, math.cos(yaw)*dT, 0], [0, 1, 0, math.sin(yaw)*dT, 0], [0, 0, 1, 0, dT], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+    A = np.array([[1, 0, 0, math.cos(yaw)*dT, 0], 
+                [0, 1, 0, math.sin(yaw)*dT, 0], 
+                [0, 0, 1, 0, dT], 
+                [0, 0, 0, 1, 0], 
+                [0, 0, 0, 0, 1]])
     B = np.array([[0.5*math.cos(yaw)*(dT**2), 0.5*math.sin(yaw)*(dT**2), 0, dT, 0]]).transpose()
-    C = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0]])
+    C = np.array([[1, 0, 0, 0, 0], 
+                [0, 1, 0, 0, 0], 
+                [0, 0, 1, 0, 0]])
     prediction = A.dot(state_vector) + B.dot(uk)
     Pk = (A.dot(Pk)).dot(A.transpose()) + Q
     K = (Pk.dot(C.transpose())).dot(np.linalg.inv((C.dot(Pk).dot(C.transpose()))+R))
