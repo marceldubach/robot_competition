@@ -73,7 +73,10 @@ if __name__=='__main__':
 
         if (state == states.MOVING):
             wp = np.array([[4.5,0.5]]) # need to define waypoints here
-            message["ref"] = [float(wp[0]), float(wp[1])] # conversion to float is necessary!
+            print("wp",wp)
+            print(wp[0])
+            print("ref", [float(wp[0])])
+            message["ref"] = [float(wp[0])] # conversion to float is necessary!
 
         # write message to serial
         print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
