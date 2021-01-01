@@ -92,11 +92,12 @@ int n_US = 7;
 int idx_us = 0;
 double distances[] = {100, 100, 100, 100, 100, 100, 0};
 int threshold[] = {0,0,0,0,0,0,0};
-int weight_left[] =  {1000, 200, 1000, -1000, -1000, 100, 500};//{700, 100, 500,-500, -500, 500, 10 };
-int weight_right[] = {1000, 500, 100, -1000, -1000, 1200, 200};//{600, 250, 50, -500, -500, 600, 120}; // right
+int weight_left[] =  {700, 300, 400, -1200, -800, -400, -100};//{1000, 200, 1000, -1000, -1000, 100, 500};//{700, 100, 500,-500, -500, 500, 10 };
+int weight_right[] = {1000, 400, -400, -300, -600, 400, 300};//{1000, 500, 100, -1000, -1000, 1200, 200};//{600, 250, 50, -500, -500, 600, 120}; // right
 const double maxdist = 50;
-unsigned long maxPulseIn = 25000;
+unsigned long maxPulseIn = 3000; // 50 cm range 
 unsigned long duration;
+//boolean check_obstacle; // if true we asses the presence of an obstacle
 //initialize distances at values bigger than the threshold
 
 
@@ -233,11 +234,17 @@ void loop() {
   // read ultrasonic sensors
   //cli();
   //for(int i=0;i<7;i++){
+  /*
+  if (idx_us == 0){
+    check_obstacle = false;
+  }
+  */
   digitalWrite(trigger[idx_us], LOW);
   delayMicroseconds(5);
   digitalWrite(trigger[idx_us], HIGH);
   delayMicroseconds(10);
   digitalWrite(trigger[idx_us], LOW);
+  
   duration = pulseIn(echo[idx_us], HIGH, maxPulseIn);
   distances[idx_us] = (double) ((duration / 2) / 29.1);
   if (distances[idx_us]==0){
@@ -250,6 +257,7 @@ void loop() {
   }
   idx_us = idx_us+1;
   if (idx_us==7){
+    //check_obstacle = true;
     idx_us = 0;
   }
   //sei(); // restart interrupts
@@ -259,21 +267,24 @@ void loop() {
   switch (macro_state){
     case STARTING:
       // turn motors off
-      enableMotors = false;
+      //enableMotors = false;
+      enableMotors = true;
 
       // initialize position of servos;
-      mainServo.write(160);
+      mainServo.write(150);
       microLeft.write(80);
       microRight.write(120);
-      backDoor.write(160);
+      backDoor.detach();
       break;
 
     case MOVING: // moving
-      for(int i=0;i<n_US;i++){
-        if (distances[i]<maxdist){
-          foundObstacle = true;
+      //if(check_obstacle){
+        for(int i=0;i<n_US;i++){
+          if (distances[i]<maxdist){
+            foundObstacle = true;
+          }
         }
-      }
+      //}
       if (foundObstacle){
         macro_state = OBSTACLE;
       } else {
@@ -331,10 +342,10 @@ void loop() {
         cmdLeft = 128;
         cmdRight = 128;
         for(int i=0; i<n_US;i++){
-          if (threshold[i]==1){
-            cmdLeft = cmdLeft + weight_left[i]/distances[i];
-            cmdRight = cmdRight + weight_right[i]/distances[i];
-          }
+          //if (threshold[i]==1){
+            cmdLeft = cmdLeft + threshold[i]*weight_left[i]/distances[i];
+            cmdRight = cmdRight + threshold[i]*weight_right[i]/distances[i];
+          //}
         }
       }
       break;
@@ -468,15 +479,15 @@ void loop() {
     digitalWrite(enableRight, HIGH);                
     digitalWrite(enableLeft, HIGH);
     // saturation
-    if (cmdRight>255){
-      cmdRight = 255;
-    } else if (cmdRight<0) {
-      cmdRight = 0;
+    if (cmdRight>240){
+      cmdRight = 240;
+    } else if (cmdRight<10) {
+      cmdRight = 10;
     }
-    if (cmdLeft>255){
-      cmdLeft = 255;
-    }else if(cmdLeft<0){
-      cmdLeft = 0;
+    if (cmdLeft>240){
+      cmdLeft = 240;
+    }else if(cmdLeft<10){
+      cmdLeft = 10;
     }
     // set motor speed (fixed speed)
     analogWrite(pwmRight, 255-cmdRight);
@@ -503,21 +514,26 @@ void loop() {
     v = (wLeft + wRight)*radius/2;
     
     // gyro angular rate
+    /*
     IMU.getRotation(&gx, &gy, &gz);
     omega_deg = gz/gyro_sf - gyro_mean; // deg/sec
     omega_rad = omega_deg*3.1415/180;   // rad/s
+    */
 
 
-    /*
-     * IMU.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
-     * scaledAx = ax/aSensScaleFactor - accNoiseMean;
-     * 
-     */
+    
+    IMU.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
+    acc_x = ax/acc_sf - acc_mean;
+    omega_deg = gz/gyro_sf - gyro_mean; // deg/sec
+    omega_rad = omega_deg*3.1415/180;   // rad/s
+      
+     
+     
 
     // update the position
-    x = x + cos(theta)*v*dt; //+ 0.5*cos(theta)*scaledAx*pow(dt,2); // [m]
-    y = y + sin(theta)*v*dt; //+ 0.5*sin(theta)*scaledAx*pow(dt,2); // [m]
-    //v = v + scaledAx*dT; // [m/s]
+    x = x + cos(theta)*v*dt + 0.5*cos(theta)*acc_x*pow(dt,2); // [m]
+    y = y + sin(theta)*v*dt + 0.5*sin(theta)*acc_x*pow(dt,2); // [m]
+    v = v + acc_x*dt; // [m/s]
     theta = theta + omega_rad*dt;       // theta is in radians
   }
 }
