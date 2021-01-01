@@ -121,7 +121,7 @@ void Servos::lowerGripper(int value = 15)
 
 bool Servos::isBottleGrabbed()
 {
-    cli(); //stop interrupts
+    //cli(); //stop interrupts
 
     digitalWrite(pinTrigger, LOW);
     delayMicroseconds(5);
@@ -129,10 +129,10 @@ bool Servos::isBottleGrabbed()
     delayMicroseconds(10);
     digitalWrite(pinTrigger, LOW);
 
-    unsigned long duration = pulseIn(pinEcho, HIGH);
+    unsigned long duration = pulseIn(pinEcho, HIGH,4000);
     double distance = (duration / 2) / 29.1;
 
-    sei(); // restart interrupts
+    //sei(); // restart interrupts
 
     if (distance <= 30) // distance threshold to determine if bottle is grabbed
     {
