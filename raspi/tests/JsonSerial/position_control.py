@@ -98,7 +98,7 @@ if __name__=='__main__':
         # time.sleep(0.1)
 
     # shut down the Robot
-    state = 0;
+    state = 0
     wp_end = np.array([0.5,0.5])
     write_to_serial(ser, state, wp_end)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
