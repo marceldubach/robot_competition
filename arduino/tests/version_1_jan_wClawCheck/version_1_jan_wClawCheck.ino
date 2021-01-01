@@ -37,7 +37,7 @@ int16_t ax, ay, az;
 int16_t gx, gy, gz;
 int16_t mx, my, mz;
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
-float gyro_mean = 0.86; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
+float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
 
 float omega_mean = 0;
 
@@ -139,6 +139,9 @@ void setup() {
     pinMode(trigger[i], OUTPUT);
     pinMode(echo[i], INPUT);
   }
+  pinMode(claw_trigger, OUTPUT); // for the claw
+  pinMode(claw_echo, INPUT);
+
   pinMode(avSpeedRight, INPUT); //analog input -> average speed motorRight
   pinMode(avSpeedLeft, INPUT); //analog input -> average speed motorLeft
   pinMode(pwmRight, OUTPUT); //PWM pin motorRight
@@ -376,12 +379,12 @@ void loop() {
           digitalWrite(claw_trigger, HIGH);
           delayMicroseconds(10);
           digitalWrite(claw_trigger, LOW);
-          unsigned long claw_duration = pulseIn(claw_echo, HIGH, 10000);
+          unsigned long claw_duration = pulseIn(claw_echo, HIGH, 3000); // 50 cm timeOut
           claw_dist = (double) ((claw_duration / 2) / 29.1);
           if (claw_dist == 0){
-            claw_dist = 20;
+            claw_dist = 100;
           }
-          if (claw_dist<19){
+          if (claw_dist<30){
             cntBottles++;
           }
           catch_state = RAISE;
