@@ -50,7 +50,7 @@ if __name__=='__main__':
     state_previous = 0
     n_bottles = 0
 
-    Pk = np.identity(5)
+    # Pk = np.identity(5)
 
     Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
                    [0, 0.1, 0.02, 0.02, 0],
@@ -58,7 +58,7 @@ if __name__=='__main__':
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
     Q = 0.01*np.identity(5)
-    R = np.identity(3)
+    # R = np.identity(3)
     R =  np.array([[0.1, 0, 0],
                   [0, 0.1, 0],
                   [0, 0, 0.01]])
@@ -191,6 +191,10 @@ if __name__=='__main__':
             measures = np.array(data["info"])
             v,omega,dT = measures
             pose_KF = pose
+            if pose[2] > 2*np.pi:
+                pose_KF[2] -= 2*np.pi
+            elif pose[2] < -2*np.pi:
+                pose_KF[2] += 2*np.pi
             x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
             e_img_loc.clear()
             # print(x)
@@ -228,7 +232,7 @@ if __name__=='__main__':
                 p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
                 p_triang.start()
 
-        print("End of loop (should be false here):", e_location.is_set())
+        # print("End of loop (should be false here):", e_location.is_set())
 
 
 

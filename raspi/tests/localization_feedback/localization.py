@@ -25,14 +25,14 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
         else:
             print("[TRIANGULATION] took photo")
     e_img_loc.set()
-    print("Set Event")
+    # print("Set Event")
     centroids = extractCentroids(filename)
     xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
     if (xCenterM != -1 and yCenterM != -1):
         data = np.array([xCenterM, yCenterM, yaw])
         # print(data)
         queue.put(data)
-        e_loc_finished.set()
+
     else:
         print("[TRAINGULATION] no beacon found")
     """
@@ -49,6 +49,7 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
             e_img_loc.clear()
     """
     webcam.release()
+    e_loc_finished.set()
     return queue  # if fails the queue will be empty
 
 def setupWebcam():
@@ -67,7 +68,7 @@ def savePicture(webcam):
             filename = 'img.jpg'
             time.sleep(0.1)
             cv.imwrite(filename, img=frame)
-            print("Image saved!")
+            # print("Image saved!")
         else:
             filename = 0
     except:
