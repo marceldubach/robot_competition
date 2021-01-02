@@ -8,7 +8,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter
-from picamera import PiCamera
+from utilities import detect_bottle
 
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
@@ -82,13 +82,18 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
-    q_triang = mp.Queue() 
+    q_bottle = mp.Queue() # queue for frontal camera information
+    q_triang = mp.Queue() # queue for triangulation
+    e_bottle = mp.Event() # event when the frontal camera has finished
     e_img_loc = mp.Event() # event when an image is saved
-    e_location = mp.Event() # event when trinagulation has finished 
+    e_location = mp.Event() # event when triangulation has finished
 
+    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
+    p_bottle.start()
     p_triang.start()
     pose_update_available = False
+    bottle_detected = False
 
     pose_KF = np.empty(3)
 
@@ -207,6 +212,24 @@ if __name__=='__main__':
             p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
             p_triang.start()
 
+        # frontal camera check
+        if(e_bottle.is_set()):
+            e_bottle.clear()
+            bottle_pos = q_bottle.get()
+            print("bottle position:", bottle_pos)
+            p_bottle.join()
+            if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
+                bottle_detected = True
+            del q_bottle
+            del e_bottle
+            del p_bottle
+
+            q_bottle = mp.Queue()
+            e_bottle = mp.Event()
+            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
+            p_bottle.start()
+            # TODO send bottle detected to arduino and commands
+
     # shut the motor down
     state = states.FINISH
     wp_end = np.array([0.5,0.5])
@@ -218,6 +241,7 @@ if __name__=='__main__':
     ser.close() # close serial port at the end of the code
 
     p_triang.join()
+    p_bottle.join()
 
 
 
