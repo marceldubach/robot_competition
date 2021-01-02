@@ -93,7 +93,7 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event()
 
-    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2],webcam))
+    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_triang.start()
     pose_update_available = False
 
