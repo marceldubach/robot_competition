@@ -8,6 +8,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter
+from picamera import PiCamera
 
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
@@ -30,7 +31,7 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 30
+    t_max = 60
     # initalize time for display
     t_s = time.time()
 
@@ -38,10 +39,9 @@ if __name__=='__main__':
     state = states.STARTING
     state_previous = 0
     n_bottles = 0
-    i = 0
 
-    Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
-                   [0, 0.1, 0.02, 0.02, 0],
+    Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
+                   [0, 0.5, 0.02, 0.02, 0],
                    [0.02, 0.02, 0.1, 0, 0.04],
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
@@ -52,6 +52,10 @@ if __name__=='__main__':
 
     x = np.zeros(5)
     dT = 0
+
+    # Picam initialization
+    camera = PiCamera()
+    camera.rotation = 180
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
@@ -82,13 +86,13 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event() # event when trinagulation has finished 
 
-    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], i))
+    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_triang.start()
     pose_update_available = False
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,1],[2,2],[1,2], [1,1], [2,1]]) #TODO write function to calculate waypoints
+    waypoints = np.array([[2,1],[4,4],[5,3], [1,1], [2,1]]) #TODO write function to calculate waypoints
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
@@ -176,6 +180,7 @@ if __name__=='__main__':
             e_location.clear()
             
             measure = q_triang.get()
+            print("measure:", measure)
             print("{:6.2f}".format(get_time(t_s)), "Time join start")
             p_triang.join()
             print("{:6.2f}".format(get_time(t_s)), "Time join end")
@@ -188,7 +193,6 @@ if __name__=='__main__':
                 pose[2] = x_update[2] + delta[2]
                 pose_update_available = True
                 print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
-            i += 1
 
             del q_triang
             del e_location
@@ -200,7 +204,7 @@ if __name__=='__main__':
             e_img_loc = mp.Event()
 
 
-            p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], i))
+            p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
             p_triang.start()
 
     # shut the motor down

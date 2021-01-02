@@ -10,7 +10,7 @@ import time
 import json
 import os
 
-def triangulation(queue, e_img_loc, e_loc_finished, yaw, i):
+def triangulation(queue, e_img_loc, e_loc_finished, yaw):
     # filename = savePicture(webcam)
     # set event to tell the readingOdometry to read the serial information
     filename = 0
@@ -19,7 +19,7 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw, i):
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     time.sleep(0.3)
     while(filename == 0):
-        filename = savePicture(webcam, i)
+        filename = savePicture(webcam)
         if (filename==0):
             print("[TRIANGULATION] coultn't take photo")
         else:
@@ -30,41 +30,20 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw, i):
     xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
     data = np.array([xCenterM, yCenterM, yaw])
     queue.put(data)
-    """
-    if filename != 0:
-        e_img_loc.set()
-        centroids = extractCentroids(filename)
-        xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-        if (xCenterM != -1 and yCenterM != -1):
-            data = np.array([xCenterM, yCenterM,yaw])
-            # print(data)
-            queue.put(data)
-            e_loc_finished.set()
-        else:
-            e_img_loc.clear()
-    """
     webcam.release()
     e_loc_finished.set()
     return queue  # if fails the queue will be empty
 
-def setupWebcam():
-    webcam = cv.VideoCapture(0) #ID 0
-    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(1)
-    return webcam
-
-def savePicture(webcam, i):
-
+def savePicture(webcam):
     if not (webcam.isOpened()):
         print("Could not open video device")
     try:
         check, frame = webcam.read()
         if check:
-            filename = 'img'+str(i)+'.jpg'
-            time.sleep(0.1)
+            filename = 'img.jpg'
+            #time.sleep(0.1)
             cv.imwrite(filename, img=frame)
-            # print("Image saved!")
+            print("Image saved!")
         else:
             filename = 0
     except:
@@ -420,7 +399,5 @@ def getAbsoluteAngle(centroids, xCenterM, yCenterM):
         absolute_angle = (robotAngle + rel_forward_dir)%(2*np.pi)
         #if (absolute_angle > np.pi):
         #    absolute_angle -= 2*np.pi
-        if (absolute_angle > 2*np.pi - np.pi/8):
-            absolute_angle -= 2*np.pi
         print("absolute angle [deg]", absolute_angle*180/np.pi)
         return absolute_angle

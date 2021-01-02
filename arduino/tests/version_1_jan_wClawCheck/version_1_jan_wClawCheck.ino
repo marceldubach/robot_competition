@@ -58,8 +58,8 @@ float acc_x;
 #define avSpeedLeft A3 // Hall sensor reading
 
 // estimated position of the robot
-double x = 0.5;
-double y = 0.5;
+double x = 1;
+double y = 1;
 double theta = 0;
 
 // references to waypoint (goal)
@@ -299,21 +299,21 @@ void loop() {
         }else{
           if (heading_ref-theta>0){
             // turn left
-            if (heading_ref-theta<0.5){
+            if (heading_ref-theta<0.2){
               cmdRight = 140;
               cmdLeft = 116;
             }else{
-              cmdRight = 160;
-              cmdLeft = 96;
+              cmdRight = 145;
+              cmdLeft = 111;
             }
           } else {
             // turn right
-            if (theta-heading_ref<0.5){
+            if (theta-heading_ref<0.2){
               cmdRight = 116;
               cmdLeft = 140;
             } else {
-              cmdRight = 96;
-              cmdLeft = 160;
+              cmdRight = 111;
+              cmdLeft = 145;
             }
           } // end else turn right
         } // end else deltatheta>0.3
