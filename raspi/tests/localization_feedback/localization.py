@@ -3,8 +3,6 @@ import math
 import numpy as np
 import time
 import cv2 as cv
-import usb.core
-import usb.util 
 import imutils
 import time
 import json
