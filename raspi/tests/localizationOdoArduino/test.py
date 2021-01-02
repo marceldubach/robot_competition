@@ -36,4 +36,4 @@ if __name__ == '__main__':
             print("Problem saving image")
             filename = 0
         i += 1
-    
+    webcam.release() 
