@@ -29,7 +29,7 @@ if __name__ == '__main__':
         try:
             check, frame = webcam.read()
             if check:
-                filename = 'img.jpg'
+                filename = 'img'+str(i)+'.jpg'
                 cv.imwrite(filename, img=frame)
                 print("Image saved!")
         except:
