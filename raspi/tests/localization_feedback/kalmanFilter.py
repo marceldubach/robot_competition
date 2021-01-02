@@ -8,7 +8,7 @@ import usb.util
 import imutils
 import time 
 
-def kalmanFilter(state_vector, measurements_vector, dT, Pk, Q, R):
+def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     """
     state_vector: column vector{
     x: x position in global reference [m]
@@ -27,10 +27,11 @@ def kalmanFilter(state_vector, measurements_vector, dT, Pk, Q, R):
     Q: environment uncertainty(untrucked noise)
     R: covariance of sensors noise 
     """
-    yaw = state_vector[2]
+    yaw = prediction[2]
+
     A = np.array([[1, 0, 0, math.cos(yaw)*dT, 0], [0, 1, 0, math.sin(yaw)*dT, 0], [0, 0, 1, 0, dT], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
     C = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0]])
-    prediction = A.dot(state_vector)
+
     Pk = (A.dot(Pk)).dot(A.transpose()) + Q
     K = (Pk.dot(C.transpose())).dot(np.linalg.inv((C.dot(Pk).dot(C.transpose()))+R))
     Pk = Pk - (K.dot(C)).dot(Pk)

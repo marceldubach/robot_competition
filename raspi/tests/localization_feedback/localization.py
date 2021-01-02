@@ -6,9 +6,23 @@ import cv2 as cv
 import usb.core
 import usb.util 
 import imutils
-import time 
+import time
+import json
 import os
 
+def triangulation(queue, e_img_loc, e_loc_finished, yaw,webcam):
+    filename = savePicture(webcam)
+    # set event to tell the readingOdometry to read the serial information
+    e_img_loc.set()
+    if filename != 0:
+        centroids = extractCentroids(filename)
+        xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
+        if (xCenterM != -1 and yCenterM != -1):
+            data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
+            print(data)
+            queue.put(data)
+    e_loc_finished.set()
+    return queue  # if fails the queue will be empty
 
 def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
@@ -30,6 +44,7 @@ def savePicture(webcam):
         print("Problem saving image")
         filename = 0
     return filename
+
 
 def extractCentroids(filename):
     # load image RGB
