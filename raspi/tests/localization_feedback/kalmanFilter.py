@@ -28,6 +28,11 @@ def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     R: covariance of sensors noise 
     """
     yaw = prediction[2]
+    measured_angle = measurements_vector[2]
+
+    if abs(measured_angle - yaw) > np.pi:
+        if measured_angle - yaw > 0:
+            measurements_vector[2] -= 2*np.pi
 
     A = np.array([[1, 0, 0, math.cos(yaw)*dT, 0], [0, 1, 0, math.sin(yaw)*dT, 0], [0, 0, 1, 0, dT], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
     C = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0]])
