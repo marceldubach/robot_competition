@@ -50,15 +50,19 @@ if __name__=='__main__':
     state_previous = 0
     n_bottles = 0
 
+    # Pk = np.identity(5)
+
     Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
                    [0, 0.1, 0.02, 0.02, 0],
                    [0.02, 0.02, 0.1, 0, 0.04],
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
-    Q = 0.01 * np.identity(5)
-    R = np.array([[0.1, 0, 0],
+    Q = 0.01*np.identity(5)
+    # R = np.identity(3)
+    R =  np.array([[0.1, 0, 0],
                   [0, 0.1, 0],
                   [0, 0, 0.01]])
+
     x = np.zeros(5)
     dT = 0
 
@@ -76,7 +80,7 @@ if __name__=='__main__':
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
 
-    webcam = localization.setupWebcam()
+    # webcam = localization.setupWebcam()
 
     time.sleep(4)
     if (ser.in_waiting>0):
@@ -89,6 +93,19 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
+    """
+        # MAIN LOOP HERE
+        q_kalman = Queue()
+    
+        # beacon_start = mp.Event()
+        beacon_completed = mp.Event()
+    
+        # bottle_detection_start = mp.Event()
+        bottle_detection_completed = mp.Event()
+    
+        process_beacon = Process(target=main, args=(q_main,pose,event,,ser))
+        process_beacon.start()
+    """
     q_triang = mp.Queue()
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event()
@@ -107,8 +124,6 @@ if __name__=='__main__':
         message = {}
 
         if (state == states.MOVING):  # state = 1: track waypoints
-            # generate the current waypoint to track
-            
             if np.linalg.norm(pose[0:-1]-wp)<0.2:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
@@ -176,10 +191,6 @@ if __name__=='__main__':
             measures = np.array(data["info"])
             v,omega,dT = measures
             pose_KF = pose
-            if pose[2] > 2*np.pi:
-                pose_KF[2] -= 2*np.pi
-            elif pose[2] < -2*np.pi:
-                pose_KF[2] += 2*np.pi
             x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
             e_img_loc.clear()
             # print(x)
@@ -195,6 +206,7 @@ if __name__=='__main__':
 
 
             x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
+            x_update[0:3] = measure
             if (x_update[0]!=-1) and (x_update[1]!=-1):
                 delta = pose - pose_KF
                 pose[0] = x_update[0] + delta[0]
@@ -203,18 +215,27 @@ if __name__=='__main__':
                 pose_update_available = True
                 print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
 
+                del q_triang
+                del e_location
+                del e_img_loc
+                del p_triang
 
                 q_triang = mp.Queue()
                 e_location = mp.Event()
                 e_img_loc = mp.Event()
 
-                p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], webcam))
+
+                p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
                 p_triang.start()
+
+        # print("End of loop (should be false here):", e_location.is_set())
+
+
 
 
 
     # shut the motor down
-    webcam.release()
+    # webcam.release()
     state = states.FINISH
     wp_end = np.array([0.5,0.5])
     message = {"state": state}
