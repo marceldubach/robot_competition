@@ -29,10 +29,10 @@ Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
                 [0.02, 0.02, 0.1, 0, 0.04], 
                 [0.02, 0.02, 0, 0.05, 0], 
                 [0, 0, 0.04, 0, 0.02]])
-Q = 0.005*np.identity(5) 
-R = np.array([[0.01, 0, 0],
-                [0, 0.01, 0],
-                [0, 0, 0.001]]) 
+Q = 0.01*np.identity(5) 
+R = np.array([[0.1, 0, 0],
+                [0, 0.1, 0],
+                [0, 0, 0.01]]) 
 
 def append_list_as_row(file_name, list_of_elem):
     # open file in append mode
@@ -43,19 +43,18 @@ def append_list_as_row(file_name, list_of_elem):
         csv_writer.writerow(list_of_elem)
 
 def triangulation(queue, e, yaw):
-    try:
-        filename = savePicture()
-        # set event to tell the readingOdometry to read the serial information
-        e.set()
-    except:
-         print("Problem retrieving filename")
-    else:
+    
+    filename = savePicture()
+    # set event to tell the readingOdometry to read the serial information
+    e.set()
+    if filename != 0:
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-        data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
-        print(data)
-        queue.put(json.dumps(data))
-        return queue
+        if (xCenterM != -1 and yCenterM != -1):
+            data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
+            print(data)
+            queue.put(json.dumps(data))
+    return queue # if fails the queue will be empty
 
 def readingOdometry(queue, e, ser):
 

@@ -9,15 +9,15 @@ import imutils
 import time 
 import os
 
+
 def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(0.3)
+    time.sleep(1)
     return webcam
 
-def savePicture():
-    webcam = setupWebcam()
+def savePicture(webcam):
     if not (webcam.isOpened()):
         print("Could not open video device")
     try:
@@ -28,7 +28,7 @@ def savePicture():
             print("Image saved!")
     except:
         print("Problem saving image")
-    webcam.release()
+        filename = 0
     return filename
 
 def extractCentroids(filename):
@@ -50,7 +50,7 @@ def extractCentroids(filename):
     # masking region of no interest 
     # detect circles (attention to parameters)
     circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1.4, 1000, minRadius = 400, maxRadius = 650)
-    print("circle", circles) # print how many circles are found 
+    #print("circle", circles) # print how many circles are found 
 
     # ensure at least some circles were found
     if circles is not None:
@@ -192,24 +192,27 @@ def getReference(centroids):
     magenta = 0
     blue = 0
     green = 0
-    for c in centroids:
-        if (c[2] == "red"):
-            red += 1
-        elif(c[2] == "magenta"):
-            magenta += 1
-        elif(c[2] == "blue"):
-            blue += 1
-        elif(c[2] == "green"):
-            green += 1
-        
-    if red + magenta + blue == 3:
-        return "m"
-    elif magenta + blue + green == 3:
-        return "b"
-    elif blue + green + red == 3:
-        return "g"
+    if centroids != []:
+        for c in centroids:
+            if (c[2] == "red"):
+                red += 1
+            elif(c[2] == "magenta"):
+                magenta += 1
+            elif(c[2] == "blue"):
+                blue += 1
+            elif(c[2] == "green"):
+                green += 1
+            
+        if red + magenta + blue == 3:
+            return "m"
+        elif magenta + blue + green == 3:
+            return "b"
+        elif blue + green + red == 3:
+            return "g"
+        elif green + red + magenta == 3:
+            return "r"
     else:
-        return "r"
+        return 0
     
 
 def computePosition(centroids, yaw):
@@ -219,9 +222,9 @@ def computePosition(centroids, yaw):
     # calculate the reference to which the angles are computed
     reference = getReference(centroids)
     #print(reference)
-    if len(centroids) < 3:
-        print("Not enough beacons")
-        return 0, 0
+    if len(centroids) < 3 or reference is 0:
+        print("Not enough beacons or not able to get reference")
+        return -1, -1,  yaw 
 
     if len(centroids) == 4:
         c1 = centroids[1]
@@ -312,7 +315,9 @@ def computePosition(centroids, yaw):
         # calculate position of center of mass and absolute angle
         xCenterM = x - l*np.cos(yaw)
         yCenterM = y - l*np.sin(yaw)
-        yaw = getAbsoluteAngle(centroids, xCenterM, yCenterM)
+        angle = getAbsoluteAngle(centroids, xCenterM, yCenterM)
+        if angle != -1:
+            yaw = angle
         return xCenterM, yCenterM, yaw
     else:
         # translate to true arena origin  
@@ -331,7 +336,9 @@ def computePosition(centroids, yaw):
         # calculate position of center of mass and absolute angle
         xCenterM = x - l*np.cos(yaw)
         yCenterM = y - l*np.sin(yaw)
-        yaw = getAbsoluteAngle(centroids, xCenterM, yCenterM)
+        angle = getAbsoluteAngle(centroids, xCenterM, yCenterM)
+        if angle != -1:
+            yaw = angle
         return xCenterM, yCenterM, yaw
 
 def getAbsoluteAngle(centroids, xCenterM, yCenterM):
@@ -340,7 +347,7 @@ def getAbsoluteAngle(centroids, xCenterM, yCenterM):
     to the global reference frame 
     """
     if len(centroids) < 3:
-        return 0
+        return -1
     else:
         origin = []
         opposite = []
