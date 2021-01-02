@@ -108,6 +108,8 @@ if __name__=='__main__':
     p_triang.start()
     pose_update_available = False
 
+    pose_KF = np.empty(3)
+
     waypoints = np.array([[2,1],[2,2]]) #TODO write function to calculate waypoints
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
@@ -181,7 +183,8 @@ if __name__=='__main__':
         if (e_img_loc.is_set()):
             v = data["info"][0]
             omega = data["info"][1]
-            x = np.array([pose[0],pose[1],pose[2],v, omega])
+            pose_KF = pose
+            x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
             dT = data["info"][2]
 
         if (e_location.is_set()):
@@ -189,9 +192,10 @@ if __name__=='__main__':
 
             x_update, Pk = kalmanFilter(x,q_triang.get(),dT,Pk,Q,R)
             if (x_update[0]!=-1) and (x_update[1]!=-1):
-                pose[0] = x_update[0]
-                pose[1] = x_update[1]
-                pose[2] = x_update[2]
+                delta = pose - pose_KF
+                pose[0] = x_update[0] + delta[0]
+                pose[1] = x_update[1] + delta[1]
+                pose[2] = x_update[2] + delta[2]
                 pose_update_available = True
 
             q_triang = mp.Queue()
