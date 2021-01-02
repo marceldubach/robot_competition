@@ -340,7 +340,7 @@ void loop() {
       break;
       
     case CATCH: // lift bottles
-      enableMotors = false;
+      enableMotors = false; 
       break;
      
     case RETURN:
