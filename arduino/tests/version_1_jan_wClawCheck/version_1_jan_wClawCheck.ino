@@ -33,9 +33,9 @@ float omega_rad;
 
 // definition of an IMU object with associated variables
 MPU6050 IMU;
-int16_t ax, ay, az;
+//int16_t ax, ay, az;
 int16_t gx, gy, gz;
-int16_t mx, my, mz;
+//int16_t mx, my, mz;
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
 
@@ -94,7 +94,7 @@ double distances[] = {100, 100, 100, 100, 100, 100, 0};
 int threshold[] = {0,0,0,0,0,0,0};
 int weight_left[] =  {700, 300, 400, -1200, -800, -400, -100};
 int weight_right[] = {1000, 400, -400, -300, -600, 400, 300};
-const double maxdist = 50;
+const double maxdist = 1; // TODO change this back to 50
 unsigned long maxPulseIn = 3000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
@@ -133,7 +133,7 @@ void setup() {
   microLeft.attach(10,900,2100); // (pin, min, max) // for HC-82 left
   microRight.attach(9,900,2100); // (pin, min, max) // for HC-82 right
   camServo.attach(8,750,2250);   // (pin, min, max) // for camshaft servo
-  backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
+  //backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
 
   for (int i = 0; i < n_US; i++) { // set up Echo and Trigger pins
     pinMode(trigger[i], OUTPUT);
@@ -284,8 +284,8 @@ void loop() {
   
         if (fabs(heading_ref-theta)<0.3){
           if (dist>0.5){
-            cmdLeft = 200;
-            cmdRight = 200;
+            cmdLeft = 240;
+            cmdRight = 240;
           }else{
             cmdLeft = 160;
             cmdRight = 160;

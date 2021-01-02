@@ -39,7 +39,7 @@ def main(event, queue): # localisation
 
 
 if __name__=='__main__':
-    t_max = 20
+    t_max = 30
     # initalize time for display
     t_s = time.time()
 
@@ -87,12 +87,13 @@ if __name__=='__main__':
 
     waypoints = np.array([[2,1],[2,2]]) #TODO write function to calculate waypoints
     i_wp = 0 # iterator over waypoints
-    wp = np.array([0.5,0.5])
+    wp = waypoints[i_wp]
 
     while (time.time() - t_s < t_max):
+        message = {}
 
         if (state == states.MOVING):  # state = 1: track waypoints
-            if np.linalg.norm(pose[0:-1])<0.2:
+            if np.linalg.norm(pose[0:-1]-wp)<0.2:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
                 if i_wp>len(waypoints): # if all waypoints are reached, shutdown
@@ -101,19 +102,15 @@ if __name__=='__main__':
                     print("{:6.2f}".format(get_time(t_s)), " [MAIN] All waypoints are reached")
                 else:
                     wp = waypoints[i_wp]  # some random waypoint (doesn't matter)
+            message["ref"] = [float(wp[0]), float(wp[1])]
 
-        message = {}
         if (state != state_previous):
             message["state"] = state
             state_previous = state
 
-        if (state == states.MOVING): # if state is moving, send the next waypoint
-            wp = np.array([1, 1])  # need to define waypoints here
-            message["ref"] = [float(wp[0]), float(wp[1])]  # conversion to float is necessary!
-
         if (state == states.RETURN): # if state is returning, then send waypoints
             wp = np.array([1, 1])  # need to define waypoints here
-            message["ref"] = [float(wp[0]), (wp[1])]  # conversion to float is necessary!
+            message["ref"] = [float(wp[0]), float(wp[1])]  # conversion to float is necessary!
 
         # write message to serial
         print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
@@ -138,12 +135,13 @@ if __name__=='__main__':
                         state = data["state"]
                         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)
                 if "nBot" in data:
-                    n_bottles = data["nBot"]
-                    print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
-                          n_bottles, " bottles")
+                    if (n_bottles != data["nBot"]):
+                        n_bottles = data["nBot"]
+                        print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
+                              n_bottles, " bottles")
 
                 print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                      " pos: ", pose)
+                      " pos: ", pose," ref:", data["ref"], " cmd: ", data["cmd"])
                 # display detailed message:
                 # print(", cmd:", data["cmd"], ", ref:", data["ref"]," cnt: ", data["cnt"])
 
