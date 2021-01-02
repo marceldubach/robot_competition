@@ -110,6 +110,9 @@ unsigned long t_empty = 0;
 #define claw_echo 36
 unsigned long claw_dist = 100;
 int cntBottles = 0;
+
+#define PI 3.1415
+
 // set default values
 double ref_x = 0.0;
 double ref_y = 0.0;
@@ -216,6 +219,7 @@ void loop() {
     JsonArray reference = send_msg.createNestedArray("ref");
     reference.add(ref_x);
     reference.add(ref_y);
+    reference.add(heading_ref);
 
     JsonArray command = send_msg.createNestedArray("cmd");
     command.add(cmdLeft);
@@ -284,36 +288,53 @@ void loop() {
         macro_state = OBSTACLE;
       } else {
         // update the motor speed
-        heading_ref = atan2((ref_y-y), (ref_x-x)); // TODO maybe rescale to [0,2PI]
-  
+        heading_ref = atan2((ref_y-y), (ref_x-x));
+        if (heading_ref<0){ // rescale heading reference in [0,2*PI]
+          heading_ref += 2*PI;
+        }
+        
         dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
   
-        if (fabs(heading_ref-theta)<0.3){
-          if (dist>0.5){
+        if ((fabs(heading_ref-theta)<0.3) || (fabs(heading_ref-theta)>5.8)){
+          // heading is good -> fast forward
+          if (dist>1){
             cmdLeft = 240;
             cmdRight = 240;
           }else{
-            cmdLeft = 160;
-            cmdRight = 160;
+            cmdLeft = 150+dist/0.5*50; // give some value between 150 and 190
+            cmdRight = 150+dist/0.5*50;
           }
         }else{
-          if (heading_ref-theta>0){
-            // turn left
-            if (heading_ref-theta<0.2){
-              cmdRight = 140;
-              cmdLeft = 116;
-            }else{
-              cmdRight = 145;
-              cmdLeft = 111;
+          bool turnLeft; // get rotation sense
+          if ((heading_ref-theta)>0){
+            if (heading_ref-theta<PI){
+              turnLeft = true; // turn right
+            } else {
+              turnLeft = false;
+            }
+          } else { // theta > heading_ref
+            if ((theta - heading_ref)<PI){
+              turnLeft = false;
+            } else {
+              turnLeft = true;
+            }
+          }
+          if (fabs(heading_ref-theta)<0.8){
+            // turn slowly
+            if (turnLeft){
+              cmdRight = 130+fabs(heading_ref-theta)/0.3*10;
+              cmdLeft = 126-fabs(heading_ref-theta)/0.3*10;
+            }else{ // turn right
+              cmdLeft = 130+fabs(heading_ref-theta)/0.3*10;
+              cmdRight = 126-fabs(heading_ref-theta)/0.3*10;
             }
           } else {
-            // turn right
-            if (theta-heading_ref<0.2){
-              cmdRight = 116;
-              cmdLeft = 140;
+            if (turnLeft){ // turn left
+              cmdRight = 148;
+              cmdLeft = 108;
             } else {
-              cmdRight = 111;
-              cmdLeft = 145;
+              cmdRight = 108;
+              cmdLeft = 148;
             }
           } // end else turn right
         } // end else deltatheta>0.3
@@ -510,5 +531,10 @@ void loop() {
     x = x + cos(theta)*v*dt;
     y = y + sin(theta)*v*dt;
     theta = theta + omega_rad*dt;       // theta is in radians
+    if (theta>2*PI){
+      theta = theta-2*PI;  // theta in [0,2*PI]
+    } else if (theta<0){
+      theta = theta+2*PI;
+    }
   }
 }

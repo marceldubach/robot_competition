@@ -31,7 +31,7 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 60
+    t_max = 120
     # initalize time for display
     t_s = time.time()
 
@@ -46,9 +46,9 @@ if __name__=='__main__':
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
     Q = 0.01*np.identity(5)
-    R =  np.array([[0.1, 0, 0],
-                  [0, 0.1, 0],
-                  [0, 0, 0.01]])
+    R =  np.array([[0.5, 0, 0],
+                  [0, 0.5, 0],
+                  [0, 0, 0.05]])
 
     x = np.zeros(5)
     dT = 0
@@ -100,7 +100,7 @@ if __name__=='__main__':
         message = {}
 
         if (state == states.MOVING):  # state = 1: track waypoints
-            if np.linalg.norm(pose[0:-1]-wp)<0.2:
+            if np.linalg.norm(pose[0:-1]-wp)<0.4:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
                 if i_wp>len(waypoints): # if all waypoints are reached, shutdown
