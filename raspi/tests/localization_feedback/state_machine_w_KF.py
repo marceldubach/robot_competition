@@ -93,19 +93,6 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
-    """
-        # MAIN LOOP HERE
-        q_kalman = Queue()
-    
-        # beacon_start = mp.Event()
-        beacon_completed = mp.Event()
-    
-        # bottle_detection_start = mp.Event()
-        bottle_detection_completed = mp.Event()
-    
-        process_beacon = Process(target=main, args=(q_main,pose,event,,ser))
-        process_beacon.start()
-    """
     q_triang = mp.Queue()
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event()
@@ -124,6 +111,8 @@ if __name__=='__main__':
         message = {}
 
         if (state == states.MOVING):  # state = 1: track waypoints
+            # generate the current waypoint to track
+            
             if np.linalg.norm(pose[0:-1]-wp)<0.2:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
