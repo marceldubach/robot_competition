@@ -41,7 +41,7 @@ def main(event, queue): # localisation
 
 
 if __name__=='__main__':
-    t_max = 30
+    t_max = 120
     # initalize time for display
     t_s = time.time()
 
@@ -67,7 +67,7 @@ if __name__=='__main__':
     dT = 0
 
     # initial estimated position
-    pose = np.array([0.5,0.5,0]) # estimated position
+    pose = np.array([1,1,0]) # estimated position
 
     data = ""
 
@@ -93,19 +93,6 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
-    """
-        # MAIN LOOP HERE
-        q_kalman = Queue()
-    
-        # beacon_start = mp.Event()
-        beacon_completed = mp.Event()
-    
-        # bottle_detection_start = mp.Event()
-        bottle_detection_completed = mp.Event()
-    
-        process_beacon = Process(target=main, args=(q_main,pose,event,,ser))
-        process_beacon.start()
-    """
     q_triang = mp.Queue()
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event()
@@ -116,7 +103,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,1],[2,2]]) #TODO write function to calculate waypoints
+    waypoints = np.array([[2,1],[2,2],[1,2], [1,1], [2,1]]) #TODO write function to calculate waypoints
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
