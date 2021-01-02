@@ -41,9 +41,9 @@ def savePicture(webcam):
         check, frame = webcam.read()
         if check:
             filename = 'img.jpg'
-            #time.sleep(0.1)
+            time.sleep(0.1)
             cv.imwrite(filename, img=frame)
-            print("Image saved!")
+            # print("Image saved!")
         else:
             filename = 0
     except:
