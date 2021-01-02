@@ -9,6 +9,7 @@ import imutils
 import time 
 import os
 
+
 def setupWebcam():
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
@@ -17,7 +18,6 @@ def setupWebcam():
     return webcam
 
 def savePicture(webcam):
-    webcam = setupWebcam()
     if not (webcam.isOpened()):
         print("Could not open video device")
     try:
