@@ -1,5 +1,5 @@
 /*
- * Run this script together with 'moving_around.py'
+ * Run this script together with 'version_30_dec.py'
  * Implementation: 
  *  - odometry (Hall sensors + IMU anguar rate) (no position feedback yet)
  *  - tracking of position commands (waypoints) -> to be improved
@@ -397,9 +397,6 @@ void loop() {
         if (millis()-t_catch>2000){
           t_catch = millis();
           catch_state = OPEN;
-          /*
-           * t_catch = millis(); should be here to update t_catch for next state (OPEN) right
-           */
         }
         break;
 
