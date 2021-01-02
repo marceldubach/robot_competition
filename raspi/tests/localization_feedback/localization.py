@@ -318,7 +318,7 @@ def computePosition(centroids, yaw):
     #print(y1)
     #print(x2)
     #print(y2)
-    if(x1>pow(10,-3) and x1<8 and y1>pow(10,-3) and y1<8):
+    if(x1>0 and x1<8 and y1>0 and y1<8):
     
         # translate to true arena origin  
         if (reference == 'm'):
@@ -340,7 +340,7 @@ def computePosition(centroids, yaw):
         if angle != -1:
             yaw = angle
         return xCenterM, yCenterM, yaw
-    else:
+    elif(x2>0 and x2<8 and y2>0 and y2<8)::
         # translate to true arena origin  
         if (reference == 'm'):
             x = x2
@@ -361,6 +361,8 @@ def computePosition(centroids, yaw):
         if angle != -1:
             yaw = angle
         return xCenterM, yCenterM, yaw
+    else:
+        return -1, -1,  yaw 
 
 def getAbsoluteAngle(centroids, xCenterM, yCenterM):
     """
