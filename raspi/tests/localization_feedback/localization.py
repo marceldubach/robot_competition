@@ -10,18 +10,45 @@ import time
 import json
 import os
 
-def triangulation(queue, e_img_loc, e_loc_finished, yaw,webcam):
-    filename = savePicture(webcam)
+def triangulation(queue, e_img_loc, e_loc_finished, yaw):
+    # filename = savePicture(webcam)
     # set event to tell the readingOdometry to read the serial information
+    filename = 0
+    webcam = cv.VideoCapture(0) #ID 0
+    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+    time.sleep(0.3)
+    while(filename == 0):
+        filename = savePicture(webcam)
+        if (filename==0):
+            print("[TRIANGULATION] coultn't take photo")
+        else:
+            print("[TRIANGULATION] took photo")
     e_img_loc.set()
+    print("Set Event")
+    centroids = extractCentroids(filename)
+    xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
+    if (xCenterM != -1 and yCenterM != -1):
+        data = np.array([xCenterM, yCenterM, yaw])
+        # print(data)
+        queue.put(data)
+        e_loc_finished.set()
+    else:
+        print("[TRAINGULATION] no beacon found")
+    """
     if filename != 0:
+        e_img_loc.set()
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
         if (xCenterM != -1 and yCenterM != -1):
             data = np.array([xCenterM, yCenterM,yaw])
             # print(data)
             queue.put(data)
-    e_loc_finished.set()
+            e_loc_finished.set()
+        else:
+            e_img_loc.clear()
+    """
+    webcam.release()
     return queue  # if fails the queue will be empty
 
 def setupWebcam():
@@ -38,6 +65,7 @@ def savePicture(webcam):
         check, frame = webcam.read()
         if check:
             filename = 'img.jpg'
+            time.sleep(0.1)
             cv.imwrite(filename, img=frame)
             print("Image saved!")
         else:

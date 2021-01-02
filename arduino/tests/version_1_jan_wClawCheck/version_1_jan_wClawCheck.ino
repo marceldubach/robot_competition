@@ -203,7 +203,7 @@ void loop() {
     JsonArray position = send_msg.createNestedArray("pos");
     position.add(x); //[m]
     position.add(y); //[m]
-    position.add(theta*180/3.1415); // remember to put [rad/s]
+    position.add(theta); // remember to put [rad/s]
 
      // info to add in the json document for Kalman filter
     JsonArray info = send_msg.createNestedArray("info");
