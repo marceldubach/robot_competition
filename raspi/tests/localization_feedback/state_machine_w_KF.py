@@ -24,24 +24,13 @@ from kalmanFilter import kalmanFilter
         - Add Localization update on python (camera)
         - Implement a Kalman Filter
         - Add Bottle Detection to the Script
-        """
 """
-def state_machine(t_s, t_max):
-    # predefined waypoints
-"""
-
 def get_time(time_start):
     return time.time() - time_start
 
-def main(event, queue): # localisation
-    # take image..(taking 0.3 seconds(
-    event.set()
-
-
-
 
 if __name__=='__main__':
-    t_max = 120
+    t_max = 30
     # initalize time for display
     t_s = time.time()
 
@@ -49,8 +38,7 @@ if __name__=='__main__':
     state = states.STARTING
     state_previous = 0
     n_bottles = 0
-
-    # Pk = np.identity(5)
+    i = 0
 
     Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
                    [0, 0.1, 0.02, 0.02, 0],
@@ -58,7 +46,6 @@ if __name__=='__main__':
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
     Q = 0.01*np.identity(5)
-    # R = np.identity(3)
     R =  np.array([[0.1, 0, 0],
                   [0, 0.1, 0],
                   [0, 0, 0.01]])
@@ -80,11 +67,9 @@ if __name__=='__main__':
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
 
-    # webcam = localization.setupWebcam()
-
     time.sleep(4)
     if (ser.in_waiting>0):
-        line = ser.readline().decode('ascii') # TODO check if this decode works
+        line = ser.readline().decode('ascii') 
         print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
         state = states.MOVING
         # if the received message is 'ready', then the arduino is in state 0 and well initialized
@@ -93,11 +78,11 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
-    q_triang = mp.Queue()
+    q_triang = mp.Queue() 
     e_img_loc = mp.Event() # event when an image is saved
-    e_location = mp.Event()
+    e_location = mp.Event() # event when trinagulation has finished 
 
-    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
+    p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], i))
     p_triang.start()
     pose_update_available = False
 
@@ -187,46 +172,38 @@ if __name__=='__main__':
             # print(x)
 
         if (e_location.is_set()):
-            print("True here", e_location.is_set())
+            
             e_location.clear()
-            print("False here", e_location.is_set())
+            
             measure = q_triang.get()
             print("{:6.2f}".format(get_time(t_s)), "Time join start")
             p_triang.join()
             print("{:6.2f}".format(get_time(t_s)), "Time join end")
-
-
-            x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
-            x_update[0:3] = measure
-            if (x_update[0]!=-1) and (x_update[1]!=-1):
+           
+            if (measure[0]!=-1) and (measure[1]!=-1):
+                x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
                 delta = pose - pose_KF
                 pose[0] = x_update[0] + delta[0]
                 pose[1] = x_update[1] + delta[1]
                 pose[2] = x_update[2] + delta[2]
                 pose_update_available = True
                 print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
+            i += 1
 
-                del q_triang
-                del e_location
-                del e_img_loc
-                del p_triang
+            del q_triang
+            del e_location
+            del e_img_loc
+            del p_triang
 
-                q_triang = mp.Queue()
-                e_location = mp.Event()
-                e_img_loc = mp.Event()
-
-
-                p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
-                p_triang.start()
-
-        # print("End of loop (should be false here):", e_location.is_set())
+            q_triang = mp.Queue()
+            e_location = mp.Event()
+            e_img_loc = mp.Event()
 
 
-
-
+            p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], i))
+            p_triang.start()
 
     # shut the motor down
-    # webcam.release()
     state = states.FINISH
     wp_end = np.array([0.5,0.5])
     message = {"state": state}
@@ -234,7 +211,7 @@ if __name__=='__main__':
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
     time.sleep(1)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
-    ser.close() # close serial   port at the end of the code
+    ser.close() # close serial port at the end of the code
 
     p_triang.join()
 

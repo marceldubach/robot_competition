@@ -10,7 +10,7 @@ import time
 import json
 import os
 
-def triangulation(queue, e_img_loc, e_loc_finished, yaw):
+def triangulation(queue, e_img_loc, e_loc_finished, yaw, i):
     # filename = savePicture(webcam)
     # set event to tell the readingOdometry to read the serial information
     filename = 0
@@ -19,7 +19,7 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     time.sleep(0.3)
     while(filename == 0):
-        filename = savePicture(webcam)
+        filename = savePicture(webcam, i)
         if (filename==0):
             print("[TRIANGULATION] coultn't take photo")
         else:
@@ -28,13 +28,8 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
     # print("Set Event")
     centroids = extractCentroids(filename)
     xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-    if (xCenterM != -1 and yCenterM != -1):
-        data = np.array([xCenterM, yCenterM, yaw])
-        # print(data)
-        queue.put(data)
-
-    else:
-        print("[TRAINGULATION] no beacon found")
+    data = np.array([xCenterM, yCenterM, yaw])
+    queue.put(data)
     """
     if filename != 0:
         e_img_loc.set()
@@ -59,13 +54,14 @@ def setupWebcam():
     time.sleep(1)
     return webcam
 
-def savePicture(webcam):
+def savePicture(webcam, i):
+
     if not (webcam.isOpened()):
         print("Could not open video device")
     try:
         check, frame = webcam.read()
         if check:
-            filename = 'img.jpg'
+            filename = 'img'+str(i)+'.jpg'
             time.sleep(0.1)
             cv.imwrite(filename, img=frame)
             # print("Image saved!")
@@ -268,7 +264,7 @@ def computePosition(centroids, yaw):
     # calculate the reference to which the angles are computed
     reference = getReference(centroids)
     #print(reference)
-    if len(centroids) < 3 or reference is 0:
+    if len(centroids) < 3:
         print("Not enough beacons or not able to get reference")
         return -1, -1,  yaw 
 
