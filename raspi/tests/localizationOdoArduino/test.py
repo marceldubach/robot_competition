@@ -21,7 +21,7 @@ if __name__ == '__main__':
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(0.3)
+    time.sleep(1)
     i = 0
     while( i < 5):
         if not (webcam.isOpened()):
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         try:
             check, frame = webcam.read()
             if check:
-                filename = 'img'+str(i)+'.jpg'
+                filename = 'img.jpg'
                 cv.imwrite(filename, img=frame)
                 print("Image saved!")
         except:
