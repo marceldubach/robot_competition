@@ -191,6 +191,10 @@ if __name__=='__main__':
             measures = np.array(data["info"])
             v,omega,dT = measures
             pose_KF = pose
+            if pose[2] > 2*np.pi:
+                pose_KF[2] -= 2*np.pi
+            elif pose[2] < -2*np.pi:
+                pose_KF[2] += 2*np.pi
             x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
             e_img_loc.clear()
             # print(x)
