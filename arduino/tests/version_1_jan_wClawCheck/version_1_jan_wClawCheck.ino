@@ -178,6 +178,12 @@ void loop() {
         ref_x = receive_msg["ref"][0];
         ref_y = receive_msg["ref"][1];
     }
+    if (receive_msg.containsKey("pose")){
+        x = receive_msg["pose"][0];
+        y = receive_msg["pose"][1];
+        theta = receive_msg["theta"][2];
+        
+    }
 
     // change the state
     if ((macro_state == CATCH)&&(old_state != CATCH)){
@@ -199,13 +205,13 @@ void loop() {
     position.add(y); //[m]
     position.add(theta*180/3.1415); // remember to put [rad/s]
 
-    /* // info to add in the json document for Kalman filter
+     // info to add in the json document for Kalman filter
     JsonArray info = send_msg.createNestedArray("info");
     info.add(v); //[m/s]
     info.add(omega_rad); //[rad/s]
     info.add(dt); //[rad]
-    info.add(acc); //[m/s^2]
-    */
+    //info.add(acc); //[m/s^2]
+    
     
     JsonArray reference = send_msg.createNestedArray("ref");
     reference.add(ref_x);

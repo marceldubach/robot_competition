@@ -65,6 +65,8 @@ if __name__=='__main__':
     # initial estimated position
     pose = np.array([0.5,0.5,0]) # estimated position
 
+    data = ""
+
     print("Start simulation. Duration: ", t_max ," seconds")
     t_s = time.time()
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)

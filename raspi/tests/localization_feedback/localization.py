@@ -18,7 +18,7 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw,webcam):
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
         if (xCenterM != -1 and yCenterM != -1):
-            data = {"xCenterM": xCenterM[0], "yCenterM": yCenterM[0], "yaw": yaw[0]}
+            data = {"xCenterM": xCenterM, "yCenterM": yCenterM, "yaw": yaw}
             print(data)
             queue.put(data)
     e_loc_finished.set()
