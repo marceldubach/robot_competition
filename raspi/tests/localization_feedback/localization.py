@@ -18,8 +18,8 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw,webcam):
         centroids = extractCentroids(filename)
         xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
         if (xCenterM != -1 and yCenterM != -1):
-            data = {"xCenterM": xCenterM, "yCenterM": yCenterM, "yaw": yaw}
-            print(data)
+            data = np.array([xCenterM, yCenterM,yaw])
+            # print(data)
             queue.put(data)
     e_loc_finished.set()
     return queue  # if fails the queue will be empty
@@ -40,6 +40,8 @@ def savePicture(webcam):
             filename = 'img.jpg'
             cv.imwrite(filename, img=frame)
             print("Image saved!")
+        else:
+            filename = 0
     except:
         print("Problem saving image")
         filename = 0

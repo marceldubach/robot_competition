@@ -78,7 +78,7 @@ if __name__=='__main__':
 
     webcam = localization.setupWebcam()
 
-    time.sleep(3)
+    time.sleep(4)
     if (ser.in_waiting>0):
         line = ser.readline().decode('ascii') # TODO check if this decode works
         print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
@@ -103,7 +103,7 @@ if __name__=='__main__':
         process_beacon.start()
     """
     q_triang = mp.Queue()
-    e_img_loc = mp.Event()
+    e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event()
 
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2],webcam))
@@ -172,7 +172,7 @@ if __name__=='__main__':
                               n_bottles, " bottles")
 
                 print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                      " pos: ", pose," ref:", data["ref"], " cmd: ", data["cmd"])
+                      " pos: ", pose," ref:", data["ref"], " info:", data["info"])
                 # display detailed message:
                 # print(", cmd:", data["cmd"], ", ref:", data["ref"]," cnt: ", data["cnt"])
 
@@ -183,32 +183,45 @@ if __name__=='__main__':
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
         if (e_img_loc.is_set()):
-            v = data["info"][0]
-            omega = data["info"][1]
+
+            measures = np.array(data["info"])
+            v,omega,dT = measures
             pose_KF = pose
             x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
-            dT = data["info"][2]
+            e_img_loc.clear()
+            # print(x)
 
         if (e_location.is_set()):
+            print("True here", e_location.is_set())
+            e_location.clear()
+            print("False here", e_location.is_set())
+            measure = q_triang.get()
+            print("{:6.2f}".format(get_time(t_s)), "Time join start")
             p_triang.join()
+            print("{:6.2f}".format(get_time(t_s)), "Time join end")
 
-            x_update, Pk = kalmanFilter(x,q_triang.get(),dT,Pk,Q,R)
+
+            x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
             if (x_update[0]!=-1) and (x_update[1]!=-1):
                 delta = pose - pose_KF
                 pose[0] = x_update[0] + delta[0]
                 pose[1] = x_update[1] + delta[1]
                 pose[2] = x_update[2] + delta[2]
                 pose_update_available = True
+                print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
 
-            q_triang = mp.Queue()
-            e_img_loc = mp.Event()
-            e_location = mp.Event()
 
-            p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], webcam))
-            p_triang.start()
+                q_triang = mp.Queue()
+                e_location = mp.Event()
+                e_img_loc = mp.Event()
+
+                p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2], webcam))
+                p_triang.start()
+
 
 
     # shut the motor down
+    webcam.release()
     state = states.FINISH
     wp_end = np.array([0.5,0.5])
     message = {"state": state}
@@ -217,3 +230,8 @@ if __name__=='__main__':
     time.sleep(1)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
     ser.close() # close serial   port at the end of the code
+
+    p_triang.join()
+
+
+

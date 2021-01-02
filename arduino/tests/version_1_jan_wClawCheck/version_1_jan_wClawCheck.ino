@@ -181,7 +181,7 @@ void loop() {
     if (receive_msg.containsKey("pose")){
         x = receive_msg["pose"][0];
         y = receive_msg["pose"][1];
-        theta = receive_msg["theta"][2];
+        theta = receive_msg["pose"][2];
         
     }
 
@@ -223,7 +223,7 @@ void loop() {
     //command.add(heading_ref);
     //command.add(dist);
     
-
+    /*
     JsonArray dist = send_msg.createNestedArray("dist");
     dist.add(distances[0]);
     dist.add(distances[1]);
@@ -233,7 +233,7 @@ void loop() {
     dist.add(distances[5]);
     dist.add(distances[6]);
     dist.add(duration);
-
+    */
     serializeJson(send_msg, Serial);
 
     Serial.println();
