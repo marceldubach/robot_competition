@@ -43,6 +43,9 @@ if __name__=='__main__':
     # initalize time for display
     t_s = time.time()
 
+    # initial state
+    state = states.STARTING
+
     print("Start simulation. Duration: ", t_max ," seconds")
     t_s = time.time()
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)
@@ -54,8 +57,9 @@ if __name__=='__main__':
 
     time.sleep(4)
     if (ser.in_waiting>0):
-        line = ser.readline()
+        line = ser.readline().decode('ascii')
         print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
+        if (line == "ready")
         # if the received message is 'ready', then the arduino is in state 0 and well initialized
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino is not responding")
@@ -74,11 +78,6 @@ if __name__=='__main__':
 
     process_beacon = Process(target=main, args=(q_main,pose,event,,ser))
     process_beacon.start()
-
-
-
-
-
 
     waypoints = np.array([[2,1],[2,2]])
     i_wp = 0 # iterator over waypoints

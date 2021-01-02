@@ -32,6 +32,9 @@ if __name__=='__main__':
     # initalize time for display
     t_s = time.time()
 
+    state = 0 # state
+    state_previous = 0 # to check if the state has changed
+
     print("Start simulation. Duration: ", t_max ," seconds")
     t_s = time.time()
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)
@@ -59,7 +62,7 @@ if __name__=='__main__':
     # initial estimated position
     pose = np.array([0.5,0.5,0]) # estimated position
     state = 0 # state
-    state_previous = 0
+    state_previous = 0 # to check if the state has changed
     # MAIN LOOP HERE
     while(time.time()-t_s < t_max):
         # TODO do this properly

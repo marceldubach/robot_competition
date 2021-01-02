@@ -193,7 +193,7 @@ void loop() {
 
     send_msg["state"] = macro_state;
     send_msg["nBot"] = cntBottles;
-    //send_msg["cnt"] = cnt_shakes;
+    //send_msg["cnt"] = cnt_shakes; // counter for camshaft movements
     JsonArray position = send_msg.createNestedArray("pos");
     position.add(x); //[m]
     position.add(y); //[m]
