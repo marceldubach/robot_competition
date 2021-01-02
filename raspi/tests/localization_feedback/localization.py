@@ -338,7 +338,7 @@ def computePosition(centroids, yaw):
         if angle != -1:
             yaw = angle
         return xCenterM, yCenterM, yaw
-    elif(x2>0 and x2<8 and y2>0 and y2<8)::
+    elif(x2>0 and x2<8 and y2>0 and y2<8):
         # translate to true arena origin  
         if (reference == 'm'):
             x = x2
