@@ -66,7 +66,7 @@ if __name__=='__main__':
     r2 = Zi.dot([x_c, y_c, 1.0])
 
     # initial estimated position
-    pose = np.array([1,1,0]) # estimated position
+    pose = np.array([1,4,0]) # estimated position
 
     data = ""
 
@@ -112,135 +112,139 @@ if __name__=='__main__':
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
-    while (time.time() - t_s < t_max):
-        message = {}
-        if data == "":
-            message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
+    try:
+        while (time.time() - t_s < t_max):
 
-        # Timeout expired: return to recycling station
-        if (state == states.MOVING) and (time.time()- t_s > t_home):
-            state_previous = state
-            state = states.RETURN
-            wp = wp_recycling_area
-            message["ref"] = [float(wp[0]), float(wp[1])]
+            message = {}
+            if data == "":
+                message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
 
-        # We have seen a bottle 
-        if (state == states.CATCH):
-            message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
+            # Timeout expired: return to recycling station
+            if (state == states.MOVING) and (time.time()- t_s > t_home):
+                state_previous = state
+                state = states.RETURN
+                wp = wp_recycling_area
+                message["ref"] = [float(wp[0]), float(wp[1])]
 
-        # Back to recycling station
-        if (state == states.RETURN):
-            if (np.linalg.norm(pose[0:-1]-np.array([0.5,0.5]))<0.4):
-                state = states.EMPTY
+            # We have seen a bottle
+            if (state == states.CATCH):
+                message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
-        if (state == states.MOVING):  # state = 1: track waypoints
-            if np.linalg.norm(pose[0:-1]-wp)<0.4:
-                print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
-                i_wp += 1
-                if i_wp>len(waypoints): # if all waypoints are reached, shutdown
-                    state_previous = state
-                    state = states.FINISH
-                    print("{:6.2f}".format(get_time(t_s)), " [MAIN] All waypoints are reached")
-                else:
-                    wp = waypoints[i_wp]  # some random waypoint (doesn't matter)
-            message["ref"] = [float(wp[0]), float(wp[1])]
+            # Back to recycling station
+            if (state == states.RETURN):
+                if (np.linalg.norm(pose[0:-1]-np.array([0.5,0.5]))<0.4):
+                    state = states.EMPTY
 
-        if (state != state_previous):
-            message["state"] = state
-            state_previous = state
-
-        if (state == states.RETURN): # if state is returning, then send waypoints
-            wp = wp_recycling_area # need to define waypoints here
-            message["ref"] = [float(wp[0]), float(wp[1])]  # conversion to float is necessary!
-
-        if (pose_update_available):
-            message["pose"]  =[float(pose[0]),float(pose[1]),float(pose[2])]
-            pose_update_available = False
-
-        # write message to serial
-        print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
-        ser.write(json.dumps(message).encode('ascii'))
-
-        ser.flush()
-        time.sleep(0.09)  # TODO replace this with while
-
-        # READ THE SERIAL INFORMATION FROM ARDUINO
-        if (ser.in_waiting > 0):
-            t0 = time.time()
-            line = ser.readline().decode('ascii').rstrip()
-            ser.reset_input_buffer()
-            # print(line)
-            try:
-                data = json.loads(line)
-                if "pos" in data:
-                    pose = np.array(data["pos"])
-                if "state" in data:
-                    if state != data["state"]:
+            if (state == states.MOVING):  # state = 1: track waypoints
+                if np.linalg.norm(pose[0:-1]-wp)<0.4:
+                    print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
+                    i_wp += 1
+                    if i_wp>len(waypoints): # if all waypoints are reached, shutdown
                         state_previous = state
-                        state = data["state"]
-                        print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)
-                if "nBot" in data:
-                    if (n_bottles != data["nBot"]):
-                        n_bottles = data["nBot"]
-                        print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
-                              n_bottles, " bottles")
+                        state = states.FINISH
+                        print("{:6.2f}".format(get_time(t_s)), " [MAIN] All waypoints are reached")
+                    else:
+                        wp = waypoints[i_wp]  # some random waypoint (doesn't matter)
+                message["ref"] = [float(wp[0]), float(wp[1])]
 
-                print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                      " pos: ", pose," ref:", data["ref"], " info:", data["info"])
-                # display detailed message:
-                # print(", cmd:", data["cmd"], ", ref:", data["ref"]," cnt: ", data["cnt"])
+            if (state != state_previous):
+                message["state"] = state
+                state_previous = state
 
-            except:
-                print("[ERROR] cannot deserialize string from arduino. Received:", line)
+            if (state == states.RETURN): # if state is returning, then send waypoints
+                wp = wp_recycling_area # need to define waypoints here
+                message["ref"] = [float(wp[0]), float(wp[1])]  # conversion to float is necessary!
 
-        else:
-            print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
+            if (pose_update_available):
+                message["pose"]  =[float(pose[0]),float(pose[1]),float(pose[2])]
+                pose_update_available = False
 
-        if (e_img_loc.is_set()):
-            v = 0
-            omega = 0
-            dT = 0.02
-            try:
-                measures = np.array(data["info"])
-                v,omega,dT = measures
-            except:
-                print("Didn't manage to get info from arduino")
-            pose_KF = pose
-            if pose[2] > 2*np.pi:
-                pose_KF[2] -= 2*np.pi
-            elif pose[2] < -2*np.pi:
-                pose_KF[2] += 2*np.pi
-            x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
-            e_img_loc.clear()
-            # print(x)
+            # write message to serial
+            print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
+            ser.write(json.dumps(message).encode('ascii'))
 
-        if (e_location.is_set()):
-            
-            e_location.clear()
-            
-            measure = q_triang.get()
-            print("measure:", measure)
-            print("{:6.2f}".format(get_time(t_s)), "Time join start")
-            p_triang.join()
-            print("{:6.2f}".format(get_time(t_s)), "Time join end")
-           
-            if (measure[0]!=-1) and (measure[1]!=-1):
-                x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
-                delta = pose - pose_KF
-                pose[0] = x_update[0] + delta[0]
-                pose[1] = x_update[1] + delta[1]
-                pose[2] = x_update[2] + delta[2]
-                pose_update_available = True
-                print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
+            ser.flush()
+            while not (ser.in_waiting >0):
+                time.sleep(0.05)  # TODO replace this with while
 
-            del q_triang
-            del e_location
-            del e_img_loc
-            del p_triang
+            # READ THE SERIAL INFORMATION FROM ARDUINO
+            if (ser.in_waiting > 0):
+                t0 = time.time()
+                line = ser.readline().decode('ascii').rstrip()
+                ser.reset_input_buffer()
+                #ser.flush()
+                # print(line)
+                try:
+                    data = json.loads(line)
+                    if "pos" in data:
+                        pose = np.array(data["pos"])
+                    if "state" in data:
+                        if state != data["state"]:
+                            state_previous = state
+                            state = data["state"]
+                            print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)
+                    if "nBot" in data:
+                        if (n_bottles != data["nBot"]):
+                            n_bottles = data["nBot"]
+                            print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
+                                  n_bottles, " bottles")
 
-            q_triang = mp.Queue()
-            e_location = mp.Event()
-            e_img_loc = mp.Event()
+                    print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
+                          " pos: ", pose," ref:", data["ref"], " info:", data["info"])
+                    # display detailed message:
+                    # print(", cmd:", data["cmd"], ", ref:", data["ref"]," cnt: ", data["cnt"])
+
+                except:
+                    print("[ERROR] cannot deserialize string from arduino. Received:", line)
+
+            else:
+                print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
+
+            if (e_img_loc.is_set()):
+                v = 0
+                omega = 0
+                dT = 0.02
+                try:
+                    measures = np.array(data["info"])
+                    v,omega,dT = measures
+                except:
+                    print("Didn't manage to get info from arduino")
+                pose_KF = pose
+                if pose[2] > 2*np.pi:
+                    pose_KF[2] -= 2*np.pi
+                elif pose[2] < -2*np.pi:
+                    pose_KF[2] += 2*np.pi
+                x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
+                e_img_loc.clear()
+                # print(x)
+
+            if (e_location.is_set()):
+
+                e_location.clear()
+
+                measure = q_triang.get()
+                print("measure:", measure)
+                print("{:6.2f}".format(get_time(t_s)), "Time join start")
+                p_triang.join()
+                print("{:6.2f}".format(get_time(t_s)), "Time join end")
+
+                if (measure[0]!=-1) and (measure[1]!=-1):
+                    x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
+                    delta = pose - pose_KF
+                    pose[0] = x_update[0] + delta[0]
+                    pose[1] = x_update[1] + delta[1]
+                    pose[2] = x_update[2] + delta[2]
+                    pose_update_available = True
+                    print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
+
+                del q_triang
+                del e_location
+                del e_img_loc
+                del p_triang
+
+                q_triang = mp.Queue()
+                e_location = mp.Event()
+                e_img_loc = mp.Event()
 
 
             p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
@@ -262,6 +266,7 @@ if __name__=='__main__':
                 bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
                 wp_bottle = np.array([bottle_x, bottle_y])
                 # TODO do not chenge wp if not yet reached
+
             del q_bottle
             del e_bottle
             del p_bottle
@@ -272,18 +277,19 @@ if __name__=='__main__':
             p_bottle.start()
             # TODO send bottle detected to arduino and commands
 
-    # shut the motor down
-    state = states.FINISH
-    wp_end = np.array([0.5,0.5])
-    message = {"state": state}
-    ser.write(json.dumps(message).encode('ascii'))
-    print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
-    time.sleep(1)
-    print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
-    ser.close() # close serial port at the end of the code
+    finally:
+        # shut the motor down
+        state = states.FINISH
+        wp_end = np.array([0.5,0.5])
+        message = {"state": state}
+        ser.write(json.dumps(message).encode('ascii'))
+        print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
+        time.sleep(1)
+        print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
+        ser.close() # close serial port at the end of the code
 
-    p_triang.join()
-    p_bottle.join()
+        p_triang.join()
+        p_bottle.join()
 
 
 
