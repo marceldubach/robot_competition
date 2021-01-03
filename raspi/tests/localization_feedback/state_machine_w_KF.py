@@ -9,6 +9,7 @@ import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter
 from utilities import detect_bottle
+from picamera import PiCamera
 
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
@@ -31,7 +32,7 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 120
+    t_max = 50
     # initalize time for display
     t_s = time.time()
 
@@ -54,8 +55,9 @@ if __name__=='__main__':
     dT = 0
 
     # Picam initialization
-    camera = PiCamera()
-    camera.rotation = 180
+    #camera = PiCamera()
+    #camera.rotation = 180
+    #camera.resolution = (1280,720)
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
