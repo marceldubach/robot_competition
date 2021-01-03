@@ -8,6 +8,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter
+from utilities import detect_bottle
 
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
@@ -24,20 +25,9 @@ from kalmanFilter import kalmanFilter
         - Add Localization update on python (camera)
         - Implement a Kalman Filter
         - Add Bottle Detection to the Script
-        """
 """
-def state_machine(t_s, t_max):
-    # predefined waypoints
-"""
-
 def get_time(time_start):
     return time.time() - time_start
-
-def main(event, queue): # localisation
-    # take image..(taking 0.3 seconds(
-    event.set()
-
-
 
 
 if __name__=='__main__':
@@ -50,21 +40,22 @@ if __name__=='__main__':
     state_previous = 0
     n_bottles = 0
 
-    # Pk = np.identity(5)
-
-    Pk = np.array([[0.1, 0, 0.02, 0.02, 0],
-                   [0, 0.1, 0.02, 0.02, 0],
+    Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
+                   [0, 0.5, 0.02, 0.02, 0],
                    [0.02, 0.02, 0.1, 0, 0.04],
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
     Q = 0.01*np.identity(5)
-    # R = np.identity(3)
-    R =  np.array([[0.1, 0, 0],
-                  [0, 0.1, 0],
-                  [0, 0, 0.01]])
+    R =  np.array([[0.5, 0, 0],
+                  [0, 0.5, 0],
+                  [0, 0, 0.05]])
 
     x = np.zeros(5)
     dT = 0
+
+    # Picam initialization
+    camera = PiCamera()
+    camera.rotation = 180
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
@@ -80,11 +71,9 @@ if __name__=='__main__':
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
 
-    # webcam = localization.setupWebcam()
-
     time.sleep(4)
     if (ser.in_waiting>0):
-        line = ser.readline().decode('ascii') # TODO check if this decode works
+        line = ser.readline().decode('ascii') 
         print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
         state = states.MOVING
         # if the received message is 'ready', then the arduino is in state 0 and well initialized
@@ -93,17 +82,22 @@ if __name__=='__main__':
     ser.flush()
     time.sleep(0.1)
 
-    q_triang = mp.Queue()
+    q_bottle = mp.Queue() # queue for frontal camera information
+    q_triang = mp.Queue() # queue for triangulation
+    e_bottle = mp.Event() # event when the frontal camera has finished
     e_img_loc = mp.Event() # event when an image is saved
-    e_location = mp.Event()
+    e_location = mp.Event() # event when triangulation has finished
 
+    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
+    p_bottle.start()
     p_triang.start()
     pose_update_available = False
+    bottle_detected = False
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,1],[2,2],[1,2], [1,1], [2,1]]) #TODO write function to calculate waypoints
+    waypoints = np.array([[2,1],[4,4],[5,3], [1,1], [2,1]]) #TODO write function to calculate waypoints
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
@@ -111,7 +105,7 @@ if __name__=='__main__':
         message = {}
 
         if (state == states.MOVING):  # state = 1: track waypoints
-            if np.linalg.norm(pose[0:-1]-wp)<0.2:
+            if np.linalg.norm(pose[0:-1]-wp)<0.4:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
                 if i_wp>len(waypoints): # if all waypoints are reached, shutdown
@@ -187,18 +181,17 @@ if __name__=='__main__':
             # print(x)
 
         if (e_location.is_set()):
-            print("True here", e_location.is_set())
+            
             e_location.clear()
-            print("False here", e_location.is_set())
+            
             measure = q_triang.get()
+            print("measure:", measure)
             print("{:6.2f}".format(get_time(t_s)), "Time join start")
             p_triang.join()
             print("{:6.2f}".format(get_time(t_s)), "Time join end")
-
-
-            x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
-            x_update[0:3] = measure
-            if (x_update[0]!=-1) and (x_update[1]!=-1):
+           
+            if (measure[0]!=-1) and (measure[1]!=-1):
+                x_update, Pk = kalmanFilter(x,measure,dT,Pk,Q,R)
                 delta = pose - pose_KF
                 pose[0] = x_update[0] + delta[0]
                 pose[1] = x_update[1] + delta[1]
@@ -206,27 +199,38 @@ if __name__=='__main__':
                 pose_update_available = True
                 print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
 
-                del q_triang
-                del e_location
-                del e_img_loc
-                del p_triang
+            del q_triang
+            del e_location
+            del e_img_loc
+            del p_triang
 
-                q_triang = mp.Queue()
-                e_location = mp.Event()
-                e_img_loc = mp.Event()
-
-
-                p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
-                p_triang.start()
-
-        # print("End of loop (should be false here):", e_location.is_set())
+            q_triang = mp.Queue()
+            e_location = mp.Event()
+            e_img_loc = mp.Event()
 
 
+            p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
+            p_triang.start()
 
+        # frontal camera check
+        if(e_bottle.is_set()):
+            e_bottle.clear()
+            bottle_pos = q_bottle.get()
+            print("bottle position:", bottle_pos)
+            p_bottle.join()
+            if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
+                bottle_detected = True
+            del q_bottle
+            del e_bottle
+            del p_bottle
 
+            q_bottle = mp.Queue()
+            e_bottle = mp.Event()
+            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
+            p_bottle.start()
+            # TODO send bottle detected to arduino and commands
 
     # shut the motor down
-    # webcam.release()
     state = states.FINISH
     wp_end = np.array([0.5,0.5])
     message = {"state": state}
@@ -234,9 +238,10 @@ if __name__=='__main__':
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Shutting motors down")
     time.sleep(1)
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
-    ser.close() # close serial   port at the end of the code
+    ser.close() # close serial port at the end of the code
 
     p_triang.join()
+    p_bottle.join()
 
 
 

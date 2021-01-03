@@ -3,8 +3,6 @@ import math
 import numpy as np
 import time
 import cv2 as cv
-import usb.core
-import usb.util 
 import imutils
 import time
 import json
@@ -28,36 +26,11 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
     # print("Set Event")
     centroids = extractCentroids(filename)
     xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-    if (xCenterM != -1 and yCenterM != -1):
-        data = np.array([xCenterM, yCenterM, yaw])
-        # print(data)
-        queue.put(data)
-
-    else:
-        print("[TRAINGULATION] no beacon found")
-    """
-    if filename != 0:
-        e_img_loc.set()
-        centroids = extractCentroids(filename)
-        xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-        if (xCenterM != -1 and yCenterM != -1):
-            data = np.array([xCenterM, yCenterM,yaw])
-            # print(data)
-            queue.put(data)
-            e_loc_finished.set()
-        else:
-            e_img_loc.clear()
-    """
+    data = np.array([xCenterM, yCenterM, yaw])
+    queue.put(data)
     webcam.release()
     e_loc_finished.set()
     return queue  # if fails the queue will be empty
-
-def setupWebcam():
-    webcam = cv.VideoCapture(0) #ID 0
-    webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920) 
-    webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080) 
-    time.sleep(1)
-    return webcam
 
 def savePicture(webcam):
     if not (webcam.isOpened()):
@@ -268,7 +241,7 @@ def computePosition(centroids, yaw):
     # calculate the reference to which the angles are computed
     reference = getReference(centroids)
     #print(reference)
-    if len(centroids) < 3 or reference is 0:
+    if len(centroids) < 3:
         print("Not enough beacons or not able to get reference")
         return -1, -1,  yaw 
 
@@ -343,7 +316,7 @@ def computePosition(centroids, yaw):
     #print(y1)
     #print(x2)
     #print(y2)
-    if(x1>pow(10,-3) and x1<8 and y1>pow(10,-3) and y1<8):
+    if(x1>0 and x1<8 and y1>0 and y1<8):
     
         # translate to true arena origin  
         if (reference == 'm'):
@@ -365,7 +338,7 @@ def computePosition(centroids, yaw):
         if angle != -1:
             yaw = angle
         return xCenterM, yCenterM, yaw
-    else:
+    elif(x2>0 and x2<8 and y2>0 and y2<8):
         # translate to true arena origin  
         if (reference == 'm'):
             x = x2
@@ -386,6 +359,8 @@ def computePosition(centroids, yaw):
         if angle != -1:
             yaw = angle
         return xCenterM, yCenterM, yaw
+    else:
+        return -1, -1,  yaw 
 
 def getAbsoluteAngle(centroids, xCenterM, yCenterM):
     """
@@ -424,7 +399,6 @@ def getAbsoluteAngle(centroids, xCenterM, yCenterM):
         absolute_angle = (robotAngle + rel_forward_dir)%(2*np.pi)
         #if (absolute_angle > np.pi):
         #    absolute_angle -= 2*np.pi
-        if (absolute_angle > 2*np.pi - np.pi/8):
-            absolute_angle -= 2*np.pi
         print("absolute angle [deg]", absolute_angle*180/np.pi)
         return absolute_angle
+
