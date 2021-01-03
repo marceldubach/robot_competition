@@ -9,8 +9,6 @@
  */
 
 #include "ArduinoJson.h"
-//#include "Motors.h"
-#include "ArduinoJson.h"
 #include "Wire.h"
 #include "I2Cdev.h"
 #include "MPU6050.h"
@@ -46,33 +44,19 @@ float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points
 
 bool time_elapsed = false;
-//int16_t ax, ay, az;
-//int16_t mx, my, mz;
-
-//float acc_sf = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
-//float acc_mean = -0.04; // mean noise on accelerometre ax lecture, averaged over 1000 data points
-//float acc_x;
-
-// wheel motor ports
 
 //MotorRight ports
 byte enableRight(51);
 byte pwmRight(3); // changed from define
-//#define avSpeedRight A1 // Hall sensor reading
 
 //MotorLeft ports
 byte enableLeft(50);
 byte pwmLeft(2); // changed from define
-//#define avSpeedLeft A3 // Hall sensor reading
 
 // estimated position of the robot
 double x = 1;
 double y = 1;
 double theta = 0;
-
-// references to waypoint (goal)
-//double heading_ref = 0;
-//double dist = 0;
 
 // variables for serial communication
 int macro_state;
@@ -264,17 +248,6 @@ void loop()
     command.add(cmdLeft);
     command.add(cmdRight);
 
-    /*
-    JsonArray dist = send_msg.createNestedArray("dist");
-    dist.add(distances[0]);
-    dist.add(distances[1]);
-    dist.add(distances[2]);
-    dist.add(distances[3]);
-    dist.add(distances[4]);
-    dist.add(distances[5]);
-    dist.add(distances[6]);
-    dist.add(duration);
-    */
     serializeJson(send_msg, Serial);
 
     Serial.println();
@@ -344,7 +317,7 @@ void loop()
     break;
 
   case OBSTACLE:
-    // TODO: implement motor commands and braitenberg here
+   
     for (int i = 0; i < n_US; i++)
     {
       if (threshold[i] == 1)
@@ -371,7 +344,7 @@ void loop()
     break;
 
   case RETURN:
-    // TODO: implement motor commands here
+    
     enableMotors = true;
     calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
     break;
@@ -388,8 +361,6 @@ void loop()
     camServo.detach();
     enableMotors = false;
   }
-
-  // TODO: state machine for obstacle avoidance
 
   // switch if state is CATCH
   if (macro_state == CATCH)
@@ -429,7 +400,7 @@ void loop()
     case CLOSE:
       microLeft.write(40);
       microRight.write(160);
-      // TODO: Read ultrasonic sensor + increase counter
+      
       if (millis() - t_catch > 1000)
       {
         digitalWrite(claw_trigger, LOW);
