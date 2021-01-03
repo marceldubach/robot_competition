@@ -11,37 +11,34 @@ import os
 def triangulation(queue, e_img_loc, e_loc_finished, yaw):
     # filename = savePicture(webcam)
     # set event to tell the readingOdometry to read the serial information
-
+    filename = 0
     webcam = cv.VideoCapture(0) #ID 0
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     time.sleep(0.3)
-
-    try:
-        if (webcam.isOpened()):
-            filename = savePicture(webcam)
-            e_img_loc.set()
-            # print("Set Event")
-            centroids = extractCentroids(filename)
-            xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
-            data = np.array([xCenterM, yCenterM, yaw])
-            queue.put(data)
+    while(filename == 0):
+        filename = savePicture(webcam)
+        if (filename==0):
+            print("[TRIANGULATION] coultn't take photo")
         else:
-            raise ValueError("[TRIANG] Video Device is not open")
-
-    except ValueError as ve:
-        print(ve)
-
-    finally:
-        webcam.release()
-        e_loc_finished.set()
-        return queue  # if fails the queue will be empty
+            print("[TRIANGULATION] took photo")
+    e_img_loc.set()
+    # print("Set Event")
+    centroids = extractCentroids(filename)
+    xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
+    data = np.array([xCenterM, yCenterM, yaw])
+    queue.put(data)
+    webcam.release()
+    e_loc_finished.set()
+    return queue  # if fails the queue will be empty
 
 def savePicture(webcam):
+    if not (webcam.isOpened()):
+        print("Could not open video device")
     try:
         check, frame = webcam.read()
         if check:
-            filename = 'img.jpg'
+            filename = 'localization_feedback/img.jpg'
             time.sleep(0.1)
             cv.imwrite(filename, img=frame)
             # print("Image saved!")
