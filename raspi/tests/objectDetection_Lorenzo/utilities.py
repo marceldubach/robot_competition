@@ -58,8 +58,8 @@ def corner_detection(img_grey):
 
     # Add back the correct y shift with respect to original image 
     for c in corners:
-        c[0][1] += 250
-
+        c[0][1] += 200
+      
     return found_corner, corners
 
 def corner_in_rectangle(rect, c):
@@ -95,6 +95,8 @@ def corner_is_outlier(corners, i,min_neighbours, max_distance):
                 n += 1
         if (n >= min_neighbours):
             isOutlier = False
+    print("neighbours",n)
+   
     return isOutlier
 
 def add_corners(img, cornerList):
@@ -107,7 +109,7 @@ def add_corners(img, cornerList):
         x_center = int((xmin+xmax)/2)
         y_center = int((ymin+ymax)/2)
 
-        cv.circle(img, (x_center, y_center), 20, 0, -1)
+        cv.circle(img, (x_center, y_center), 20, [0,0,255], -1)
 
         for c in cornerList:
             x, y = c # extract components
