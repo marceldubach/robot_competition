@@ -98,7 +98,7 @@ def detect_bottle(queue, e_bottle, Zi, r2):
     
     #img = np.empty((720,1280,3))
     camera.capture('frontal_img.jpg')
-    img = cv.imread('localization_feedback/frontal_img.jpg')
+    img = cv.imread('frontal_img.jpg')
     
     img_out = img.copy()
     

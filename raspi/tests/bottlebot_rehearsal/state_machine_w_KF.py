@@ -146,9 +146,11 @@ if __name__=='__main__':
             message["ref"] = [float(wp[0]), float(wp[1])]
 
         if (state != state_previous):
-            if (state== states.MOVING) and (state_previous == states.CATCH):
-                    is_catching = False
-                    n_bottles += 1
+            if (state == states.MOVING) and (state_previous == states.CATCH):
+                is_catching = False
+                n_bottles += 1
+                print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED! Robot contains ",
+                      str(n_bottles), " bottles")
             message["state"] = state
             state_previous = state
 
@@ -261,14 +263,14 @@ if __name__=='__main__':
                 bottle_detected = True
                 state_previous = state 
                 state = states.CATCH
-                distanceToBottle = bottle_pos[0]
-                angle = bottle_pos[1]
-                bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
-                bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
-                if not is_catching:
-                        wp_bottle = np.array([bottle_x, bottle_y])
-                        is_catching = True 
-                # TODO do not chenge wp if not yet reached
+                if not (is_catching):
+                    is_catching = True
+                    distanceToBottle = bottle_pos[0]
+                    angle = bottle_pos[1]
+                    bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
+                    bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
+                    wp_bottle = np.array([bottle_x, bottle_y])
+
             del q_bottle
             del e_bottle
             del p_bottle
