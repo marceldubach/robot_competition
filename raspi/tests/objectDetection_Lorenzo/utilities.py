@@ -72,9 +72,9 @@ def add_corners(img, cornerList):
         for c in cornerList:
             x, y = c # extract components
             cv.circle(img, (x, y), 5, 0, -1)
-        return True, np.array([x_center, y_center])
+        return True, np.array([x_center, y_center]), img
     else:
-        return False, np.array([-1,-1])
+        return False, np.array([-1,-1]), img
 
 def bottle_ref(position, Zi, r2):
     

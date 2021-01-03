@@ -161,7 +161,9 @@ if __name__=='__main__':
         ser.write(json.dumps(message).encode('ascii'))
 
         ser.flush()
-        time.sleep(0.09)  # TODO replace this with while
+        #time.sleep(0.09)  # TODO replace this with while
+        while not (ser.in_waiting > 0):
+            time.sleep(0.02)
 
         # READ THE SERIAL INFORMATION FROM ARDUINO
         if (ser.in_waiting > 0):
