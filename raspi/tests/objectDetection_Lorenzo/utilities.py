@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
+#from picamera import PiCamera
 
 
 def HSV_mask(img,hsv_min, hsv_max):
@@ -16,39 +17,6 @@ def HSV_mask(img,hsv_min, hsv_max):
 
     return mask
 
-def find_rectangles_around_brick(brick_mask):
-    """returns rectangles of pointx (x,y) where x=(x1,x2) is (vertical, horizontal)"""
-    rectangles = []
-    height, width = brick_mask.shape
-    delta = 20  # extend the bricks by some value
-    b_contours, b_hierarchy = cv.findContours(brick_mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    for i in range(len(b_contours)):
-        if (cv.arcLength(b_contours[i],True))>800: # take only long enough contours
-            cnt = b_contours[i]
-            # x1: from top to bottom, x2: from left to right,w: width, h: height of rectangle
-            p2,p1,w,h = cv.boundingRect(cnt)
-            if (p1-delta)>0:
-                x1 = p1-delta
-            else:
-                x1 = 0
-            if (p2-delta)>0:
-                x2 = p2-delta
-            else:
-                x2 = 0
-            if (p1+h+delta<height):
-                y1 = p1+h+delta
-            else:
-                y1 = height
-            if (p2+w+delta<width):
-                y2= p2+w+delta
-            else:
-                y2 = width
-            print("[DETECTION] Found a brick at:", np.array([x1,x2,y1,y2]))
-            rectangles.append(np.array([x1,x2,y1,y2]))
-
-
-    return rectangles
-
 def corner_detection(img_grey):
     corners = cv.goodFeaturesToTrack(img_grey,10,0.05,10)
     found_corner = False
@@ -58,19 +26,9 @@ def corner_detection(img_grey):
 
     # Add back the correct y shift with respect to original image 
     for c in corners:
-        c[0][1] += 250
-
+        c[0][1] += 200
+      
     return found_corner, corners
-
-def corner_in_rectangle(rect, c):
-
-    x1, x2, y1, y2 = rect
-    if (((x1 <= c[1]) and (y1 >= c[1])) and ((x2 <= c[0]) and (y2 >= c[0]))):
-        # print("Rectangle coordinates: ", rect)
-        # print("Corner coordinates", c)
-        return True
-    else:
-        return False
 
 def corner_in_beacon(mask, c):
 
@@ -95,6 +53,8 @@ def corner_is_outlier(corners, i,min_neighbours, max_distance):
                 n += 1
         if (n >= min_neighbours):
             isOutlier = False
+    print("neighbours",n)
+   
     return isOutlier
 
 def add_corners(img, cornerList):
@@ -107,12 +67,86 @@ def add_corners(img, cornerList):
         x_center = int((xmin+xmax)/2)
         y_center = int((ymin+ymax)/2)
 
-        cv.circle(img, (x_center, y_center), 20, 0, -1)
+        cv.circle(img, (x_center, y_center), 20, [0,0,255], -1)
 
         for c in cornerList:
             x, y = c # extract components
             cv.circle(img, (x, y), 5, 0, -1)
-        return True, np.array([x_center, y_center]), img
+        return True, np.array([x_center, y_center])
     else:
-        return False, np.array([-1,-1]), img
+        return False, np.array([-1,-1])
 
+def bottle_ref(position, Zi, r2):
+    
+    x_b = position[0]
+    y_b = position[1] 
+    r1 = Zi.dot([x_b, y_b, 1.0]) 
+    if 640 > x_b:
+        sign = 1
+    else:
+        sign = -1
+    cos_angle = r1.dot(r2) / (np.linalg.norm(r1) * np.linalg.norm(r2))
+    angle_radians = sign*np.arccos(cos_angle) 
+    distance = 1.5 - ((y_b)-200)/200
+    return distance, angle_radians
+
+def detect_bottle(queue, e_bottle, Zi, r2, filename):
+    #t_start_det = time.time()
+
+    #camera = PiCamera()
+    #camera.rotation = 180
+    #camera.resolution = (1280,720)
+    
+    #img = np.empty((720,1280,3))
+    #camera.capture('frontal_img.jpg')
+    img = cv.imread(filename)
+   
+    img_out = img.copy()
+   
+    # Compute a mask on the beacon to exclude outliers given by extreme color gradient 
+    beacon_hsv_min = np.array([0, 0, 200])
+    beacon_hsv_max = np.array([180, 255, 255])
+    beacon_mask = HSV_mask(img, beacon_hsv_min, beacon_hsv_max)
+
+    # The region of interest excludes image upper part
+    ROI = img[200:, 0:]
+    img_gray = cv.cvtColor(ROI, cv.COLOR_BGR2GRAY)
+    foundCorner, corners = corner_detection(img_gray)
+
+    # Try to exclude outliers
+    cornerList = []
+    for i in range(len(corners)):
+        c = corners[i].flatten()
+
+        isBrick = False
+        isBeacon = False
+        
+        if corner_in_beacon(beacon_mask, c):
+            isBeacon = True
+
+        if not isBrick and not isBeacon:
+            min_neighbours = 6  # minimum amount of neighbours
+            max_distance = 100  # distance in pixels within the corner must have its neighbours
+            isOutlier = corner_is_outlier(corners, i, min_neighbours, max_distance)
+
+        if not isBrick and not isBeacon and not isOutlier:
+            # print("Append corner at  (x1, x2): (" , c[0], ", ", c[1],")")
+            cornerList.append(c)
+
+    # TODO add the case where there are more than 1 bottle in the image!
+
+    # Plot a bounding box around the bottle
+    has_bottle, center = add_corners(img_out, cornerList)
+
+    distance, angle = bottle_ref(center, Zi, r2)
+    bottle_pos = np.array([distance, angle])
+    queue.put(bottle_pos)
+    if(has_bottle):
+        print("[DETECTION] Found a bottle at position ", center, "bottle position", bottle_pos)
+    else:
+        print("[DETECTION] Found no bottle ...")
+    print("center bottle:", center)
+    #camera.close()
+    e_bottle.set()
+    #print("e_bottle:", e_bottle.is_set())
+    return queue
