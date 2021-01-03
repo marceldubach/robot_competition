@@ -136,14 +136,15 @@ def detect_bottle(queue, e_bottle, Zi, r2):
     # Plot a bounding box around the bottle
     has_bottle, center = add_corners(img_out, cornerList)
 
-    distance, angle = bottle_ref(center, Zi, r2)
-    bottle_pos = np.array([distance, angle])
-    queue.put(bottle_pos)
     if(has_bottle):
-        print("[DETECTION] Found a bottle at position ", center, "bottle position", bottle_pos)
+        distance, angle = bottle_ref(center, Zi, r2)
+        bottle_pos = np.array([distance, angle])
+        queue.put(bottle_pos)
+        print("[DETECTION] Found a bottle at position ", center, "(pixels), bottle position(arena) :", bottle_pos)
     else:
+        queue.put(center)
         print("[DETECTION] Found no bottle ...")
-    print("center bottle:", center)
+    #print("center bottle:", center)
     camera.close()
     e_bottle.set()
     #print("e_bottle:", e_bottle.is_set())

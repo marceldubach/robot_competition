@@ -32,7 +32,9 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 50
+    t_max = 40
+    t_home = 40
+    
     # initalize time for display
     t_s = time.time()
 
@@ -52,6 +54,7 @@ if __name__=='__main__':
                   [0, 0, 0.05]])
 
     x = np.zeros(5)
+    wp_bottle = np.array([0,0])
     dT = 0
 
     # Picamera sensor matrix
@@ -77,12 +80,15 @@ if __name__=='__main__':
 
     time.sleep(4)
     if (ser.in_waiting>0):
-        line = ser.readline().decode('ascii') 
-        print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
-        state = states.MOVING
-        # if the received message is 'ready', then the arduino is in state 0 and well initialized
+        try:
+            line = ser.readline().decode('ascii') 
+            print("{:6.2f}".format(get_time(t_s)) + " [SER] Arduino: ", line)
+            state = states.MOVING
+            # if the received message is 'ready', then the arduino is in state 0 and well initialized
+        except:
+             print("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino is not responding")
     else:
-        print("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino is not responding")
+        print("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino didn't send message")
     ser.flush()
     time.sleep(0.1)
 
@@ -107,6 +113,24 @@ if __name__=='__main__':
 
     while (time.time() - t_s < t_max):
         message = {}
+        if data == "":
+            message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
+
+        # Timeout expired: return to recycling station
+        if (state == states.MOVING) and (time.time()- t_s > t_home):
+            state_previous = state
+            state = states.RETURN
+            wp = np.array([0.5,0.5])
+            message["ref"] = [float(wp[0]), float(wp[1])]
+
+        # We have seen a bottle 
+        if (state == states.CATCH):
+            message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
+
+        # Back to recycling station
+        if (state == states.RETURN):
+            if (np.linalg.norm(pose[0:-1]-np.array([0.5,0.5]))<0.4):
+                state = states.EMPTY
 
         if (state == states.MOVING):  # state = 1: track waypoints
             if np.linalg.norm(pose[0:-1]-wp)<0.4:
@@ -172,9 +196,14 @@ if __name__=='__main__':
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
         if (e_img_loc.is_set()):
-
-            measures = np.array(data["info"])
-            v,omega,dT = measures
+            v = 0
+            omega = 0
+            dT = 0.02
+            try:
+                measures = np.array(data["info"])
+                v,omega,dT = measures
+            except:
+                print("Didn't manage to get info from arduino")
             pose_KF = pose
             if pose[2] > 2*np.pi:
                 pose_KF[2] -= 2*np.pi
@@ -224,6 +253,14 @@ if __name__=='__main__':
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
                 bottle_detected = True
+                state_previous = state 
+                state = states.CATCH
+                distanceToBottle = bottle_pos[0]
+                angle = bottle_pos[1]
+                bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
+                bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
+                wp_bottle = np.array([bottle_x, bottle_y])
+                # TODO do not chenge wp if not yet reached
             del q_bottle
             del e_bottle
             del p_bottle
