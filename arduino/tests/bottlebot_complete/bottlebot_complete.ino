@@ -340,7 +340,7 @@ void loop()
     break;
 
   case CATCH: // lift bottles
-    enableMotors = false;
+  
     break;
 
   case RETURN:
@@ -379,19 +379,23 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(20);
+      mainServo.write(16);
+      microLeft.write(100);
+      microRight.write(100);
       if (millis() - t_catch > 1000)
       {
         catch_state = APPROACH_BOTTLE;
         t_catch = millis();
+        enableMotors = true;
       }
       break;
 
     case APPROACH_BOTTLE:
       cmdLeft = 150;
       cmdRight = 150;
-      if (millis() - t_catch > 5000)
+      if (millis() - t_catch > 3000)
       {
+        enableMotors = false;
         catch_state = CLOSE;
         t_catch = millis();
       }
@@ -438,6 +442,7 @@ void loop()
       if (millis() - t_catch > 1000)
       {
         macro_state = MOVING;
+        enableMotors = true;
       }
       break;
 
