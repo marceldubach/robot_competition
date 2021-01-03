@@ -55,6 +55,7 @@ if __name__=='__main__':
 
     x = np.zeros(5)
     wp_bottle = np.array([0,0])
+    wp_recycling_area = np.array([1,1])
     dT = 0
 
     # Picamera sensor matrix
@@ -120,7 +121,7 @@ if __name__=='__main__':
         if (state == states.MOVING) and (time.time()- t_s > t_home):
             state_previous = state
             state = states.RETURN
-            wp = np.array([0.5,0.5])
+            wp = wp_recycling_area
             message["ref"] = [float(wp[0]), float(wp[1])]
 
         # We have seen a bottle 
@@ -149,7 +150,7 @@ if __name__=='__main__':
             state_previous = state
 
         if (state == states.RETURN): # if state is returning, then send waypoints
-            wp = np.array([1, 1])  # need to define waypoints here
+            wp = wp_recycling_area # need to define waypoints here
             message["ref"] = [float(wp[0]), float(wp[1])]  # conversion to float is necessary!
 
         if (pose_update_available):
