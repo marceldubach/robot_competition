@@ -119,9 +119,11 @@ def add_corners(img, cornerList):
 
 def detect_bottle(queue, e_bottle):
     #t_start_det = time.time()
+
     camera = PiCamera()
     camera.rotation = 180
     camera.resolution = (1280,720)
+    
     #img = np.empty((720,1280,3))
     camera.capture('frontal_img.jpg')
     img = cv.imread('frontal_img.jpg')
@@ -182,6 +184,7 @@ def detect_bottle(queue, e_bottle):
     else:
         print("[DETECTION] Found no bottle ...")
     print("center bottle:", center)
+    camera.close()
     e_bottle.set()
     #print("e_bottle:", e_bottle.is_set())
     return queue
