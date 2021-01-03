@@ -38,7 +38,7 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
   double dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
 
   // if the heading is ok (difference < del_theta), then go straight
-  double del_theta = 0.3;
+  double del_theta = 0.3; // tolerance for angle: 17.8°
   if ((fabs(heading_ref-theta)<del_theta) || (fabs(heading_ref-theta)>(2*PI-del_theta))){
     // heading is good -> fast forward
     if (dist>1){
@@ -53,9 +53,9 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     
     if ((heading_ref-theta)>0){
       if (heading_ref-theta<PI){
-        turnLeft = true; // turn right
+        turnLeft = true; // turn left
       } else {
-        turnLeft = false;
+        turnLeft = false; // turn right
       }
     } else { // theta > heading_ref
       if ((theta - heading_ref)<PI){
@@ -74,14 +74,14 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
         cmdRight = 126-fabs(heading_ref-theta)*5;
       }
     } else {
+      // turn faster
       if (turnLeft){ 
-        // turn faster
         cmdRight = 138;
         cmdLeft = 118;
       } else {
         cmdRight = 138;
         cmdLeft = 118;
       }
-    } // end else turn right
-  } // end else deltatheta>0.3
+    }
+  } // end else turn
 }

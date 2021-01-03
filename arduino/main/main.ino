@@ -17,47 +17,54 @@
 #include "Servo.h"
 #include "VelCtrl.h"
 
+
+#define PI 3.1415
+
 byte dutyCycle;
 
 // timestep variables (for integration of IMU)
 unsigned long t0 = 0;
-float dt;
 
+float dt;
+float v = 0;
+float omega_rad;
+// definition of an IMU object with associated variables
+MPU6050 IMU;
+int16_t gx, gy, gz;
+
+#define avSpeedRight A1 // Hall sensor reading
+#define avSpeedLeft A3 // Hall sensor reading
 float speedRight = 0;
 float speedLeft = 0;
-float v = 0;
+
 float wLeft = 0;
 float wRight = 0;
 
 float radius = 0.04;
 float omega_deg;
-float omega_rad;
 
-// definition of an IMU object with associated variables
-MPU6050 IMU;
-//int16_t ax, ay, az;
-int16_t gx, gy, gz;
-//int16_t mx, my, mz;
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points 
 
-float omega_mean = 0;
 
-float acc_sf = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
-float acc_mean = -0.04; // mean noise on accelerometre ax lecture, averaged over 1000 data points 
-float acc_x;
+//int16_t ax, ay, az;
+//int16_t mx, my, mz;
+
+//float acc_sf = 16384; // [LSB/g] gain at ±2 configuration DEFAULT ONE
+//float acc_mean = -0.04; // mean noise on accelerometre ax lecture, averaged over 1000 data points 
+//float acc_x;
 
 // wheel motor ports
 
 //MotorRight ports
 byte enableRight(51);
 byte pwmRight(3); // changed from define
-#define avSpeedRight A1 // Hall sensor reading
+//#define avSpeedRight A1 // Hall sensor reading
 
 //MotorLeft ports
 byte enableLeft(50);
 byte pwmLeft(2); // changed from define
-#define avSpeedLeft A3 // Hall sensor reading
+//#define avSpeedLeft A3 // Hall sensor reading
 
 // estimated position of the robot
 double x = 1;
@@ -65,8 +72,8 @@ double y = 1;
 double theta = 0;
 
 // references to waypoint (goal)
-double heading_ref = 0;
-double dist = 0;
+//double heading_ref = 0;
+//double dist = 0;
 
 // variables for serial communication
 int macro_state;
@@ -113,8 +120,6 @@ unsigned long t_empty = 0;
 
 unsigned long claw_dist = 100;
 int cntBottles = 0;
-
-#define PI 3.1415
 
 // set default values
 double ref_x = 0.0;
@@ -222,7 +227,7 @@ void loop() {
     JsonArray reference = send_msg.createNestedArray("ref");
     reference.add(ref_x);
     reference.add(ref_y);
-    reference.add(heading_ref);
+//    reference.add(heading_ref);
 
     JsonArray command = send_msg.createNestedArray("cmd");
     command.add(cmdLeft);
@@ -290,60 +295,9 @@ void loop() {
       if (foundObstacle){
         macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
       } else {
-        // update the motor speed
+        // compute motor speeds
         calculate_Commands(cmdLeft,cmdRight, x, y, theta, ref_x, ref_y);
-        /*
-        heading_ref = atan2((ref_y-y), (ref_x-x));
-        if (heading_ref<0){ // rescale heading reference in [0,2*PI]
-          heading_ref += 2*PI;
-        }
         
-        dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
-  
-        if ((fabs(heading_ref-theta)<0.3) || (fabs(heading_ref-theta)>5.8)){
-          // heading is good -> fast forward
-          if (dist>1){
-            cmdLeft = 240;
-            cmdRight = 240;
-          }else{
-            cmdLeft = 150+dist/0.5*50; // give some value between 150 and 190
-            cmdRight = 150+dist/0.5*50;
-          }
-        }else{
-          bool turnLeft; // get rotation sense
-          if ((heading_ref-theta)>0){
-            if (heading_ref-theta<PI){
-              turnLeft = true; // turn right
-            } else {
-              turnLeft = false;
-            }
-          } else { // theta > heading_ref
-            if ((theta - heading_ref)<PI){
-              turnLeft = false;
-            } else {
-              turnLeft = true;
-            }
-          }
-          if (fabs(heading_ref-theta)<0.8){
-            // turn slowly
-            if (turnLeft){
-              cmdRight = 130+fabs(heading_ref-theta)/0.3*10;
-              cmdLeft = 126-fabs(heading_ref-theta)/0.3*10;
-            }else{ // turn right
-              cmdLeft = 130+fabs(heading_ref-theta)/0.3*10;
-              cmdRight = 126-fabs(heading_ref-theta)/0.3*10;
-            }
-          } else {
-            if (turnLeft){ // turn left
-              cmdRight = 148;
-              cmdLeft = 108;
-            } else {
-              cmdRight = 108;
-              cmdLeft = 148;
-            }
-          } // end else turn right
-        } // end else deltatheta>0.3
-        */
         // turn motors on
         enableMotors = true; 
       } // end else obstacle found
@@ -489,35 +443,16 @@ void loop() {
     }
   }
   set_Commands(enableMotors, cmdRight, cmdLeft, pwmRight, pwmLeft, enableRight, enableLeft);
-  /*
-  if (enableMotors){
-    digitalWrite(enableRight, HIGH);                
-    digitalWrite(enableLeft, HIGH);
-    // saturation
-    if (cmdRight>240){
-      cmdRight = 240;
-    } else if (cmdRight<15) {
-      cmdRight = 15;
-    }
-    if (cmdLeft>240){
-      cmdLeft = 240;
-    }else if(cmdLeft<15){
-      cmdLeft = 15;
-    }
-    // set motor speed (fixed speed)
-    analogWrite(pwmRight, 255-cmdRight);
-    analogWrite(pwmLeft, cmdLeft);
-  } else {
-    digitalWrite(enableRight, LOW);                
-    digitalWrite(enableLeft, LOW);
-  }
-  */
-    
+  
   if ((enableMotors) && (millis()-t0>20)){
     // time interval
     dt = (float) (millis() - t0)/1000;
     t0 = millis();
+
     
+    
+    //update_Odometry(gz, x, y, theta, v, omega_rad, dt);
+
     // read motorspeeds
     speedRight = analogRead(avSpeedRight);
     speedLeft = analogRead(avSpeedLeft);
@@ -528,7 +463,7 @@ void loop() {
     
     // mean forward speed in m/s
     v = (wLeft + wRight)*radius/2;
-    
+
     // gyro angular rate
     IMU.getRotation(&gx, &gy, &gz);
     omega_deg = gz/gyro_sf - gyro_mean; // deg/sec
@@ -543,5 +478,6 @@ void loop() {
     } else if (theta<0){
       theta = theta+2*PI;
     }
+    
   }
 }
