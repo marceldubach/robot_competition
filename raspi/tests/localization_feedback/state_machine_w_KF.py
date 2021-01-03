@@ -66,7 +66,7 @@ if __name__=='__main__':
     r2 = Zi.dot([x_c, y_c, 1.0])
 
     # initial estimated position
-    pose = np.array([1,4,0]) # estimated position
+    pose = np.array([1,1,0]) # estimated position
 
     data = ""
 
@@ -266,7 +266,6 @@ if __name__=='__main__':
                 bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
                 wp_bottle = np.array([bottle_x, bottle_y])
                 # TODO do not chenge wp if not yet reached
-
             del q_bottle
             del e_bottle
             del p_bottle
