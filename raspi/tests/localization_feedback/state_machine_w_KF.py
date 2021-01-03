@@ -32,8 +32,8 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 40
-    t_home = 40
+    t_max = 180
+    t_home = 120
     
     # initalize time for display
     t_s = time.time()
