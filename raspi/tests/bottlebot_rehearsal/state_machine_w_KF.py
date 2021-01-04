@@ -22,8 +22,8 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 60
-    t_home = 20
+    t_max = 200
+    t_home =120
     
     # initalize time for display
     t_s = time.time()
@@ -89,7 +89,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[4,3],[7,1],[7,4],[4,4],[4,5],[1,3],[2,1],[4,2]])
+    waypoints = np.array([[4,4],[7,1],[7,4],[4,4],[4,5],[1,3],[2,1],[4,2]])
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
@@ -172,7 +172,7 @@ if __name__=='__main__':
                 if "pos" in data:
                     pose = np.array(data["pos"])
                 if "state" in data:
-                    if state != data["state"]:
+                    if (state != data["state"]) and ((state != states.RETURN) and (state!=states.EMPTY)):
                         state_previous = state
                         state = data["state"]
                         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)

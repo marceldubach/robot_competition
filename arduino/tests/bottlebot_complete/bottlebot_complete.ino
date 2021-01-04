@@ -60,6 +60,7 @@ double theta = 0;
 
 // variables for serial communication
 int macro_state;
+int old_macro_state;
 enum macro_states
 {
   STARTING,
@@ -107,7 +108,7 @@ int threshold[] = {0, 0, 0, 0, 0, 0, 0};
 int weight_left[] = {700, 200, -200, -1200, -800, -100, 500};
 int weight_right[] = {1000, 500, -400, -300, -600, -400, 200};
 const double maxdist = 80; // initialize maxdist at less than default distances!
-unsigned long maxPulseIn = 3000; // 50 cm range
+unsigned long maxPulseIn = 10000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
 
@@ -186,12 +187,15 @@ void loop()
   else
   {
     // read the obtained string
-    int old_state = macro_state;
+    old_macro_state = macro_state;
 
     // python prints the state if it has changed
     if (receive_msg.containsKey("state"))
-    {
-      macro_state = receive_msg["state"];
+    { 
+      if (macro_state != OBSTACLE){
+        macro_state = receive_msg["state"];
+      }
+      // else stay in obstacle avoidance
     }
     if (receive_msg.containsKey("ref"))
     {
@@ -208,23 +212,23 @@ void loop()
     // STATE UPDATE
     
     // transition to MOVING
-    if ((macro_state == MOVING) && (old_state != MOVING)){
+    if ((macro_state == MOVING) && (old_macro_state != MOVING)){
       enableMotors = true;
     }
     // transition to CATCH: initialize micro_state and timer
-    if ((macro_state == CATCH) && (old_state != CATCH))
+    if ((macro_state == CATCH) && (old_macro_state != CATCH))
     {
       t_catch = millis();
       catch_state = TRACK_WP;
       enableMotors = true;
     }
     // if state was set to RETURN: nothing special to do
-    if ((macro_state == RETURN) && (old_state != CATCH))
+    if ((macro_state == RETURN) && (old_macro_state != CATCH))
     {
       time_elapsed = true;
     }
     // if state was set to EMPTY:  initialize  micro state and timer (only once)
-    if ((macro_state == EMPTY) && (old_state != EMPTY))
+    if ((macro_state == EMPTY) && (old_macro_state != EMPTY))
     {
       t_empty = millis();
       empty_state = ROTATE;
@@ -232,36 +236,6 @@ void loop()
     if (macro_state == FINISH){
       enableMotors = false;
     }
-    /*
-    const int capacity = 200;
-    StaticJsonDocument<capacity> send_msg;
-
-    send_msg["state"] = macro_state;
-    send_msg["nBot"] = cntBottles;
-    //send_msg["cnt"] = cnt_shakes; // counter for camshaft movements
-    JsonArray position = send_msg.createNestedArray("pos");
-    position.add(x);     //[m]
-    position.add(y);     //[m]
-    position.add(theta); // remember to put [rad/s]
-
-    // info to add in the json document for Kalman filter
-    JsonArray info = send_msg.createNestedArray("info");
-    info.add(v);         //[m/s]
-    info.add(omega_rad); //[rad/s]
-    info.add(dt);        //[s]
-
-    JsonArray reference = send_msg.createNestedArray("ref");
-    reference.add(ref_x); //[m]
-    reference.add(ref_y); //[m]
-
-    JsonArray command = send_msg.createNestedArray("cmd");
-    command.add(cmdLeft);
-    command.add(cmdRight);
-
-    serializeJson(send_msg, Serial);
-
-    Serial.println();
-    */
   }
 
   // read ultrasonic sensors
@@ -290,8 +264,16 @@ void loop()
     idx_us = 0;
   }
 
-  // simulation: position changes over time...
+  // update the variable if there is an obstacle
   bool foundObstacle = false;
+  for (int i = 0; i < n_US; i++)
+  {
+    if (threshold[i] == 1)
+    {
+      foundObstacle = true;
+    }
+  }
+  
   switch (macro_state)
   {
   case STARTING:
@@ -306,15 +288,9 @@ void loop()
     break;
 
   case MOVING: // moving
-    for (int i = 0; i < n_US; i++)
-    {
-      if (distances[i] < maxdist)
-      {
-        foundObstacle = true;
-      }
-    }
     if (foundObstacle)
     {
+      old_macro_state = macro_state;
       macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
     }
     else
@@ -322,13 +298,11 @@ void loop()
       // compute motor speeds
       double del_theta = 0.3;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
-
-      // turn motors on
-      // enableMotors = true;
     } // end else obstacle found
     break;
 
   case OBSTACLE:
+    /*
     for (int i = 0; i < n_US; i++)
     {
       if (threshold[i] == 1)
@@ -336,9 +310,13 @@ void loop()
         foundObstacle = true;
       }
     }
+    */
     if (foundObstacle == false)
     {
-      macro_state = MOVING; // change to state moving again
+      // get back to old state
+      int tmp_state = macro_state;
+      macro_state = old_macro_state; // change to previous again
+      old_macro_state = tmp_state;
     }
     else
     { 
@@ -358,12 +336,22 @@ void loop()
     break;
 
   case RETURN:
+    if (foundObstacle)
+    {
+      old_macro_state = macro_state;
+      macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+    }
     enableMotors = true;
     double del_theta = 0.3;
     calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
     break;
 
   case EMPTY:
+    if (foundObstacle)
+    { 
+      old_macro_state = macro_state;
+      macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+    }
     //enableMotors = false;
     break;
 
@@ -383,7 +371,7 @@ void loop()
     switch (catch_state)
     {
     case TRACK_WP:
-    /*
+    /* // TODO
       double distance_to_WP = sqrt(pow(x-ref_x,2)+pow(y-ref_y,2));
       double del_theta = 0.3;
       if (distance_to_WP<1){
@@ -543,7 +531,7 @@ void loop()
       break;
 
     case CLOSE_DOOR:
-      backDoor.write(160);
+      backDoor.write(175);
       if (millis() - t_empty > 500)
       {
         // if not homing:
