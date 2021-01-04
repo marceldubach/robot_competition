@@ -30,9 +30,11 @@ def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     yaw = prediction[2]
     measured_angle = measurements_vector[2]
 
-    if abs(measured_angle - yaw) > np.pi:
+    if abs(measured_angle - yaw) > 1.5*np.pi:
         if measured_angle - yaw > 0:
             measurements_vector[2] -= 2*np.pi
+        elif yaw - measured_angle > 0:
+            prediction[2] -= 2*np.pi
 
     A = np.array([[1, 0, 0, math.cos(yaw)*dT, 0], [0, 1, 0, math.sin(yaw)*dT, 0], [0, 0, 1, 0, dT], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
     C = np.array([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0]])
@@ -41,4 +43,6 @@ def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     K = (Pk.dot(C.transpose())).dot(np.linalg.inv((C.dot(Pk).dot(C.transpose()))+R))
     Pk = Pk - (K.dot(C)).dot(Pk)
     update = prediction + K.dot(measurements_vector - C.dot(prediction))
+    if update[2] < 0:
+        update[2] += 2*np.pi
     return update , Pk

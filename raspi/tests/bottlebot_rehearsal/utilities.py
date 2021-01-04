@@ -87,6 +87,9 @@ def bottle_ref(position, Zi, r2):
     cos_angle = r1.dot(r2) / (np.linalg.norm(r1) * np.linalg.norm(r2))
     angle_radians = sign*np.arccos(cos_angle) 
     distance = 1.5 - ((y_b)-200)/200
+    if (distance < 0):
+        distance = -1
+        angle_radians = -1
     return distance, angle_radians
 
 def detect_bottle(queue, e_bottle, Zi, r2):
