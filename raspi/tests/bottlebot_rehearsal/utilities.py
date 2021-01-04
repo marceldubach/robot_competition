@@ -91,7 +91,7 @@ def bottle_ref(position, Zi, r2):
         angle_radians = -1
     return distance, angle_radians
 
-def detect_bottle(queue, e_bottle, Zi, r2, i):
+def detect_bottle(queue, e_bottle, Zi, r2):
 
     camera = PiCamera()
     camera.rotation = 180
