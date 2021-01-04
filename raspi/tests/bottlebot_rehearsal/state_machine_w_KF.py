@@ -5,6 +5,10 @@ import numpy as np
 import states
 import localization
 from multiprocessing import Lock, Process, Queue, current_process
+from datetime import datetime
+import os
+import pandas as pd
+
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter
@@ -22,8 +26,11 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 60
-    t_home =30
+    log_time = []
+    log_pos = []
+
+    t_max = 5
+    t_home =5
     
     # initalize time for display
     t_s = time.time()
@@ -183,11 +190,14 @@ if __name__=='__main__':
                               n_bottles, " bottles")
 
                 if "dist" in data:
-                    print("{:6.2f}".format(get_time(t_s)), "Distances ", data["dist"])
+                    print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
+                          " pos: ", pose, " dist:", data["dist"], " info:", data["info"])
+                elif "ref" in data:
+                    print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
+                          " pos: ", pose, " ref:", data["ref"], " info:", data["info"])
 
 
-                print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                      " pos: ", pose," ref:", data["ref"], " info:", data["info"])
+
 
 
             except:
@@ -271,6 +281,10 @@ if __name__=='__main__':
             p_bottle.start()
             # TODO send bottle detected to arduino and commands
 
+        log_time.append(get_time(t_s))
+        log_pos.append(pose)
+
+
     # shut the motor down
     state = states.FINISH
     message = {"state": state}
@@ -295,3 +309,18 @@ if __name__=='__main__':
     # join the processes to close them correctly
     p_triang.join()
     p_bottle.join()
+
+    print("Writing logfile...")
+
+    log_data = {'time': log_time, 'pos': log_pos}
+
+    dataframe = pd.DataFrame()
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+
+    now = datetime.now()
+    date_time = now.strftime("%m-%d-%Y_%H-%M-%S")
+    logfile_name = os.path.basename(__file__)[:-3] + "_"+ date_time + ".csv"
+    dataframe.to_csv("logs/"+logfile_name)
+
+    print("Saved logfile to: logs/"+logfile_name)

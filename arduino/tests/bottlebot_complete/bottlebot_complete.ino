@@ -108,7 +108,7 @@ double distances[] = {100, 100, 100, 100, 100, 100, 100}; // old: double
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
 double weight_left[] = {1000, -400, -200, -300, -300, -400, -400}; // old: double
 double weight_right[] = {1000, -400, -400, -500, -500, -500, -200}; // double
-const double maxdist = 50; // initialize maxdist at less than default distances!
+double maxdist[] = {30,20,60,70,70,60,20}; // initialize maxdist at less than default distances!
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
@@ -210,7 +210,7 @@ void loop()
           enableMotors = true;
         }
         // if PYTHON sets state to RETURN: set time_elapsed to true
-        if ((macro_state == RETURN)&&(old_macro_state != RETURN){
+        if ((macro_state == RETURN)&&(old_macro_state != RETURN)){
           //time_elapsed = true;
         }
         // if PYTHON sets to EMPTY: initialize substate
@@ -255,7 +255,7 @@ void loop()
   {
     distances[idx_us] = 1000; // set the distance to 10m otherwise
   }
-  if (distances[idx_us] < maxdist)
+  if (distances[idx_us] < maxdist[idx_us])
   {
     threshold[idx_us] = 1;
   }
@@ -321,7 +321,11 @@ void loop()
     {
       // get back to old state
       int tmp_state = macro_state;
-      macro_state = old_macro_state; // change to previous again
+      if (old_macro_state == CATCH){
+        macro_state = MOVING;
+      } else {
+        macro_state = old_macro_state; // change to previous again
+      }
       old_macro_state = tmp_state;
     }
     else
@@ -339,6 +343,13 @@ void loop()
     break;
 
   case CATCH: // lift bottles
+    if (foundObstacle){
+      maxdist[3] = 50;
+      maxdist[4] = 50;
+      old_macro_state = macro_state;
+      macro_state = OBSTACLE;
+      
+    }
     break;
 
   case RETURN:
@@ -383,7 +394,8 @@ void loop()
         del_theta = 0.3+ (1-distance_to_WP);
       }
     */
-      
+      maxdist[3] = 1;
+      maxdist[4] = 1;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
       if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.5)
