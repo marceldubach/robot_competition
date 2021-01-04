@@ -13,27 +13,17 @@ from picamera import PiCamera
 
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
-    Run this script together with 'gripper_test' on Arduino.
+    Run this script together with 'bottlebot_complete' on Arduino.
     
-    30.Dec.2020
-    Done:
-        - Bidirectional communication
-        - Odometry implemented on Arduino
-        - Implement the position controller
-        - Implement servo control (with empty mechanism)
-    ToDo:
-        - Implement the state machine (goal: by 29.12.20)
-        - Add Localization update on python (camera)
-        - Implement a Kalman Filter
-        - Add Bottle Detection to the Script
+    04.Jan.2020
 """
 def get_time(time_start):
     return time.time() - time_start
 
 
 if __name__=='__main__':
-    t_max = 240
-    t_home = 160
+    t_max = 60
+    t_home = 40
     
     # initalize time for display
     t_s = time.time()
@@ -43,6 +33,7 @@ if __name__=='__main__':
     state_previous = 0
     n_bottles = 0
     is_catching = False
+    i = 0
 
     Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
                    [0, 0.5, 0.02, 0.02, 0],
@@ -56,7 +47,7 @@ if __name__=='__main__':
 
     x = np.zeros(5)
     wp_bottle = np.array([0,0])
-    wp_end = np.array([0.5,0.5])
+    wp_end = np.array([0.75,0.75])
     dT = 0
 
     # Picamera sensor matrix
@@ -81,38 +72,8 @@ if __name__=='__main__':
         state = states.MOVING
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
-    """
-    while (time.time()-t_s > 5):
-        state = states.MOVING
-        message={"state": state, "ref": [float(1),float(1)]}
-        ser.write(json.dumps(message).encode('ascii'))
-        while not (ser.in_waiting > 0):
-            time.sleep(0.02)
     
-    try:
-        while not (ser.in_waiting > 0):
-            time.sleep(0.02)
-            if(time.time()-t_s > 5):
-                ValueError("{:6.2f}".format(get_time(t_s)) + " [ERROR] Arduino is not responding")
-        
-            try:
-                line = ser.readline().decode('ascii')
-                if (line=="ready"):
-                    state = states.MOVING
-                else:
-                    print("Arduino not ready")
-                    pass
-            except:
-                print("couldn't decode message from arduino")
-                pass
-            
-        state = states.MOVING
-        # if the received message is 'ready', then the arduino is in state 0 and well initialized
-    except ValueError as ve:
-        print(ve)
-    """
     ser.flush()
-    #time.sleep(0.1)
 
     q_bottle = mp.Queue() # queue for frontal camera information
     q_triang = mp.Queue() # queue for triangulation
@@ -120,7 +81,7 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event() # event when triangulation has finished
 
-    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2, i))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_bottle.start()
     p_triang.start()
@@ -128,7 +89,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,1],[7,1],[7,4], [4,4], [2,2]]) #TODO write function to calculate waypoints
+    waypoints = np.array([[2,1],[7,1],[7,4],[4,4],[4,5],[1,3],[2,1],[4,2]])
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
@@ -136,7 +97,6 @@ if __name__=='__main__':
         message = {}
         if data == "":
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
-
 
         # We have seen a bottle 
         if (state == states.CATCH):
@@ -158,10 +118,17 @@ if __name__=='__main__':
             if np.linalg.norm(pose[0:-1]-wp)<0.4:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
                 i_wp += 1
+                """
+                ATTENTION HERE
+                """
                 if i_wp>len(waypoints): # if all waypoints are reached, shutdown
+                    i_wp = 0
+                    wp = waypoints[i_wp]
+                    """
                     state_previous = state
                     state = states.FINISH
                     print("{:6.2f}".format(get_time(t_s)), " [MAIN] All waypoints are reached")
+                    """
                 else:
                     wp = waypoints[i_wp]  # some random waypoint (doesn't matter)
             message["ref"] = [float(wp[0]), float(wp[1])]
@@ -190,16 +157,14 @@ if __name__=='__main__':
         ser.write(json.dumps(message).encode('ascii'))
 
         ser.flush()
-        #time.sleep(0.09)  # TODO replace this with while
+        
         while not (ser.in_waiting > 0):
             time.sleep(0.02)
 
         # READ THE SERIAL INFORMATION FROM ARDUINO
         if (ser.in_waiting > 0):
             t0 = time.time()
-            #line = ser.readline().decode('ascii').rstrip()
-            #ser.reset_input_buffer()
-            # print(line)
+            
             try:
                 line = ser.readline().decode('ascii').rstrip()
                 ser.reset_input_buffer()
@@ -222,8 +187,6 @@ if __name__=='__main__':
 
                 print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                       " pos: ", pose," ref:", data["ref"], " info:", data["info"])
-                # display detailed message:
-                # print(", cmd:", data["cmd"], ", ref:", data["ref"]," cnt: ", data["cnt"])
 
             except:
                 print("[ERROR] cannot deserialize string from arduino.")
@@ -231,6 +194,7 @@ if __name__=='__main__':
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
+        # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
             v = 0
             omega = 0
@@ -241,16 +205,10 @@ if __name__=='__main__':
             except:
                 print("Didn't manage to get info from arduino")
             pose_KF = pose
-            """
-            if pose[2] > 2*np.pi:
-                pose_KF[2] -= 2*np.pi
-            elif pose[2] < -2*np.pi:
-                pose_KF[2] += 2*np.pi
-            """
             x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
             e_img_loc.clear()
-            # print(x)
 
+        # condition to know that localization is ready for sensor fusion update 
         if (e_location.is_set()):
             
             e_location.clear()
@@ -284,8 +242,8 @@ if __name__=='__main__':
             p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
             p_triang.start()
 
-        # frontal camera check
-        if(e_bottle.is_set()):
+        # frontal camera check when not in RETURN state 
+        if(e_bottle.is_set()) and (state == states.MOVING):
             e_bottle.clear()
             bottle_pos = q_bottle.get()
             print("bottle position:", bottle_pos)
@@ -299,7 +257,8 @@ if __name__=='__main__':
                     angle = bottle_pos[1]
                     bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
                     bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
-                    wp_bottle = np.array([bottle_x, bottle_y])
+                    if bottle_x > 0.5 and bottle_x < 7.5 and bottle_y > 0.5 and bottle_y < 7.5:
+                        wp_bottle = np.array([bottle_x, bottle_y])
 
             del q_bottle
             del e_bottle
@@ -307,10 +266,10 @@ if __name__=='__main__':
 
             q_bottle = mp.Queue()
             e_bottle = mp.Event()
-            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2, i))
             p_bottle.start()
-            # TODO send bottle detected to arduino and commands
-
+        i += 1
+        
     # shut the motor down
     state = states.FINISH
     message = {"state": state}
@@ -332,8 +291,6 @@ if __name__=='__main__':
     ser.reset_input_buffer()
     ser.close() # close serial port at the end of the code
 
+    # join the processes to close them correctly
     p_triang.join()
     p_bottle.join()
-
-
-

@@ -52,7 +52,6 @@ def corner_is_outlier(corners, i,min_neighbours, max_distance):
                 n += 1
         if (n >= min_neighbours):
             isOutlier = False
-    #print("neighbours",n)
    
     return isOutlier
 
@@ -92,16 +91,14 @@ def bottle_ref(position, Zi, r2):
         angle_radians = -1
     return distance, angle_radians
 
-def detect_bottle(queue, e_bottle, Zi, r2):
-    #t_start_det = time.time()
+def detect_bottle(queue, e_bottle, Zi, r2, i):
 
     camera = PiCamera()
     camera.rotation = 180
     camera.resolution = (1280,720)
     
-    #img = np.empty((720,1280,3))
-    camera.capture('frontal_img.jpg')
-    img = cv.imread('frontal_img.jpg')
+    camera.capture('frontal_img'+str(i)+'.jpg')
+    img = cv.imread('frontal_img'+str(i)+'jpg')
     
     img_out = img.copy()
     
@@ -132,7 +129,7 @@ def detect_bottle(queue, e_bottle, Zi, r2):
             isOutlier = corner_is_outlier(corners, i, min_neighbours, max_distance)
 
         if not isBrick and not isBeacon and not isOutlier:
-            # print("Append corner at  (x1, x2): (" , c[0], ", ", c[1],")")
+           
             cornerList.append(c)
 
 
@@ -147,9 +144,8 @@ def detect_bottle(queue, e_bottle, Zi, r2):
     else:
         queue.put(center)
         print("[DETECTION] Found no bottle ...")
-    #print("center bottle:", center)
+    
     camera.close()
     e_bottle.set()
-    #print("e_bottle:", e_bottle.is_set())
     return queue
 
