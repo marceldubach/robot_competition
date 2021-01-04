@@ -134,7 +134,7 @@ if __name__=='__main__':
 
     while (time.time() - t_s < t_max):
         message = {}
-        if data == "":
+        if data == "": # send the position from python to arduino in the first iteration
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
 
 
@@ -247,7 +247,7 @@ if __name__=='__main__':
             elif pose[2] < -2*np.pi:
                 pose_KF[2] += 2*np.pi
             """
-            x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
+            x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega]) # pose to send to
             e_img_loc.clear()
             # print(x)
 
@@ -279,7 +279,6 @@ if __name__=='__main__':
             q_triang = mp.Queue()
             e_location = mp.Event()
             e_img_loc = mp.Event()
-
 
             p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
             p_triang.start()

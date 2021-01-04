@@ -30,7 +30,7 @@ def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     yaw = prediction[2]
     measured_angle = measurements_vector[2]
 
-    if abs(measured_angle - yaw) > 1.5*np.pi:
+    if abs(measured_angle - yaw) > np.pi:
         if measured_angle - yaw > 0:
             measurements_vector[2] -= 2*np.pi
         elif yaw - measured_angle > 0:

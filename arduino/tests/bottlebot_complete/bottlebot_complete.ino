@@ -104,10 +104,10 @@ int n_US = 7;
 int idx_us = 0;
 double distances[] = {100, 100, 100, 100, 100, 100, 100};
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
-int weight_left[] = {700, 300, 400, -1200, -800, -400, -100};
-int weight_right[] = {1000, 400, -400, -300, -600, 400, 300};
-const double maxdist = 5; // initialize maxdist at less than default distances!
-unsigned long maxPulseIn = 10000; // 50 cm range
+int weight_left[] = {700, 200, -200, -1200, -800, -100, 500};
+int weight_right[] = {1000, 500, -400, -300, -600, -400, 200};
+const double maxdist = 80; // initialize maxdist at less than default distances!
+unsigned long maxPulseIn = 3000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
 
@@ -141,7 +141,7 @@ void setup()
   microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
   microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
   camServo.attach(8, 750, 2250);   // (pin, min, max) // for camshaft servo
-  //backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
+  backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
 
   for (int i = 0; i < n_US; i++)
   { // set up Echo and Trigger pins
@@ -302,7 +302,7 @@ void loop()
     mainServo.write(160);
     microLeft.write(80);
     microRight.write(120);
-    backDoor.write(160);
+    backDoor.write(175);
     break;
 
   case MOVING: // moving
@@ -329,7 +329,6 @@ void loop()
     break;
 
   case OBSTACLE:
-   
     for (int i = 0; i < n_US; i++)
     {
       if (threshold[i] == 1)
@@ -342,11 +341,15 @@ void loop()
       macro_state = MOVING; // change to state moving again
     }
     else
-    {
-      for (int i = 0; i < n_US; i++)
-      {
-        cmdLeft = 128 + threshold[i] * weight_left[i] / distances[i];
-        cmdRight = 128 + threshold[i] * weight_right[i] / distances[i];
+    { 
+      if (idx_us == 0){
+        cmdLeft = 128;
+        cmdRight = 128;
+        for (int i = 0; i < n_US; i++)
+        {
+          cmdLeft += threshold[i] * weight_left[i] / distances[i];
+          cmdRight += threshold[i] * weight_right[i] / distances[i];
+        }
       }
     }
     break;
@@ -399,7 +402,7 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(16);
+      mainServo.write(17);
       microLeft.write(100);
       microRight.write(100);
       if (millis() - t_catch > 1000)
@@ -478,13 +481,19 @@ void loop()
     {
     case ROTATE:
       enableMotors = true;
-      if (fabs(theta-PI/4)>0.2){
+      if (fabs(theta-PI/4)>0.7){
         if (theta<5.0/8*PI){
           cmdLeft = 150;
           cmdRight = 106;
-        } else {
-          cmdLeft = 106;
-          cmdRight = 150;
+        } else if(fabs(theta-PI/4)){
+          if (theta>PI/4){
+            // turn right
+            cmdLeft = 135;
+            cmdRight = 121;
+          } else{
+            cmdLeft = 121;
+            cmdRight = 135;  
+          }
         }
       } else {
         enableMotors = false;
@@ -505,7 +514,7 @@ void loop()
     case SHAKE:
       if (cam_is_up)
       {
-        camServo.write(0); // turn servo down
+        camServo.write(10); // turn servo down
       }
       else
       {
@@ -521,7 +530,7 @@ void loop()
           cnt_shakes = cnt_shakes + 1;
           if (cnt_shakes >= 2)
           {
-            camServo.write(0);
+            camServo.write(10);
             empty_state = CLOSE_DOOR;
             t_empty = millis();
           }

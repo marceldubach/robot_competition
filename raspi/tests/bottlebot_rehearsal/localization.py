@@ -34,7 +34,8 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
 
     finally:
         webcam.release()
-        e_loc_finished.set()
+        if (e_img_loc.is_set()):
+            e_loc_finished.set()
         return queue  # if fails the queue will be empty
 
 def savePicture(webcam):
