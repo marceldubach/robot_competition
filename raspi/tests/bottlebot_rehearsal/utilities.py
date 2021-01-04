@@ -97,8 +97,8 @@ def detect_bottle(queue, e_bottle, Zi, r2):
     camera.rotation = 180
     camera.resolution = (1280,720)
     
-    camera.capture('frontal_img'+str(i)+'.jpg')
-    img = cv.imread('frontal_img'+str(i)+'jpg')
+    camera.capture('frontal_img.jpg')
+    img = cv.imread('frontal_img.jpg')
     
     img_out = img.copy()
     
