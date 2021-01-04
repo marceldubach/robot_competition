@@ -25,6 +25,7 @@ unsigned long t0 = 0;
 float dt;
 float v = 0;
 float omega_rad;
+
 // definition of an IMU object with associated variables
 MPU6050 IMU;
 int16_t gx, gy, gz;
@@ -43,7 +44,7 @@ float omega_deg;
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points
 
-bool time_elapsed = false;
+//bool time_elapsed = false;
 
 //MotorRight ports
 byte enableRight(51);
@@ -103,12 +104,12 @@ uint8_t echo[7] = {24, 22, 26, 28, 30, 32, 34};
 
 int n_US = 7;
 int idx_us = 0;
-double distances[] = {100, 100, 100, 100, 100, 100, 100};
+double distances[] = {100, 100, 100, 100, 100, 100, 100}; // old: double
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
-int weight_left[] = {700, 200, -200, -1200, -800, -100, 500};
-int weight_right[] = {1000, 500, -400, -300, -600, -400, 200};
-const double maxdist = 80; // initialize maxdist at less than default distances!
-unsigned long maxPulseIn = 10000; // 50 cm range
+double weight_left[] = {1000, -400, -200, -300, -300, -400, -400}; // old: double
+double weight_right[] = {1000, -400, -400, -500, -500, -500, -200}; // double
+const double maxdist = 50; // initialize maxdist at less than default distances!
+unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
 
@@ -138,9 +139,10 @@ void setup()
 {
   // put your setup code here, to run once:
   Wire.begin();
-  mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
-  microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
-  microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
+  // TODO: reattach these servos!
+  //mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
+  //microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
+  //microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
   camServo.attach(8, 750, 2250);   // (pin, min, max) // for camshaft servo
   backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
 
@@ -187,16 +189,45 @@ void loop()
   else
   {
     // read the obtained string
-    old_macro_state = macro_state;
+    // old_macro_state = macro_state;
 
     // python prints the state if it has changed
     if (receive_msg.containsKey("state"))
     { 
-      if (macro_state != OBSTACLE){
-        macro_state = receive_msg["state"];
+      int new_state = receive_msg["state"];
+      if (new_state == FINISH){
+        macro_state = receive_msg["state"]; // do shutdown ALWAYS
+        enableMotors = false;
       }
-      // else stay in obstacle avoidance
+      else if (macro_state != OBSTACLE){ // else change state only if not in obstacle avoidance
+        old_macro_state = macro_state; // keep track of the old state!
+        macro_state = new_state;
+        // if PYTHON sets state to CATCH: initialize micro_state and timer
+        if ((macro_state == CATCH) && (old_macro_state != CATCH))
+        {
+          t_catch = millis();
+          catch_state = TRACK_WP;
+          enableMotors = true;
+        }
+        // if PYTHON sets state to RETURN: set time_elapsed to true
+        if ((macro_state == RETURN)&&(old_macro_state != RETURN){
+          //time_elapsed = true;
+        }
+        // if PYTHON sets to EMPTY: initialize substate
+        if ((macro_state == EMPTY)&&(old_macro_state != EMPTY)){
+          t_empty = millis();
+          empty_state = ROTATE;
+        }
+      } // end else if macro_state != OBSTACLE
+    } // end if key "state" contained in message
+
+    /* TODO remove this! Set enableMotors for all transitions!
+    // transition to MOVING
+    if ((macro_state == MOVING) && (old_macro_state != MOVING)){
+      enableMotors = true;
     }
+    */
+    
     if (receive_msg.containsKey("ref"))
     {
       ref_x = receive_msg["ref"][0];
@@ -209,33 +240,7 @@ void loop()
       y = receive_msg["pose"][1];
       theta = receive_msg["pose"][2];
     }
-    // STATE UPDATE
-    
-    // transition to MOVING
-    if ((macro_state == MOVING) && (old_macro_state != MOVING)){
-      enableMotors = true;
-    }
-    // transition to CATCH: initialize micro_state and timer
-    if ((macro_state == CATCH) && (old_macro_state != CATCH))
-    {
-      t_catch = millis();
-      catch_state = TRACK_WP;
-      enableMotors = true;
-    }
-    // if state was set to RETURN: nothing special to do
-    if ((macro_state == RETURN) && (old_macro_state != CATCH))
-    {
-      time_elapsed = true;
-    }
-    // if state was set to EMPTY:  initialize  micro state and timer (only once)
-    if ((macro_state == EMPTY) && (old_macro_state != EMPTY))
-    {
-      t_empty = millis();
-      empty_state = ROTATE;
-    }
-    if (macro_state == FINISH){
-      enableMotors = false;
-    }
+   
   }
 
   // read ultrasonic sensors
@@ -259,7 +264,7 @@ void loop()
     threshold[idx_us] = 0;
   }
   idx_us = idx_us + 1;
-  if (idx_us == 7)
+  if (idx_us==7)
   {
     idx_us = 0;
   }
@@ -296,6 +301,7 @@ void loop()
     else
     {
       // compute motor speeds
+      enableMotors = true;
       double del_theta = 0.3;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
     } // end else obstacle found
@@ -320,7 +326,7 @@ void loop()
     }
     else
     { 
-      if (idx_us == 0){
+      if (idx_us%3==0){
         cmdLeft = 128;
         cmdRight = 128;
         for (int i = 0; i < n_US; i++)
@@ -361,7 +367,6 @@ void loop()
     microLeft.detach();
     backDoor.detach();
     camServo.detach();
-    //enableMotors = false;
     break;
   }
 
@@ -534,17 +539,21 @@ void loop()
       backDoor.write(175);
       if (millis() - t_empty > 500)
       {
+        macro_state = MOVING; // change to MOVING (always!)
+        // if the time is elapsed, the robot will change from MOVING to shutdown in the next loop
         // if not homing:
+        /*
         if (!time_elapsed)
         {
           // if time has not elapes yet, change to MOVING again
-          macro_state = MOVING;
+          
         }
         else
         {
           // if time has elapsed, change to FINISHED
           macro_state = FINISH;
         }
+        */
       }
       break;
 
@@ -599,6 +608,7 @@ void loop()
 
     send_msg["state"] = macro_state;
     send_msg["nBot"] = cntBottles;
+    
     //send_msg["cnt"] = cnt_shakes; // counter for camshaft movements
     JsonArray position = send_msg.createNestedArray("pos");
     position.add(x);     //[m]
@@ -610,26 +620,28 @@ void loop()
     info.add(v);         //[m/s]
     info.add(omega_rad); //[rad/s]
     info.add(dt);        //[s]
-
-    JsonArray reference = send_msg.createNestedArray("ref");
-    reference.add(ref_x); //[m]
-    reference.add(ref_y); //[m]
-
+    
+    /*
     JsonArray command = send_msg.createNestedArray("cmd");
     command.add(cmdLeft);
     command.add(cmdRight);
-    
-    /*
-    JsonArray dist = send_msg.createNestedArray("dist");
-    dist.add(distances[0]);
-    dist.add(distances[1]);
-    dist.add(distances[2]);
-    dist.add(distances[3]);
-    dist.add(distances[4]);
-    dist.add(distances[5]);
-    dist.add(distances[6]);
     */
 
+    if (macro_state == OBSTACLE){
+      JsonArray dist = send_msg.createNestedArray("dist");
+      dist.add(distances[0]);
+      dist.add(distances[1]);
+      dist.add(distances[2]);
+      dist.add(distances[3]);
+      dist.add(distances[4]);
+      dist.add(distances[5]);
+      dist.add(distances[6]);
+    } else {
+      JsonArray reference = send_msg.createNestedArray("ref");
+      reference.add(ref_x); //[m]
+      reference.add(ref_y); //[m]
+    }
+    
     serializeJson(send_msg, Serial);
 
     Serial.println();

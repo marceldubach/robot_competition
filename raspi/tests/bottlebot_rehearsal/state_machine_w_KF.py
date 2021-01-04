@@ -22,8 +22,8 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
-    t_max = 200
-    t_home =120
+    t_max = 60
+    t_home =30
     
     # initalize time for display
     t_s = time.time()
@@ -183,10 +183,12 @@ if __name__=='__main__':
                               n_bottles, " bottles")
 
                 if "dist" in data:
-                    print("{:6.2f}".format(get_time(t_s)) + "Distances "+ data["dist"])
+                    print("{:6.2f}".format(get_time(t_s)), "Distances ", data["dist"])
+
 
                 print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                       " pos: ", pose," ref:", data["ref"], " info:", data["info"])
+
 
             except:
                 print("[ERROR] cannot deserialize string from arduino.")
