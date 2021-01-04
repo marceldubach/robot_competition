@@ -85,6 +85,7 @@ unsigned long t_catch = 0;
 
 enum empty_states
 {
+  ROTATE,
   OPEN_DOOR,
   SHAKE,
   CLOSE_DOOR
@@ -101,12 +102,12 @@ uint8_t echo[7] = {24, 22, 26, 28, 30, 32, 34};
 
 int n_US = 7;
 int idx_us = 0;
-double distances[] = {100, 100, 100, 100, 100, 100, 0};
+double distances[] = {100, 100, 100, 100, 100, 100, 100};
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
 int weight_left[] = {700, 300, 400, -1200, -800, -400, -100};
 int weight_right[] = {1000, 400, -400, -300, -600, 400, 300};
-const double maxdist = 50;
-unsigned long maxPulseIn = 3000; // 50 cm range
+const double maxdist = 5; // initialize maxdist at less than default distances!
+unsigned long maxPulseIn = 10000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
 
@@ -160,7 +161,7 @@ void setup()
   digitalWrite(enableLeft, LOW);
 
   Serial.begin(38400);
-  Serial.setTimeout(50);
+  Serial.setTimeout(100); //
   while (!Serial)
     continue;
   IMU.initialize();
@@ -168,9 +169,10 @@ void setup()
     continue;
 
   t0 = millis();
-  enableMotors = false;
+  
   macro_state = STARTING;
-  Serial.println("ready"); // Arduino setup completed
+  enableMotors = false;
+  //Serial.println("ready"); // Arduino setup completed
 }
 
 void loop()
@@ -204,15 +206,20 @@ void loop()
       theta = receive_msg["pose"][2];
     }
     // STATE UPDATE
-
-    // if the state was set to CATCH: initialize micro_state and timer
+    
+    // transition to MOVING
+    if ((macro_state == MOVING) && (old_state != MOVING)){
+      enableMotors = true;
+    }
+    // transition to CATCH: initialize micro_state and timer
     if ((macro_state == CATCH) && (old_state != CATCH))
     {
       t_catch = millis();
       catch_state = TRACK_WP;
+      enableMotors = true;
     }
     // if state was set to RETURN: nothing special to do
-    if (macro_state == RETURN)
+    if ((macro_state == RETURN) && (old_state != CATCH))
     {
       time_elapsed = true;
     }
@@ -220,9 +227,12 @@ void loop()
     if ((macro_state == EMPTY) && (old_state != EMPTY))
     {
       t_empty = millis();
-      empty_state = OPEN_DOOR;
+      empty_state = ROTATE;
     }
-
+    if (macro_state == FINISH){
+      enableMotors = false;
+    }
+    /*
     const int capacity = 200;
     StaticJsonDocument<capacity> send_msg;
 
@@ -251,6 +261,7 @@ void loop()
     serializeJson(send_msg, Serial);
 
     Serial.println();
+    */
   }
 
   // read ultrasonic sensors
@@ -285,7 +296,7 @@ void loop()
   {
   case STARTING:
     // turn motors off
-    enableMotors = false;
+    //enableMotors = false;
 
     // initialize position of servos;
     mainServo.write(160);
@@ -309,10 +320,11 @@ void loop()
     else
     {
       // compute motor speeds
+      double del_theta = 0.3;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
 
       // turn motors on
-      enableMotors = true;
+      // enableMotors = true;
     } // end else obstacle found
     break;
 
@@ -340,17 +352,16 @@ void loop()
     break;
 
   case CATCH: // lift bottles
-  
     break;
 
   case RETURN:
-    
     enableMotors = true;
+    double del_theta = 0.3;
     calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
     break;
 
   case EMPTY:
-    enableMotors = false;
+    //enableMotors = false;
     break;
 
   case FINISH:
@@ -359,7 +370,8 @@ void loop()
     microLeft.detach();
     backDoor.detach();
     camServo.detach();
-    enableMotors = false;
+    //enableMotors = false;
+    break;
   }
 
   // switch if state is CATCH
@@ -368,9 +380,17 @@ void loop()
     switch (catch_state)
     {
     case TRACK_WP:
+    /*
+      double distance_to_WP = sqrt(pow(x-ref_x,2)+pow(y-ref_y,2));
+      double del_theta = 0.3;
+      if (distance_to_WP<1){
+        del_theta = 0.3+ (1-distance_to_WP);
+      }
+    */
+      
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.5)
       {
         catch_state = LOWER;
         enableMotors = false;
@@ -456,6 +476,22 @@ void loop()
   {
     switch (empty_state)
     {
+    case ROTATE:
+      enableMotors = true;
+      if (fabs(theta-PI/4)>0.2){
+        if (theta<5.0/8*PI){
+          cmdLeft = 150;
+          cmdRight = 106;
+        } else {
+          cmdLeft = 106;
+          cmdRight = 150;
+        }
+      } else {
+        enableMotors = false;
+        empty_state = OPEN_DOOR;
+      }
+      break;
+      
     case OPEN_DOOR:
       backDoor.write(60);
       if (millis() - t_empty > 500)
@@ -513,6 +549,7 @@ void loop()
           macro_state = FINISH;
         }
       }
+      break;
 
     default:
       backDoor.write(160); // backdoor closed
@@ -558,4 +595,46 @@ void loop()
       theta = theta + 2 * PI;
     }
   } // end odometry
+
+  if (!error){
+    const int capacity = 200;
+    StaticJsonDocument<capacity> send_msg;
+
+    send_msg["state"] = macro_state;
+    send_msg["nBot"] = cntBottles;
+    //send_msg["cnt"] = cnt_shakes; // counter for camshaft movements
+    JsonArray position = send_msg.createNestedArray("pos");
+    position.add(x);     //[m]
+    position.add(y);     //[m]
+    position.add(theta); // remember to put [rad/s]
+
+    // info to add in the json document for Kalman filter
+    JsonArray info = send_msg.createNestedArray("info");
+    info.add(v);         //[m/s]
+    info.add(omega_rad); //[rad/s]
+    info.add(dt);        //[s]
+
+    JsonArray reference = send_msg.createNestedArray("ref");
+    reference.add(ref_x); //[m]
+    reference.add(ref_y); //[m]
+
+    JsonArray command = send_msg.createNestedArray("cmd");
+    command.add(cmdLeft);
+    command.add(cmdRight);
+    
+    /*
+    JsonArray dist = send_msg.createNestedArray("dist");
+    dist.add(distances[0]);
+    dist.add(distances[1]);
+    dist.add(distances[2]);
+    dist.add(distances[3]);
+    dist.add(distances[4]);
+    dist.add(distances[5]);
+    dist.add(distances[6]);
+    */
+
+    serializeJson(send_msg, Serial);
+
+    Serial.println();
+  }
 }

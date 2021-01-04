@@ -38,7 +38,7 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
   double dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
 
   // if the heading is ok (difference < del_theta), then go straight
-  double del_theta = 0.3; // tolerance for angle: 17.8°
+  double del_theta = 0.7; // tolerance for angle: 0.3 rad = 17.8°
   if ((fabs(heading_ref-theta)<del_theta) || (fabs(heading_ref-theta)>(2*PI-del_theta))){
     // heading is good -> fast forward
     if (dist>1){
