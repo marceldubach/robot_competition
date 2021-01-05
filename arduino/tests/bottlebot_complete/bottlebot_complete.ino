@@ -227,8 +227,8 @@ void loop()
         if ((macro_state == EMPTY)&&(old_macro_state != EMPTY)){
           t_empty = millis();
           empty_state = ROTATE;
-        }
-      } // end else if macro_state != OBSTACLE
+        }// end else if macro_state != OBSTACLE
+      }
     } // end if key "state" contained in message
     
     if (receive_msg.containsKey("ref"))
@@ -338,10 +338,14 @@ void loop()
 
   case CATCH: // lift bottles
     if (foundObstacle){
-      maxdist[3] = 40;
-      maxdist[4] = 40;
+      maxdist[3] = 70;
+      maxdist[4] = 70;
+      maxdist[5] = 70;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
+      microLeft.write(80);
+      microRight.write(120);
+      mainServo.write(160);
       
     }
     break;
@@ -387,8 +391,9 @@ void loop()
         del_theta = 0.3+ (1-distance_to_WP);
       }
       */
-      maxdist[3] = 1;
-      maxdist[4] = 1;
+      maxdist[3] = 0;
+      maxdist[4] = 0;
+      maxdist[5] = 0;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
       if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.5)
@@ -400,7 +405,7 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(17);
+      mainServo.write(19);
       microLeft.write(100);
       microRight.write(100);
       if (millis() - t_catch > 1000)

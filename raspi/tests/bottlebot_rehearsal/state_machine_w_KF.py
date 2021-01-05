@@ -59,7 +59,7 @@ if __name__=='__main__':
 
     x = np.zeros(5)
     wp_bottle = np.array([1,1])
-    wp_end = np.array([0.75,0.75])
+    wp_end = np.array([1,1])
     dT = 0
 
     """
@@ -102,7 +102,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,2],[3,2],[4,3],[5,2],[6,3],[6,2],[7,2],[7,3]])
+    waypoints = np.array([[2,1],[4,1],[7,1],[5,2],[6,3],[6,2],[7,2],[7,3]])
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 
