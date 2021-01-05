@@ -99,18 +99,29 @@ unsigned long t_empty = 0;
 
 // braitenberg
 // pin declaration for the braitenberg vehicle
-uint8_t trigger[7] = {25, 23, 27, 29, 31, 33, 35};
-uint8_t echo[7] = {24, 22, 26, 28, 30, 32, 34};
+//uint8_t trigger[7] = {25, 23, 27, 29, 31, 33, 35};
+//uint8_t echo[7] = {24, 22, 26, 28, 30, 32, 34};
 
-int n_US = 7;
+//int n_US = 7;
+//int idx_us = 0;
+//double distances[] = {100, 100, 100, 100, 100, 100, 100};
+//int threshold[] = {0, 0, 0, 0, 0, 0, 0};
+//double weight_left[] = {1000, -400, -300, -1200, -1200, -300, -400}; // old: double
+//double weight_right[] = {1000, -400, -500, -1400, -1400, -500, -400}; // double
+//double maxdist[] = {30,30,40,70,70,40,30}; // initialize maxdist at less than default distances!
+
+uint8_t trigger[8] = {25, 23, 27, 29, 37, 31, 33, 35};
+uint8_t echo[8] = {24, 22, 26, 28, 36,30, 32, 34};
+int n_US = 8;
 int idx_us = 0;
-double distances[] = {100, 100, 100, 100, 100, 100, 100}; // old: double
-int threshold[] = {0, 0, 0, 0, 0, 0, 0};
-double weight_left[] = {1000, -400, -200, -300, -300, -400, -400}; // old: double
-double weight_right[] = {1000, -400, -400, -500, -500, -500, -200}; // double
-double maxdist[] = {30,20,40,70,70,40,20}; // initialize maxdist at less than default distances!
+int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
+double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
+double weight_left[] = {1000, -400, -300, -1200, -1200, -300, -400}; // old: double
+double weight_right[] = {1000, -400, -500, -1400, -1400, -500, -400}; // double
+double maxdist[] = {30,30,40,70,70,70,40,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
+
 //initialize distances at values bigger than the threshold
 
 #define claw_trigger 37
@@ -139,7 +150,7 @@ void setup()
 {
   // put your setup code here, to run once:
   Wire.begin();
-  // TODO: reattach these servos!
+
   //mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
   //microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
   //microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
@@ -264,7 +275,7 @@ void loop()
     threshold[idx_us] = 0;
   }
   idx_us = idx_us + 1;
-  if (idx_us==7)
+  if (idx_us==8)
   {
     idx_us = 0;
   }
@@ -330,7 +341,7 @@ void loop()
     }
     else
     { 
-      if (idx_us%3==0){
+      if (idx_us%2==0){
         cmdLeft = 128;
         cmdRight = 128;
         for (int i = 0; i < n_US; i++)
