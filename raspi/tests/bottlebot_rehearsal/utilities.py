@@ -73,9 +73,9 @@ def add_corners(img, cornerList):
         return True, np.array([x_center, y_center])
     else:
         return False, np.array([-1,-1])
-
+"""
 def bottle_ref(position, Zi, r2):
-    
+  
     x_b = position[0]
     y_b = position[1] 
     r1 = Zi.dot([x_b, y_b, 1.0]) 
@@ -89,9 +89,10 @@ def bottle_ref(position, Zi, r2):
     if (distance < 0):
         distance = -1
         angle_radians = -1
+   
     return distance, angle_radians
-
-def detect_bottle(queue, e_bottle, Zi, r2):
+"""
+def detect_bottle(queue, e_bottle, f_dist, f_theta):
 
     camera = PiCamera()
     camera.rotation = 180
@@ -137,7 +138,8 @@ def detect_bottle(queue, e_bottle, Zi, r2):
     has_bottle, center = add_corners(img_out, cornerList)
 
     if(has_bottle):
-        distance, angle = bottle_ref(center, Zi, r2)
+        distance = f_dist(center[1])
+        angle = f_theta(center[0])
         bottle_pos = np.array([distance, angle])
         queue.put(bottle_pos)
         print("[DETECTION] Found a bottle at position ", center, "(pixels), bottle position(arena) :", bottle_pos)

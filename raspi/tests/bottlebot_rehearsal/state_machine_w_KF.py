@@ -8,6 +8,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
 import os
 import pandas as pd
+from scipy.interpolate import interp1d
 
 import multiprocessing as mp
 from localization import triangulation
@@ -75,6 +76,14 @@ if __name__=='__main__':
     y_c = 360
     r2 = Zi.dot([x_c, y_c, 1.0])
 
+    # Mapping for distance and bottle orientation
+    y_img = np.array([448, 407, 385, 375, 300, 282, 258, 243, 232, 230])
+    dist = np.array([30, 40, 50, 54, 75, 80.9, 100, 104, 126, 130]) 
+    f_dist = interp1d(y_img, dist)
+    x_img = np.array([1180, 1050, 842, 695, 500, 347, 200])
+    theta = np.array([-26,-22, -10, 0, 10, 22, 26]) 
+    f_theta = interp1d(x_img, theta)
+
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
 
@@ -100,7 +109,7 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event() # event when triangulation has finished
 
-    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, f_dist, f_theta))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_bottle.start()
     p_triang.start()
@@ -296,7 +305,7 @@ if __name__=='__main__':
 
             q_bottle = mp.Queue()
             e_bottle = mp.Event()
-            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, f_dist, f_theta))
             p_bottle.start()
             # TODO send bottle detected to arduino and commands
 
