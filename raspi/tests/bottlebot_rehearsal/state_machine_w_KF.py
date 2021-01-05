@@ -70,15 +70,6 @@ if __name__=='__main__':
     wp_end = np.array([1,1])
     dT = 0
 
-    """
-    # Picamera sensor matrix
-    Z = np.array([[2714/2, 0, 640], [0, 2714/2, 360], [0, 0, 1]])
-    Zi = np.linalg.inv(Z)
-    x_c = 640
-    y_c = 360
-    r2 = Zi.dot([x_c, y_c, 1.0])
-    """
-
     data = "" # data string for serial communication
 
     # initalize time for display
@@ -110,9 +101,10 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[4,3],[4,1],[6,2],[7,3]])
+    waypoints = [[4,3],[4,1],[6,2],[7,3]] #np.array()
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
+    obst_list = []
 
 
     while (time.time() - t_s < t_max):
@@ -123,6 +115,32 @@ if __name__=='__main__':
         # We have seen a bottle 
         if (state == states.CATCH):
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
+
+        # Calculate intermediate waypoint
+        if (state_previous == states.OBSTACLE) and (state == states.MOVING):
+            # set desired position
+             #1. find obstacles in vicinity
+            obst_close = []
+            des_angle = 0
+            for o in obst_list:
+                if np.linalg.norm(pose[0:-1]-o)<1:
+                    obst_close.append(o)
+            #2. choose desired direction to current waypoint
+            if not obst_close:
+                print("[OBSTACLE]: no obstacles found")
+            else:
+                des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # attention defined between [-pi, pi]
+                path = np.diag(np.arange(0,1.1, 0.25))
+                c = np.cos(des_angle)
+                s = np.sin(des_angle)
+                R = np.array([[c,-s],[s,c]])
+
+            
+            #3. detect worst obstacle on the way
+            #4. set intermediate waypoint
+            #5. check if intermediate waypoint feasible (boundary condition ecc )
+            #6. try until feasible -> change angle, failsafe default
+            #7. send waypoint and check if current waypoint has to be reached or bypassed
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
@@ -243,6 +261,11 @@ if __name__=='__main__':
                             already_obstacle = True
                     if not already_obstacle:
                         log_obstacle.append(obstacle)
+                        obst_list.append(obstacle)
+                        for w in waypoints:
+                            # clear precomputed waypoints that happen to be on obstacles
+                            if np.linalg.norm(w-obstacle)<0.15:
+                                waypoints.remove(w)
 
 
         # condition to read odometry when image is taken by webcam for localization
