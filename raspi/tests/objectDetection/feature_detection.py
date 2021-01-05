@@ -26,8 +26,10 @@ else:
 for img_name in img_name_list:
     img = cv.imread('images/noIR/'+img_name)
     if img is None:
-        print("Error opening image ", img_name_list)
+        print("Error opening image ", img_name)
         continue
+    else:
+        print("Could read image", img_name)
 
     # TODO continut with tutorial: https://docs.opencv.org/3.4/d2/d2c/tutorial_sobel_derivatives.html
 
@@ -52,7 +54,7 @@ for img_name in img_name_list:
 
     hsv_min = np.array([0, 26, 116])
     hsv_max = np.array([178, 54, 166])
-    brick_mask = HSV_brick_mask(img, hsv_min, hsv_max)
+    brick_mask, img = HSV_brick_mask(img, hsv_min, hsv_max)
 
     if plotBrickMask:
         plt.figure()

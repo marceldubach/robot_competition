@@ -5,16 +5,20 @@ import cv2 as cv
 
 def HSV_brick_mask(img,hsv_min, hsv_max):
     """Find a mask for bricks using thresholding on HSV image"""
+    img[:,:,0] = 0.6*img[:,:,0]
     img_blurred = cv.GaussianBlur(img, (9, 9), 0)
     img_hsv = cv.cvtColor(img_blurred, cv.COLOR_BGR2HSV)
-    erode_elem_brick = cv.getStructuringElement(cv.MORPH_RECT, (20, 20))
 
+    #equalized = cv.equalizeHist(img_hsv[:,:,0])
+    erode_elem_brick = cv.getStructuringElement(cv.MORPH_RECT, (20, 20))
+    #img_hsv_normalized = img_hsv
+    #img_hsv_normalized[:,:,0] = equalized
     brick_mask = cv.inRange(img_hsv, hsv_min, hsv_max)
     brick_mask = cv.erode(brick_mask, erode_elem_brick)
     dilate_elem_brick = cv.getStructuringElement(cv.MORPH_RECT, (10, 10))
     brick_mask = cv.dilate(brick_mask, dilate_elem_brick)
 
-    return brick_mask
+    return brick_mask, img #, img_hsv_normalized
 
 def find_rectangles_around_brick(brick_mask):
     """returns rectangles of pointx (x,y) where x=(x1,x2) is (vertical, horizontal)"""

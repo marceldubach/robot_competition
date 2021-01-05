@@ -116,9 +116,12 @@ int n_US = 8;
 int idx_us = 0;
 int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
-double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
-double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double maxdist[] = {30,30,40,40,40,40,40,30};
+//double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
+//double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
+double weight_left[] =  {20, 10, 30, -40, -40, -40, -5, 10};//{20, -10, -40, -40, -40, -40, -40, -10};
+double weight_right[] = {20, 10, -10, -20, -20, -20, 20, 10}; //{20, -10, -20, -20, -20, -20, -20, -10};
+double fr_dist = 70;
+double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 
@@ -245,33 +248,36 @@ void loop()
     }
    
   }
-
   // read ultrasonic sensors
-  digitalWrite(trigger[idx_us], LOW);
-  delayMicroseconds(5);
-  digitalWrite(trigger[idx_us], HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigger[idx_us], LOW);
-  duration = pulseIn(echo[idx_us], HIGH, maxPulseIn);
-  distances[idx_us] = (double)((duration / 2) / 29.1);
-  if (distances[idx_us] == 0)
-  {
-    distances[idx_us] = 1000; // set the distance to 10m otherwise
+  for(int idx_us=0; idx_us<8; idx_us++){
+      digitalWrite(trigger[idx_us], LOW);
+      delayMicroseconds(5);
+      digitalWrite(trigger[idx_us], HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigger[idx_us], LOW);
+      duration = pulseIn(echo[idx_us], HIGH, maxPulseIn);
+      distances[idx_us] = (double)((duration / 2) / 29.1);
+      if (distances[idx_us] == 0)
+      {
+        distances[idx_us] = 1000; // set the distance to 10m otherwise
+      }
+      if (distances[idx_us] < maxdist[idx_us])
+      {
+        threshold[idx_us] = 1;
+      }
+      else
+      {
+        threshold[idx_us] = 0;
+      }
   }
-  if (distances[idx_us] < maxdist[idx_us])
-  {
-    threshold[idx_us] = 1;
-  }
-  else
-  {
-    threshold[idx_us] = 0;
-  }
+/*
+
   idx_us = idx_us + 1;
   if (idx_us==8)
   {
     idx_us = 0;
   }
-
+*/
   // update the variable if there is an obstacle
   bool foundObstacle = false;
   for (int i = 0; i < n_US; i++)
@@ -329,8 +335,8 @@ void loop()
         cmdRight = 128;
         for (int i = 0; i < n_US; i++)
         {
-          cmdLeft += threshold[i] * weight_left[i] / distances[i];
-          cmdRight += threshold[i] * weight_right[i] / distances[i];
+          cmdLeft += threshold[i] * weight_left[i];// / distances[i];
+          cmdRight += threshold[i] * weight_right[i];// / distances[i];
         }
       }
     }
@@ -338,9 +344,9 @@ void loop()
 
   case CATCH: // lift bottles
     if (foundObstacle){
-      maxdist[3] = 70;
-      maxdist[4] = 70;
-      maxdist[5] = 70;
+      maxdist[3] = fr_dist;
+      maxdist[4] = fr_dist;
+      maxdist[5] = fr_dist;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
       microLeft.write(80);
@@ -355,10 +361,11 @@ void loop()
     {
       old_macro_state = macro_state;
       macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+    } else {
+      enableMotors = true;
+      double del_theta = 0.3;
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);    
     }
-    enableMotors = true;
-    double del_theta = 0.3;
-    calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
     break;
 
   case EMPTY:
@@ -530,17 +537,17 @@ void loop()
         if (cam_is_up == true)
         {
           cam_is_up = false;
+        }
+        else
+        {
+          cam_is_up = true;
           cnt_shakes = cnt_shakes + 1;
-          if (cnt_shakes >= 2)
+          if (cnt_shakes >= 4)
           {
             camServo.write(10);
             empty_state = CLOSE_DOOR;
             t_empty = millis();
           }
-        }
-        else
-        {
-          cam_is_up = true;
         }
       }
       break;
@@ -549,7 +556,7 @@ void loop()
       backDoor.write(175);
       if (millis() - t_empty > 500)
       {
-        macro_state = MOVING; // change to MOVING (always!)
+        macro_state = FINISH; // change to MOVING (always!)
         // if the time is elapsed, the robot will change from MOVING to shutdown in the next loop
       }
       break;

@@ -24,6 +24,13 @@ from picamera import PiCamera
 def get_time(time_start):
     return time.time() - time_start
 
+def ultrasound_dist_to_rel_pos(dist,i):
+    """ calculate the relative distance from a detection of the ultrasonic sensor w.r.t the robot frame"""
+    offset = np.array([[0.05,0.15],[0.07,0.09],[0.07,0],[0.07,-0.09],[0.05,-0.15]])
+    angles = np.array([np.pi/4, 0,0,0, -np.pi/4])
+    rel_dist = offset[i] + dist*np.array([np.cos(angles[i]), np.sin(angles[i])])
+    return rel_dist
+
 
 if __name__=='__main__':
     # display all np-floats with 2 decimals
@@ -37,13 +44,14 @@ if __name__=='__main__':
     log_ref = []
     log_info = []
     log_update = []
+    log_obstacle = []
     ref = np.zeros(2)
     info = np.zeros(3)
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 140
-    t_home = 60
+    t_max = 120
+    t_home = 120
 
     # initialize state of the robot
     state = states.STARTING
@@ -52,7 +60,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([1,1,0]) # estimated position
+    pose = np.array([6,4,3*np.pi/2]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -102,9 +110,10 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[2,1],[4,1],[7,1],[5,2],[6,3],[6,2],[7,2],[7,3]])
+    waypoints = np.array([[4,3],[4,1],[6,2],[7,3]])
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
+
 
     while (time.time() - t_s < t_max):
         message = {}
@@ -116,7 +125,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Timeout expired: return to recycling station
-        if (state == states.MOVING) and (time.time()- t_s > t_home):
+        if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
             state_previous = state
             state = states.RETURN
             wp = wp_end
@@ -156,7 +165,6 @@ if __name__=='__main__':
                       str(n_bottles), " bottles")
             message["state"] = state
             state_previous = state
-    
 
         if (state == states.RETURN): # if state is returning, then send waypoints
             message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
@@ -166,7 +174,7 @@ if __name__=='__main__':
             pose_update_available = False
 
         # write message to serial
-        print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
+        #print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
         ser.write(json.dumps(message).encode('ascii'))
 
         ser.flush()
@@ -198,12 +206,13 @@ if __name__=='__main__':
                 if "info" in data:
                     info = np.array(data["info"])
 
-                if "dist" in data:
+                if "dist" in data: # exists only if Arduino is in obstacle avoidance
                     dist = np.array(data["dist"])
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " dist:", data["dist"], " info:", info)
                 elif "ref" in data:
                     ref = np.round(np.array(data["ref"]),2)
+
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " ref:", ref, " info:", info)
 
@@ -216,6 +225,25 @@ if __name__=='__main__':
 
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
+
+        # CALCULATE OBSTACLE POSITONS:
+        if (state == states.OBSTACLE):
+            min_obst_dist = 0.7 # take the same value as in Arduino code!
+
+            # calculate all frontal obstacles
+            for idx,d in  zip(dist[2:6],range(0,5)):
+                if d<min_obst_dist:
+                    c = np.cos(pos[2])
+                    s = np.sin(pos[2])
+                    R = np.array([[c,-s],[s,c]])
+                    obstacle = pose[0:1]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
+                    already_obstacle = False
+                    for obst in log_obstacle:
+                        if np.linalg.norm(obst-obstacle)<0.25:
+                            already_obstacle = True
+                    if not already_obstacle:
+                        log_obstacle.append(obstacle)
+
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
@@ -271,6 +299,7 @@ if __name__=='__main__':
             print("bottle position:", bottle_pos)
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
+                """
                 state_previous = state 
                 state = states.CATCH
                 if not (is_catching):
@@ -281,6 +310,7 @@ if __name__=='__main__':
                     bottle_y = pose[1] + (distanceToBottle)*np.sin(pose[2]+angle)
                     if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
+                """
 
 
             del q_bottle
@@ -299,6 +329,7 @@ if __name__=='__main__':
         log_info.append(info)
         log_cov.append(Pk)
         log_update.append(x_update)
+
 
 
 
@@ -329,7 +360,7 @@ if __name__=='__main__':
 
     print("Generating logfile...")
 
-    log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref}
+    log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref, 'obstacle': log_obstacle}
 
     dataframe = pd.DataFrame(log_data)
     if not os.path.exists('logs'):
