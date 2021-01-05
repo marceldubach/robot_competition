@@ -1,5 +1,0 @@
-Servos			KEYWORD1
-approachBottle		KEYWORD2
-grabBottle		KEYWORD2
-emptyContainer		KEYWORD2
-servosDrivingPos	KEYWORD2
