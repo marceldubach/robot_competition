@@ -118,7 +118,7 @@ int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
 double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
 double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double maxdist[] = {30,30,40,70,70,70,40,30};
+double maxdist[] = {30,30,40,40,40,40,40,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 
@@ -150,9 +150,9 @@ void setup()
   // put your setup code here, to run once:
   Wire.begin();
 
-  //mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
-  //microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
-  //microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
+  mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
+  microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
+  microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
   camServo.attach(8, 750, 2250);   // (pin, min, max) // for camshaft servo
   backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
 
@@ -338,8 +338,8 @@ void loop()
 
   case CATCH: // lift bottles
     if (foundObstacle){
-      maxdist[3] = 70;
-      maxdist[4] = 70;
+      maxdist[3] = 40;
+      maxdist[4] = 40;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
       

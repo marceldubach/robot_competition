@@ -58,7 +58,7 @@ if __name__=='__main__':
     Pk, Q, R = kf_get_param()
 
     x = np.zeros(5)
-    wp_bottle = np.array([0,0])
+    wp_bottle = np.array([1,1])
     wp_end = np.array([0.75,0.75])
     dT = 0
 
@@ -279,7 +279,7 @@ if __name__=='__main__':
                     angle = bottle_pos[1]
                     bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
                     bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
-                    if bottle_x > 0.5 and bottle_x < 7.5 and bottle_y > 0.5 and bottle_y < 7.5:
+                    if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
 
 

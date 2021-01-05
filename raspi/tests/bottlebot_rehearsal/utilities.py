@@ -153,8 +153,8 @@ def detect_bottle(queue, e_bottle):
     y = center[1]
     if(has_bottle):
         if (x < x_max) and (x > x_min) and (y < y_max) and (y > y_min):
-            distance = f_dist(center[1])
-            angle = f_theta(center[0])
+            distance = f_dist(center[1])/100
+            angle = f_theta(center[0])/180*np.pi
             bottle_pos = np.array([distance, angle])
             queue.put(bottle_pos)
             print("[DETECTION] Found a bottle at position ", center, "(pixels), bottle position(arena) :", bottle_pos)
