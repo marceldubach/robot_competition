@@ -68,13 +68,14 @@ if __name__=='__main__':
     wp_bottle = np.array([0,0])
     wp_end = np.array([0.75,0.75])
     dT = 0
-
+    """
     # Picamera sensor matrix
     Z = np.array([[2714/2, 0, 640], [0, 2714/2, 360], [0, 0, 1]])
     Zi = np.linalg.inv(Z)
     x_c = 640
     y_c = 360
     r2 = Zi.dot([x_c, y_c, 1.0])
+    """
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
@@ -100,7 +101,7 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event() # event when triangulation has finished
 
-    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+    p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_bottle.start()
     p_triang.start()
@@ -296,7 +297,7 @@ if __name__=='__main__':
 
             q_bottle = mp.Queue()
             e_bottle = mp.Event()
-            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle, Zi, r2))
+            p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
             p_bottle.start()
             # TODO send bottle detected to arduino and commands
 
