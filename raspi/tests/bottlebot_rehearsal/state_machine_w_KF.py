@@ -317,7 +317,7 @@ if __name__=='__main__':
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[2:6] ,range(0,5)):
-
+                d = d/100
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
