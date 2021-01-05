@@ -277,8 +277,8 @@ if __name__=='__main__':
                     is_catching = True
                     distanceToBottle = bottle_pos[0]
                     angle = bottle_pos[1]
-                    bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
-                    bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
+                    bottle_x = pose[0] + (distanceToBottle)*np.cos(pose[2]+angle)
+                    bottle_y = pose[1] + (distanceToBottle)*np.sin(pose[2]+angle)
                     if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
 
