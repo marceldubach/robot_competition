@@ -317,7 +317,7 @@ if __name__=='__main__':
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[2:6] ,range(0,5)):
-                d = d/100
+                d = d/100 # rescale distance to millimeters
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
@@ -337,9 +337,6 @@ if __name__=='__main__':
                         # clear precomputed waypoints that happen to be on obstacles
                         if np.linalg.norm(w-obstacle)<radius_obstacle:
                             waypoints.remove(w)
-                else:
-                    print("If clause not satisfied.. WEEIRD")
-
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
