@@ -42,7 +42,7 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 60
+    t_max = 140
     t_home = 60
 
     # initialize state of the robot
@@ -271,7 +271,6 @@ if __name__=='__main__':
             print("bottle position:", bottle_pos)
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
-                """
                 state_previous = state 
                 state = states.CATCH
                 if not (is_catching):
@@ -282,7 +281,7 @@ if __name__=='__main__':
                     bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
                     if bottle_x > 0.5 and bottle_x < 7.5 and bottle_y > 0.5 and bottle_y < 7.5:
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
-                """
+
 
             del q_bottle
             del e_bottle
@@ -332,13 +331,13 @@ if __name__=='__main__':
 
     log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref}
 
-    dataframe = pd.DataFrame()
+    dataframe = pd.DataFrame(log_data)
     if not os.path.exists('logs'):
         os.makedirs('logs')
 
     now = datetime.now()
     date_time = now.strftime("%m-%d-%Y_%H-%M-%S")
     logfile_name = os.path.basename(__file__)[:-3] + "_"+ date_time + ".csv"
-    dataframe.to_csv("logs/"+logfile_name)
+    dataframe.to_csv("logs/"+logfile_name, )
 
     print("Saved logfile to: logs/"+logfile_name)

@@ -105,7 +105,7 @@ def detect_bottle(queue, e_bottle):
     y_min = np.min(y_img)
     y_max = np.max(y_img)
     x_min = np.min(x_img)
-    x_max = np.min(x_img)
+    x_max = np.max(x_img)
 
     camera = PiCamera()
     camera.rotation = 180

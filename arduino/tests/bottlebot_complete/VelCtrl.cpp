@@ -75,11 +75,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 118;
-        cmdLeft = 138;
-      } else {
         cmdRight = 138;
         cmdLeft = 118;
+      } else {
+        cmdRight = 118;
+        cmdLeft = 138;
       }
     }
   } // end else turn
