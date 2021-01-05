@@ -1,6 +1,7 @@
 import serial
 import time
 import json
+from numpy.linalg import norm
 import numpy as np
 import states
 import localization
@@ -31,6 +32,22 @@ def ultrasound_dist_to_rel_pos(dist,i):
     rel_dist = offset[i] + dist*np.array([np.cos(angles[i]), np.sin(angles[i])])
     return rel_dist
 
+def get_close_obstacles(local_obstacles, waypoint, radius):
+    close_obstacles = []
+    for wp in waypoints:
+        for cl_obst in close_obstacles:
+            if (norm(cl_obst-waypoint)<radius):
+                close_obstacles.append(cl_obst)
+    return close_obstacles
+
+def waypoint_is_valid(waypoint):
+    # TODO adapt this to enlarge valid regions
+    is_valid = False
+    if (waypoint[0]>0.5) and (waypoint[0]<6):
+        if (waypoint[1]>0.5) and (waypoint[1]<6):
+            is_valid = True
+    return is_valid
+
 
 if __name__=='__main__':
     # display all np-floats with 2 decimals
@@ -44,7 +61,7 @@ if __name__=='__main__':
     log_ref = []
     log_info = []
     log_update = []
-    log_obstacle = []
+
     ref = np.zeros(2)
     info = np.zeros(3)
     x_update = np.zeros(3)
@@ -103,7 +120,9 @@ if __name__=='__main__':
 
     waypoints = [[4,3],[4,1],[6,2],[7,3]] #np.array()
     i_wp = 0 # iterator over waypoints
-    wp = waypoints[i_wp]
+    wp = np.array(waypoints[i_wp])
+    nav_tol = 0.4 # tolerance on how close to track waypoints
+    tracked_wp = []
     obst_list = []
 
 
@@ -118,29 +137,76 @@ if __name__=='__main__':
 
         # Calculate intermediate waypoint
         if (state_previous == states.OBSTACLE) and (state == states.MOVING):
-            # set desired position
-             #1. find obstacles in vicinity
+            print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
+            path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
+
+            # redefine the waypoint to track
+            #1. find obstacles in vicinity
             obst_close = []
             des_angle = 0
             for o in obst_list:
-                if np.linalg.norm(pose[0:-1]-o)<1:
+                if norm(pose[0:-1]-o)<1:
                     obst_close.append(o)
-            #2. choose desired direction to current waypoint
+
+
             if not obst_close:
-                print("[OBSTACLE]: no obstacles found")
+                print("[OBST] WARNING: no obstacles found in vicinity... Leave waypoint unchanged")
             else:
-                des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # attention defined between [-pi, pi]
-                path = np.diag(np.arange(0,1.1, 0.25))
+                # there is an obstacle in vicinity to the desired path
+                # 2. choose desired direction to current waypoint
+                des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # in [-pi, pi]
                 c = np.cos(des_angle)
                 s = np.sin(des_angle)
-                R = np.array([[c,-s],[s,c]])
+                path = [d*np.array([c,s]) for d in np.arange(0,0.25,1.1)]
 
-            
-            #3. detect worst obstacle on the way
-            #4. set intermediate waypoint
-            #5. check if intermediate waypoint feasible (boundary condition ecc )
-            #6. try until feasible -> change angle, failsafe default
-            #7. send waypoint and check if current waypoint has to be reached or bypassed
+                # 3. detect worst obstacle on the way
+                minDistToObst = np.inf
+                closestObst = None
+                for obst in obst_close:
+                    if (norm(obst-pose[0:2])<minDistToObst):
+                        minDistToObst = norm(obst-pose[0:2])
+                        closestObst = obst
+
+                # 4. set intermediate waypoint
+                obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
+                R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
+
+                wp_CW = pose[0:2] + R.dot(np.array([1,1])) # clockwise
+                wp_CCW = pose[0:2] + R.dot(np.array([1,-1])) # counterclockwise
+
+                # 5. check if intermediate waypoint feasible (boundary condition ecc )
+                # 6. try until feasible -> change angle, failsafe default
+                to_center = (np.array([4,4])-pose[0:2])
+
+                # initialize with dummy wp that is always valid (but might be obstructed...)
+                new_wp = pose[0:2] + to_center/norm(to_center)
+
+                # TODO does not work at -pi!!
+                if (obst_angle>des_angle):
+                    # set waypoint in clockwise direction along the path
+                    if (waypoint_is_valid(wp_CW)):
+                        angleToWP = pose[2]+np.pi/4
+                        c = np.cos(angleToWP)
+                        s = np.sin(angleToWP)
+                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                        if not remaining_obst:
+                            # no obstacle blocks the waypoint!
+                            new = wp_CW
+                else:
+                    if (waypoint_is_valid(wp_CCW)):
+                        angleToWP = pose[2] - np.pi / 4
+                        c = np.cos(angleToWP)
+                        s = np.sin(angleToWP)
+                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                        if not remaining_obst:
+                            # no obstacle blocks the waypoint!
+                            new = wp_CCW
+
+                #7. send waypoint and check if current waypoint has to be reached or bypassed
+                # TODO when to drop the current waypoint?
+                wp = new_wp
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
@@ -151,26 +217,22 @@ if __name__=='__main__':
 
         # Empty the bottles in the recycling station
         if (state == states.RETURN):
-            if (np.linalg.norm(pose[0:-1]-wp_end)<0.4):
+            if (norm(pose[0:-1]-wp_end)<0.4):
                 state = states.EMPTY
 
         if (state == states.MOVING):  # state = 1: track waypoints
-            if np.linalg.norm(pose[0:-1]-wp)<0.4:
-                print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached")
-                i_wp += 1
-                """
-                ATTENTION HERE
-                """
-                if i_wp>len(waypoints): # if all waypoints are reached, shutdown
-                    i_wp = 0
-                    wp = waypoints[i_wp]
-                    """
-                    state_previous = state
-                    state = states.FINISH
-                    print("{:6.2f}".format(get_time(t_s)), " [MAIN] All waypoints are reached")
-                    """
+            if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
+                print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached.")
+                tracked_wp.append(wp)
+
+                if waypoints: # there are still waypoints to track
+                    # remove waypoint from the list and set it as current waypoint
+                    wp = waypoints.pop(0)
+
                 else:
-                    wp = waypoints[i_wp]  # some random waypoint (doesn't matter)
+                    # if there is still time, set some random waypoint
+                    wp = np.random.randint(5,size=2)
+
             message["ref"] = [float(wp[0]), float(wp[1])]
             message["state"] = state
             # not updating previous state
@@ -246,25 +308,29 @@ if __name__=='__main__':
 
         # CALCULATE OBSTACLE POSITONS:
         if (state == states.OBSTACLE):
-            min_obst_dist = 0.7 # take the same value as in Arduino code!
 
-            # calculate all frontal obstacles
+            min_obst_dist = 0.7 # take the same value as in Arduino code!
+            radius_obstacle = 0.25 # radius of the obstacle size
+
+            # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in  zip(dist[2:6],range(0,5)):
+
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
                     R = np.array([[c,-s],[s,c]])
                     obstacle = pose[0:1]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
                     already_obstacle = False
-                    for obst in log_obstacle:
-                        if np.linalg.norm(obst-obstacle)<0.25:
+                    for obst in obst_list:
+                        if (np.linalg.norm(obst-obstacle)<radius_obstacle):
                             already_obstacle = True
                     if not already_obstacle:
-                        log_obstacle.append(obstacle)
                         obst_list.append(obstacle)
+
+                        # clear all waypoints close to that obstacle
                         for w in waypoints:
                             # clear precomputed waypoints that happen to be on obstacles
-                            if np.linalg.norm(w-obstacle)<0.15:
+                            if np.linalg.norm(w-obstacle)<radius_obstacle:
                                 waypoints.remove(w)
 
 
@@ -397,9 +463,10 @@ if __name__=='__main__':
     dataframe.to_csv("logs/"+logfile_name)
 
     # log obstacle to .csv
+    log_obstacle = obst_list
     log_obstacles = {'obstacles': log_obstacle}
-    obstacle_logs = "obstacles_" + date_time + ".csv"
+    obstacle_logfilename = "obstacles_" + date_time + ".csv"
     obstacle_df = pd.DataFrame(log_obstacles)
-    obstacle_df.to_csv(obstacle_logs)
+    obstacle_df.to_csv(obstacle_logfilename)
 
     print("Saved logfile to: logs/"+logfile_name)
