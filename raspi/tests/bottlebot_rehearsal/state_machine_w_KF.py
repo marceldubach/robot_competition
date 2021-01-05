@@ -231,10 +231,10 @@ if __name__=='__main__':
             min_obst_dist = 0.7 # take the same value as in Arduino code!
 
             # calculate all frontal obstacles
-            for idx,d in  zip(dist[2:6],range(0,5)):
+            for d,idx in  zip(dist[2:6],range(0,5)):
                 if d<min_obst_dist:
-                    c = np.cos(pos[2])
-                    s = np.sin(pos[2])
+                    c = np.cos(pose[2])
+                    s = np.sin(pose[2])
                     R = np.array([[c,-s],[s,c]])
                     obstacle = pose[0:1]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
                     already_obstacle = False
@@ -360,15 +360,23 @@ if __name__=='__main__':
 
     print("Generating logfile...")
 
-    log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref, 'obstacle': log_obstacle}
+    log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref}
+
 
     dataframe = pd.DataFrame(log_data)
     if not os.path.exists('logs'):
         os.makedirs('logs')
 
+    # log position data to .csv
     now = datetime.now()
     date_time = now.strftime("%m-%d-%Y_%H-%M-%S")
     logfile_name = os.path.basename(__file__)[:-3] + "_"+ date_time + ".csv"
-    dataframe.to_csv("logs/"+logfile_name, )
+    dataframe.to_csv("logs/"+logfile_name)
+
+    # log obstacle to .csv
+    log_obstacles = {'obstacles': log_obstacle}
+    obstacle_logs = "obstacles_" + date_time + ".csv"
+    obstacle_df = pd.DataFrame(log_obstacles)
+    obstacle_df.to_csv(obstacle_logs)
 
     print("Saved logfile to: logs/"+logfile_name)
