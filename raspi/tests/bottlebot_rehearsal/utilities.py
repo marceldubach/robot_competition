@@ -102,7 +102,11 @@ def detect_bottle(queue, e_bottle):
     x_img = np.array([1180, 1050, 842, 695, 500, 347, 200])
     theta = np.array([-26,-22, -10, 0, 10, 22, 26]) 
     f_theta = interp1d(x_img, theta)
-    
+    y_min = np.min(y_img)
+    y_max = np.max(y_img)
+    x_min = np.min(x_img)
+    x_max = np.min(x_img)
+
     camera = PiCamera()
     camera.rotation = 180
     camera.resolution = (1280,720)
@@ -145,13 +149,18 @@ def detect_bottle(queue, e_bottle):
 
     # Plot a bounding box around the bottle
     has_bottle, center = add_corners(img_out, cornerList)
-
+    x = center[0]
+    y = center[1]
     if(has_bottle):
-        distance = f_dist(center[1])
-        angle = f_theta(center[0])
-        bottle_pos = np.array([distance, angle])
-        queue.put(bottle_pos)
-        print("[DETECTION] Found a bottle at position ", center, "(pixels), bottle position(arena) :", bottle_pos)
+        if (x < x_max) and (x > x_min) and (y < y_max) and (y > y_min):
+            distance = f_dist(center[1])
+            angle = f_theta(center[0])
+            bottle_pos = np.array([distance, angle])
+            queue.put(bottle_pos)
+            print("[DETECTION] Found a bottle at position ", center, "(pixels), bottle position(arena) :", bottle_pos)
+        else:
+            bottle_pos = np.array([-1, -1])
+            queue.put(bottle_pos)
     else:
         queue.put(center)
         print("[DETECTION] Found no bottle ...")
