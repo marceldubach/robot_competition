@@ -16,6 +16,7 @@ from kalmanFilter import kalmanFilter, kf_get_param
 from utilities import detect_bottle
 from picamera import PiCamera
 
+# TODO: on arduino: after changing back from OBSTACLE to MOVING, the old reference is still given
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
     Run this script together with 'bottlebot_complete' on Arduino.
