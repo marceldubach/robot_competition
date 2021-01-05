@@ -108,7 +108,7 @@ double distances[] = {100, 100, 100, 100, 100, 100, 100}; // old: double
 int threshold[] = {0, 0, 0, 0, 0, 0, 0};
 double weight_left[] = {1000, -400, -200, -300, -300, -400, -400}; // old: double
 double weight_right[] = {1000, -400, -400, -500, -500, -500, -200}; // double
-double maxdist[] = {30,20,60,70,70,60,20}; // initialize maxdist at less than default distances!
+double maxdist[] = {30,20,40,70,70,40,20}; // initialize maxdist at less than default distances!
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 //initialize distances at values bigger than the threshold
@@ -344,8 +344,8 @@ void loop()
 
   case CATCH: // lift bottles
     if (foundObstacle){
-      maxdist[3] = 50;
-      maxdist[4] = 50;
+      maxdist[3] = 70;
+      maxdist[4] = 70;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
       

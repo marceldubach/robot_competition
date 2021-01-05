@@ -26,8 +26,13 @@ def get_time(time_start):
 
 
 if __name__=='__main__':
+    # display all np-floats with 2 decimals
+    float_formatter = "{:.2f}".format
+    np.set_printoptions(formatter={'float_kind': float_formatter})
+
     log_time = []
     log_pos = []
+    log_ref = []
 
     t_max = 5
     t_home =5
@@ -283,6 +288,7 @@ if __name__=='__main__':
 
         log_time.append(get_time(t_s))
         log_pos.append(pose)
+        log_ref.append(wp)
 
 
     # shut the motor down
@@ -310,9 +316,9 @@ if __name__=='__main__':
     p_triang.join()
     p_bottle.join()
 
-    print("Writing logfile...")
+    print("Generating logfile...")
 
-    log_data = {'time': log_time, 'pos': log_pos}
+    log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref}
 
     dataframe = pd.DataFrame()
     if not os.path.exists('logs'):
