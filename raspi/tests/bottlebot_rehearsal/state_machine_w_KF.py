@@ -33,9 +33,12 @@ if __name__=='__main__':
     log_time = []
     log_pos = []
     log_ref = []
+    log_info = []
+    ref = np.array([0,0])
+    info = np.array([0,0,0])
 
-    t_max = 5
-    t_home =5
+    t_max = 40
+    t_home =40
     
     # initalize time for display
     t_s = time.time()
@@ -46,15 +49,19 @@ if __name__=='__main__':
     n_bottles = 0
     is_catching = False
 
+    """
     Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
                    [0, 0.5, 0.02, 0.02, 0],
                    [0.02, 0.02, 0.1, 0, 0.04],
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
-    Q = 0.01*np.identity(5)
-    R =  np.array([[0.5, 0, 0],
+    """
+    Pk = np.diag([0.1,0.1,0.1,0.1,0.05])
+    Q = np.diag([0.05,0.05,0.1,0.02,0.01])
+    #Q = 0.01*np.identity(5)
+    R = np.array([[0.5, 0, 0],
                   [0, 0.5, 0],
-                  [0, 0, 0.05]])
+                  [0, 0, 0.1]])
 
     x = np.zeros(5)
     wp_bottle = np.array([0,0])
@@ -182,7 +189,8 @@ if __name__=='__main__':
                 ser.reset_input_buffer()
                 data = json.loads(line)
                 if "pos" in data:
-                    pose = np.array(data["pos"])
+                    pose = np.round(np.array(data["pos"]),2)
+                    # round the pose to 2 decimals (pose may be sent via serial)
                 if "state" in data:
                     if (state != data["state"]) and ((state != states.RETURN) and (state!=states.EMPTY)):
                         state_previous = state
@@ -193,13 +201,17 @@ if __name__=='__main__':
                         n_bottles = data["nBot"]
                         print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
                               n_bottles, " bottles")
+                if "info" in data:
+                    info = np.array(data["info"])
 
                 if "dist" in data:
+                    dist = np.array(data["dist"])
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                          " pos: ", pose, " dist:", data["dist"], " info:", data["info"])
+                          " pos: ", pose, " dist:", data["dist"], " info:", info)
                 elif "ref" in data:
+                    ref = np.round(np.array(data["ref"]),2)
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                          " pos: ", pose, " ref:", data["ref"], " info:", data["info"])
+                          " pos: ", pose, " ref:", ref, " info:", info)
 
 
 
@@ -265,6 +277,7 @@ if __name__=='__main__':
             print("bottle position:", bottle_pos)
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
+                """
                 state_previous = state 
                 state = states.CATCH
                 if not (is_catching):
@@ -274,7 +287,8 @@ if __name__=='__main__':
                     bottle_x = pose[0] + (distanceToBottle-0.1)*np.cos(pose[2]+angle)
                     bottle_y = pose[1] + (distanceToBottle-0.1)*np.sin(pose[2]+angle)
                     if bottle_x > 0.5 and bottle_x < 7.5 and bottle_y > 0.5 and bottle_y < 7.5:
-                        wp_bottle = np.array([bottle_x, bottle_y])
+                        wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
+                """
 
             del q_bottle
             del e_bottle
@@ -288,7 +302,8 @@ if __name__=='__main__':
 
         log_time.append(get_time(t_s))
         log_pos.append(pose)
-        log_ref.append(wp)
+        log_ref.append(ref)
+        log_info.append(info)
 
 
     # shut the motor down

@@ -67,11 +67,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)<2*PI-2*del_theta)){
       // turn slowly
       if (turnLeft){
-        cmdRight = 130+fabs(heading_ref-theta)*5;
-        cmdLeft = 126-fabs(heading_ref-theta)*5;
+        cmdRight = 130+fabs(heading_ref-theta)*3;
+        cmdLeft = 126-fabs(heading_ref-theta)*3;
       }else{ // turn right
-        cmdLeft = 130+fabs(heading_ref-theta)*5;
-        cmdRight = 126-fabs(heading_ref-theta)*5;
+        cmdLeft = 130+fabs(heading_ref-theta)*3;
+        cmdRight = 126-fabs(heading_ref-theta)*3;
       }
     } else {
       // turn faster
