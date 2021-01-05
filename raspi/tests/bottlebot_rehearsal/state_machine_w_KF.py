@@ -302,19 +302,16 @@ if __name__=='__main__':
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " ref:", ref, " info:", info)
 
-
-
-
-
             except:
                 print("[ERROR] cannot deserialize string from arduino.")
 
         else:
             print("{:6.2f}".format(get_time(t_s)) + " [SER] No message received :(")
 
+
         # CALCULATE OBSTACLE POSITONS:
         if (state == states.OBSTACLE):
-
+            print("[MAIN] try to append obstacles to list")
             min_obst_dist = 0.7 # take the same value as in Arduino code!
             radius_obstacle = 0.25 # radius of the obstacle size
 
