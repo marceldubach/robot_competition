@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 from picamera import PiCamera
+from scipy.interpolate import interp1d
 
 
 def HSV_mask(img,hsv_min, hsv_max):
@@ -92,8 +93,16 @@ def bottle_ref(position, Zi, r2):
    
     return distance, angle_radians
 """
-def detect_bottle(queue, e_bottle, f_dist, f_theta):
+def detect_bottle(queue, e_bottle):
 
+    # Mapping for distance and bottle orientation
+    y_img = np.array([448, 407, 385, 375, 300, 282, 258, 243, 232, 230])
+    dist = np.array([30, 40, 50, 54, 75, 80.9, 100, 104, 126, 130]) 
+    f_dist = interp1d(y_img, dist)
+    x_img = np.array([1180, 1050, 842, 695, 500, 347, 200])
+    theta = np.array([-26,-22, -10, 0, 10, 22, 26]) 
+    f_theta = interp1d(x_img, theta)
+    
     camera = PiCamera()
     camera.rotation = 180
     camera.resolution = (1280,720)
