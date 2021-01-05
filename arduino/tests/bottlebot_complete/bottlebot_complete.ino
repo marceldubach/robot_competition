@@ -380,12 +380,13 @@ void loop()
     switch (catch_state)
     {
     case TRACK_WP:
+      /*
       double distance_to_WP = sqrt(pow(x-ref_x,2)+pow(y-ref_y,2));
       double del_theta = 0.3;
       if (distance_to_WP<1){
         del_theta = 0.3+ (1-distance_to_WP);
       }
-    */
+      */
       maxdist[3] = 1;
       maxdist[4] = 1;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);

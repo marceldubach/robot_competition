@@ -11,7 +11,7 @@ import pandas as pd
 
 import multiprocessing as mp
 from localization import triangulation
-from kalmanFilter import kalmanFilter
+from kalmanFilter import kalmanFilter, kf_get_param
 from utilities import detect_bottle
 from picamera import PiCamera
 
@@ -30,44 +30,38 @@ if __name__=='__main__':
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
 
+    # initialize lists to generate logfile
     log_time = []
     log_pos = []
     log_cov = []
     log_ref = []
     log_info = []
-    ref = np.array([0,0])
-    info = np.array([0,0,0])
+    log_update = []
+    ref = np.zeros(2)
+    info = np.zeros(3)
+    x_update = np.zeros(3)
 
-    t_max = 40
-    t_home =40
-    
-    # initalize time for display
-    t_s = time.time()
+    # define runtime (t_max), and time after which the robot returns to home (t_home)
+    t_max = 60
+    t_home = 60
 
-    # initial state
+    # initialize state of the robot
     state = states.STARTING
     state_previous = 0
     n_bottles = 0
     is_catching = False
 
-    """
-    Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
-                   [0, 0.5, 0.02, 0.02, 0],
-                   [0.02, 0.02, 0.1, 0, 0.04],
-                   [0.02, 0.02, 0, 0.05, 0],
-                   [0, 0, 0.04, 0, 0.02]])
-    """
-    Pk = np.diag([0.1,0.1,0.1,0.1,0.05])
-    Q = np.diag([0.05,0.05,0.1,0.02,0.01])
-    #Q = 0.01*np.identity(5)
-    R = np.array([[0.5, 0, 0],
-                  [0, 0.5, 0],
-                  [0, 0, 0.1]])
+    # initial estimated position
+    pose = np.array([1,1,0]) # estimated position
+
+    # get (initial) parameters of the Kalman Filter
+    Pk, Q, R = kf_get_param()
 
     x = np.zeros(5)
     wp_bottle = np.array([0,0])
     wp_end = np.array([0.75,0.75])
     dT = 0
+
     """
     # Picamera sensor matrix
     Z = np.array([[2714/2, 0, 640], [0, 2714/2, 360], [0, 0, 1]])
@@ -77,13 +71,12 @@ if __name__=='__main__':
     r2 = Zi.dot([x_c, y_c, 1.0])
     """
 
-    # initial estimated position
-    pose = np.array([1,1,0]) # estimated position
+    data = "" # data string for serial communication
 
-    data = ""
+    # initalize time for display
+    t_s = time.time()
 
     print("Start simulation. Duration: ", t_max ," seconds")
-    t_s = time.time()
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)
     
     if (ser.isOpen()):
@@ -305,6 +298,9 @@ if __name__=='__main__':
         log_pos.append(pose)
         log_ref.append(ref)
         log_info.append(info)
+        log_cov.append(Pk)
+        log_update.append(x_update)
+
 
 
     # shut the motor down

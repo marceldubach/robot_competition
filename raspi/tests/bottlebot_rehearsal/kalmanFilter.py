@@ -8,6 +8,22 @@ import usb.util
 import imutils
 import time 
 
+def kf_get_param():
+    """
+    Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
+                   [0, 0.5, 0.02, 0.02, 0],
+                   [0.02, 0.02, 0.1, 0, 0.04],
+                   [0.02, 0.02, 0, 0.05, 0],
+                   [0, 0, 0.04, 0, 0.02]])
+    """
+    Pk = np.diag([0.1,0.1,0.1,0.1,0.05])
+    Q = np.diag([0.05,0.05,0.1,0.02,0.01])
+    #Q = 0.01*np.identity(5)
+    R = np.array([[0.5, 0, 0],
+                  [0, 0.5, 0],
+                  [0, 0, 0.1]])
+    return Pk, Q, R
+
 def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     """
     state_vector: column vector{

@@ -50,7 +50,6 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     }
   }else{
     bool turnLeft; // get rotation sense
-    
     if ((heading_ref-theta)>0){
       if (heading_ref-theta<PI){
         turnLeft = true; // turn left
@@ -76,8 +75,8 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 138;
-        cmdLeft = 118;
+        cmdRight = 118;
+        cmdLeft = 138;
       } else {
         cmdRight = 138;
         cmdLeft = 118;
