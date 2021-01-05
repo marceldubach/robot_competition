@@ -42,11 +42,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
   if ((fabs(heading_ref-theta)<del_theta) || (fabs(heading_ref-theta)>(2*PI-del_theta))){
     // heading is good -> fast forward
     if (dist>1){
-      cmdLeft = 240;
-      cmdRight = 240;
+      cmdLeft = 220;
+      cmdRight = 220;
     }else{
-      cmdLeft = 150+dist/0.5*50; // give some value between 150 and 190
-      cmdRight = 150+dist/0.5*50;
+      cmdLeft = 150+dist*50; // give some value between 150 and 200
+      cmdRight = 150+dist*50;
     }
   }else{
     bool turnLeft; // get rotation sense

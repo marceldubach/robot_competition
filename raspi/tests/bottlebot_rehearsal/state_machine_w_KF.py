@@ -32,6 +32,7 @@ if __name__=='__main__':
 
     log_time = []
     log_pos = []
+    log_cov = []
     log_ref = []
     log_info = []
     ref = np.array([0,0])
@@ -91,7 +92,6 @@ if __name__=='__main__':
     else:
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial connection failed")
 
-
     ser.flush()
 
     q_bottle = mp.Queue() # queue for frontal camera information
@@ -108,7 +108,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = np.array([[4,4],[7,1],[7,4],[4,4],[4,5],[1,3],[2,1],[4,2]])
+    waypoints = np.array([[2,2],[3,2],[4,3],[5,2],[6,3],[6,2],[7,2],[7,3]])
     i_wp = 0 # iterator over waypoints
     wp = waypoints[i_wp]
 

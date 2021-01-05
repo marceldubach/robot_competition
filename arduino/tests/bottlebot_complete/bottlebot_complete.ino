@@ -116,14 +116,13 @@ int n_US = 8;
 int idx_us = 0;
 int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
-double weight_left[] = {1000, -400, -300, -1200, -1200, -300, -400}; // old: double
-double weight_right[] = {1000, -400, -500, -1400, -1400, -500, -400}; // double
+double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
+double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
 double maxdist[] = {30,30,40,70,70,70,40,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 
 //initialize distances at values bigger than the threshold
-
 #define claw_trigger 37
 #define claw_echo 36
 
@@ -231,13 +230,6 @@ void loop()
         }
       } // end else if macro_state != OBSTACLE
     } // end if key "state" contained in message
-
-    /* TODO remove this! Set enableMotors for all transitions!
-    // transition to MOVING
-    if ((macro_state == MOVING) && (old_macro_state != MOVING)){
-      enableMotors = true;
-    }
-    */
     
     if (receive_msg.containsKey("ref"))
     {
@@ -319,15 +311,6 @@ void loop()
     break;
 
   case OBSTACLE:
-    /*
-    for (int i = 0; i < n_US; i++)
-    {
-      if (threshold[i] == 1)
-      {
-        foundObstacle = true;
-      }
-    }
-    */
     if (foundObstacle == false)
     {
       // get back to old state
@@ -380,7 +363,6 @@ void loop()
       old_macro_state = macro_state;
       macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
     }
-    //enableMotors = false;
     break;
 
   case FINISH:
@@ -398,7 +380,6 @@ void loop()
     switch (catch_state)
     {
     case TRACK_WP:
-    /* // TODO
       double distance_to_WP = sqrt(pow(x-ref_x,2)+pow(y-ref_y,2));
       double del_theta = 0.3;
       if (distance_to_WP<1){
@@ -564,19 +545,6 @@ void loop()
       {
         macro_state = MOVING; // change to MOVING (always!)
         // if the time is elapsed, the robot will change from MOVING to shutdown in the next loop
-        // if not homing:
-        /*
-        if (!time_elapsed)
-        {
-          // if time has not elapes yet, change to MOVING again
-          
-        }
-        else
-        {
-          // if time has elapsed, change to FINISHED
-          macro_state = FINISH;
-        }
-        */
       }
       break;
 
@@ -643,7 +611,7 @@ void loop()
     info.add(v);         //[m/s]
     info.add(omega_rad); //[rad/s]
     info.add(dt);        //[s]
-    
+
     /*
     JsonArray command = send_msg.createNestedArray("cmd");
     command.add(cmdLeft);
