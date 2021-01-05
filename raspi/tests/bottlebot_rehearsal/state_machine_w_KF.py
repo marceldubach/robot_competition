@@ -311,7 +311,7 @@ if __name__=='__main__':
 
         # CALCULATE OBSTACLE POSITONS:
         if (state == states.OBSTACLE):
-            print("[MAIN] try to append obstacles to list")
+            #print("[MAIN] try to append obstacles to list")
             min_obst_dist = 0.7 # take the same value as in Arduino code!
             radius_obstacle = 0.25 # radius of the obstacle size
 
@@ -327,14 +327,18 @@ if __name__=='__main__':
                     for obst in obst_list:
                         if (np.linalg.norm(obst-obstacle) < radius_obstacle):
                             already_obstacle = True
+
                     if not already_obstacle:
                         obst_list.append(obstacle)
+                        print("obstacle appended")
 
                         # clear all waypoints close to that obstacle
-                        for w in waypoints:
-                            # clear precomputed waypoints that happen to be on obstacles
-                            if np.linalg.norm(w-obstacle)<radius_obstacle:
-                                waypoints.remove(w)
+                    for w in waypoints:
+                        # clear precomputed waypoints that happen to be on obstacles
+                        if np.linalg.norm(w-obstacle)<radius_obstacle:
+                            waypoints.remove(w)
+                else:
+                    print("If clause not satisfied.. WEEIRD")
 
 
         # condition to read odometry when image is taken by webcam for localization
