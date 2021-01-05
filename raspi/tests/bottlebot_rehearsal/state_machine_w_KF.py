@@ -22,15 +22,19 @@ from picamera import PiCamera
     
     04.Jan.2020
 """
+
+
 def get_time(time_start):
     return time.time() - time_start
 
-def ultrasound_dist_to_rel_pos(dist,i):
+
+def ultrasound_dist_to_rel_pos(dist, i):
     """ calculate the relative distance from a detection of the ultrasonic sensor w.r.t the robot frame"""
-    offset = np.array([[0.05,0.15],[0.07,0.09],[0.07,0],[0.07,-0.09],[0.05,-0.15]])
+    offset = np.array([[0.05, 0.15], [0.07, 0.09], [0.07, 0], [0.07, -0.09], [0.05, -0.15]])
     angles = np.array([np.pi/4, 0,0,0, -np.pi/4])
     rel_dist = offset[i] + dist*np.array([np.cos(angles[i]), np.sin(angles[i])])
     return rel_dist
+
 
 def get_close_obstacles(local_obstacles, waypoint, radius):
     close_obstacles = []
@@ -39,6 +43,7 @@ def get_close_obstacles(local_obstacles, waypoint, radius):
             if (norm(cl_obst-waypoint)<radius):
                 close_obstacles.append(cl_obst)
     return close_obstacles
+
 
 def waypoint_is_valid(waypoint):
     # TODO adapt this to enlarge valid regions
@@ -121,10 +126,11 @@ if __name__=='__main__':
     waypoints = [[4,3],[4,1],[6,2],[7,3]] #np.array()
     i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[i_wp])
-    nav_tol = 0.4 # tolerance on how close to track waypoints
+    nav_tol = 0.4
+
+    # tolerance on how close to track waypoints
     tracked_wp = []
     obst_list = []
-
 
     while (time.time() - t_s < t_max):
         message = {}
@@ -145,9 +151,8 @@ if __name__=='__main__':
             obst_close = []
             des_angle = 0
             for o in obst_list:
-                if norm(pose[0:-1]-o)<1:
+                if norm(pose[0:-1]-o) < 1:
                     obst_close.append(o)
-
 
             if not obst_close:
                 print("[OBST] WARNING: no obstacles found in vicinity... Leave waypoint unchanged")
@@ -157,13 +162,13 @@ if __name__=='__main__':
                 des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # in [-pi, pi]
                 c = np.cos(des_angle)
                 s = np.sin(des_angle)
-                path = [d*np.array([c,s]) for d in np.arange(0,0.25,1.1)]
+                path = [d*np.array([c, s]) for d in np.arange(0, 0.25, 1.1)]
 
                 # 3. detect worst obstacle on the way
                 minDistToObst = np.inf
                 closestObst = None
                 for obst in obst_close:
-                    if (norm(obst-pose[0:2])<minDistToObst):
+                    if (norm(obst-pose[0:2]) < minDistToObst):
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
 
@@ -207,6 +212,7 @@ if __name__=='__main__':
                 #7. send waypoint and check if current waypoint has to be reached or bypassed
                 # TODO when to drop the current waypoint?
                 wp = new_wp
+                print("[MAiN] waypoint updated!")
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
@@ -217,7 +223,7 @@ if __name__=='__main__':
 
         # Empty the bottles in the recycling station
         if (state == states.RETURN):
-            if (norm(pose[0:-1]-wp_end)<0.4):
+            if (norm(pose[0:-1] - wp_end) < 0.4):
                 state = states.EMPTY
 
         if (state == states.MOVING):  # state = 1: track waypoints
@@ -250,7 +256,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
 
         if (pose_update_available):
-            message["pose"]  =[float(pose[0]),float(pose[1]),float(pose[2])]
+            message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
             pose_update_available = False
 
         # write message to serial
@@ -313,16 +319,16 @@ if __name__=='__main__':
             radius_obstacle = 0.25 # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
-            for d,idx in  zip(dist[2:6],range(0,5)):
+            for d,idx in zip(dist[2:6] ,range(0,5)):
 
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
-                    R = np.array([[c,-s],[s,c]])
+                    R = np.array([[c, -s], [s, c]])
                     obstacle = pose[0:1]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
                     already_obstacle = False
                     for obst in obst_list:
-                        if (np.linalg.norm(obst-obstacle)<radius_obstacle):
+                        if (np.linalg.norm(obst-obstacle) < radius_obstacle):
                             already_obstacle = True
                     if not already_obstacle:
                         obst_list.append(obstacle)
@@ -341,11 +347,11 @@ if __name__=='__main__':
             dT = 0.02
             try:
                 measures = np.array(data["info"])
-                v,omega,dT = measures
+                v, omega, dT = measures
             except:
                 print("Didn't manage to get info from arduino")
             pose_KF = pose
-            x = np.array([pose_KF[0],pose_KF[1],pose_KF[2],v, omega])
+            x = np.array([pose_KF[0], pose_KF[1], pose_KF[2], v, omega])
             e_img_loc.clear()
 
         # condition to know that localization is ready for sensor fusion update
