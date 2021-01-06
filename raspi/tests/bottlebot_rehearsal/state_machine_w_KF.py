@@ -83,7 +83,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([0,0,np.pi/4]) # estimated position
+    pose = np.array([1,1,np.pi/4]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
