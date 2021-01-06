@@ -155,8 +155,8 @@ def detect_bottle(queue, e_bottle):
 
 def ultrasound_dist_to_rel_pos(dist, i):
     """ calculate the relative distance from a detection of the ultrasonic sensor w.r.t the robot frame"""
-    offset = np.array([[0.05, 0.15], [0.07, 0.09], [0.07, 0], [0.07, -0.09], [0.05, -0.15]])
-    angles = np.array([np.pi/4, 0,0,0, -np.pi/4])
+    offset = np.array([[-0.24, 0.15],[0.05, 0.15], [0.07, 0.09], [0.07, 0], [0.07, -0.09], [0.05, -0.15], [-0.24, -0.15]])
+    angles = np.array([np.pi/2, np.pi/4, 0,0,0, -np.pi/4, -np.pi/2])
     rel_dist = offset[i] + dist*np.array([np.cos(angles[i]), np.sin(angles[i])])
     return rel_dist
 
