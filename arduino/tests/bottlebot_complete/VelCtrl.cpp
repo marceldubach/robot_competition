@@ -25,7 +25,7 @@ void set_Commands(bool enableMotors, int cmdRight, int cmdLeft, byte pwmRight, b
   };
 }
 
-void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double theta, double ref_x, double ref_y){
+void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double theta, double ref_x, double ref_y, double max_dist[]){
   // assign correct values to ctrlLeft, ctrlRight, based on the waypoint
 
   // calculate desired heading in [0,2*PI]
@@ -41,6 +41,15 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
   double del_theta = 0.3; // tolerance for angle: 0.3 rad = 17.8°
   if ((fabs(heading_ref-theta)<del_theta) || (fabs(heading_ref-theta)>(2*PI-del_theta))){
     // heading is good -> fast forward
+    double forward_dist = 70;
+    max_dist[0] = 30;
+    max_dist[1] = 30;
+    max_dist[2] = 30;
+    max_dist[3] = forward_dist;
+    max_dist[4] = forward_dist;
+    max_dist[5] = forward_dist;
+    max_dist[6] = 30;
+    max_dist[7] = 30;
     if (dist>1){
       cmdLeft = 220;
       cmdRight = 220;
@@ -49,6 +58,17 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
       cmdRight = 150+dist*50;
     }
   }else{
+    double turn_dist = 30;
+    max_dist[0] = 30;
+    max_dist[1] = 30;
+    max_dist[2] = 30;
+    max_dist[3] = turn_dist;
+    max_dist[4] = turn_dist;
+    max_dist[5] = turn_dist;
+    max_dist[6] = 30;
+    max_dist[7] = 30;
+    // us_sensors at 45° are set to 30
+    
     bool turnLeft; // get rotation sense
     if ((heading_ref-theta)>0){
       if (heading_ref-theta<PI){
@@ -75,11 +95,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 138;
-        cmdLeft = 118;
+        cmdRight = 148;
+        cmdLeft = 108;
       } else {
-        cmdRight = 118;
-        cmdLeft = 138;
+        cmdRight = 108;
+        cmdLeft = 148;
       }
     }
   } // end else turn
