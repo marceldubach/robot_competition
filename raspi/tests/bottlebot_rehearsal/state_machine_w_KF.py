@@ -13,7 +13,7 @@ import pandas as pd
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter, kf_get_param
-from utilities import detect_bottle
+from utilities import detect_bottle, ultrasound_dist_to_rel_pos, get_close_obstacles, waypoint_is_valid, is_obstacle, get_time
 from picamera import PiCamera
 
 # TODO: on arduino: after changing back from OBSTACLE to MOVING, the old reference is still given
@@ -24,44 +24,6 @@ from picamera import PiCamera
     04.Jan.2020
 """
 
-
-def get_time(time_start):
-    return time.time() - time_start
-
-
-def ultrasound_dist_to_rel_pos(dist, i):
-    """ calculate the relative distance from a detection of the ultrasonic sensor w.r.t the robot frame"""
-    offset = np.array([[0.05, 0.15], [0.07, 0.09], [0.07, 0], [0.07, -0.09], [0.05, -0.15]])
-    angles = np.array([np.pi/4, 0,0,0, -np.pi/4])
-    rel_dist = offset[i] + dist*np.array([np.cos(angles[i]), np.sin(angles[i])])
-    return rel_dist
-
-
-def get_close_obstacles(local_obstacles, waypoint, radius):
-    close_obstacles = []
-    for wp in waypoints:
-        for cl_obst in close_obstacles:
-            if (norm(cl_obst-waypoint)<radius):
-                close_obstacles.append(cl_obst)
-    return close_obstacles
-
-
-def waypoint_is_valid(waypoint):
-    # TODO adapt this to enlarge valid regions
-    is_valid = False
-    if (waypoint[0]>0.5) and (waypoint[0]<7.5):
-        if (waypoint[1]>0.5) and (waypoint[1]<4.5):
-            is_valid = True
-    return is_valid
-
-def is_obstacle(waypoint, obst_list):
-    # check that the bottle waypoint is not on an obstacle 
-    radius = 0.3 # radius of influence of an obstacle
-    is_obstacle = False
-    for o in obst_list:
-        if (norm(o-waypoint)<radius):
-            is_obstacle = True
-    return is_obstacle
 
 if __name__=='__main__':
     # display all np-floats with 2 decimals
