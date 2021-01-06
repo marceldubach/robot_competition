@@ -81,8 +81,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 300
-    t_home = 200
+    t_max = 600
+    t_home = 500
 
     # initialize state of the robot
     state = states.STARTING
@@ -480,13 +480,9 @@ if __name__=='__main__':
     dataframe.to_csv("logs/"+logfile_name)
 
     # log obstacle to .csv
-    log_tracked_x = [[waypt[0] for waypt in tracked_wp]]
-    log_tracked_y = [[waypt[0] for waypt in tracked_wp]]
-    log_obstacle_x = [waypt[0] for waypt in obst_list]
+    log_obstacle_x = [o[0] for o in obst_list]
     log_obstacle_y = [o[1] for o in obst_list]
-    log_obstacles = {'obst_x': log_obstacle_x, 'obst_y': log_obstacle_y,
-                     'wp_x':log_tracked_x, 'wp_y':log_tracked_y}
-
+    log_obstacles = {'x': log_obstacle_x, 'y': log_obstacle_y}
     obstacle_logfilename = "obstacles_" + date_time + ".csv"
     obstacle_df = pd.DataFrame(log_obstacles)
     obstacle_df.to_csv('logs/'+obstacle_logfilename)
