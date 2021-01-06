@@ -24,7 +24,6 @@ from picamera import PiCamera
     04.Jan.2020
 """
 
-
 if __name__=='__main__':
     # display all np-floats with 2 decimals
     float_formatter = "{:.2f}".format
@@ -43,8 +42,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 600
-    t_home = 500
+    t_max = 60
+    t_home = 100
 
     # initialize state of the robot
     state = states.STARTING
@@ -53,7 +52,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([1,1,0]) # estimated position
+    pose = np.array([4,1,0]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -94,7 +93,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[3,3],[5,3],[6,1],[7,1],[7,2],[6,4],[4,4],[2,4]] #np.array()
+    waypoints = [[5,1],[7,1],[7,3],[7,1],[7,2],[6,4],[4,4],[2,4]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4

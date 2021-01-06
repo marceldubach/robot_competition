@@ -76,25 +76,7 @@ def add_corners(img, cornerList):
         return True, np.array([x_center, y_center])
     else:
         return False, np.array([-1,-1])
-"""
-def bottle_ref(position, Zi, r2):
-  
-    x_b = position[0]
-    y_b = position[1] 
-    r1 = Zi.dot([x_b, y_b, 1.0]) 
-    if 640 > x_b:
-        sign = 1
-    else:
-        sign = -1
-    cos_angle = r1.dot(r2) / (np.linalg.norm(r1) * np.linalg.norm(r2))
-    angle_radians = sign*np.arccos(cos_angle) 
-    distance = 1.5 - ((y_b)-200)/200
-    if (distance < 0):
-        distance = -1
-        angle_radians = -1
-   
-    return distance, angle_radians
-"""
+
 def detect_bottle(queue, e_bottle):
 
     # Mapping for distance and bottle orientation
