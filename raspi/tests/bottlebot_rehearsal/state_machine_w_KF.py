@@ -42,8 +42,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 600
-    t_home = 450
+    t_max = 100
+    t_home = 50
 
     # initialize state of the robot
     state = states.STARTING
@@ -192,13 +192,6 @@ if __name__=='__main__':
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
             state_previous = state
             state = states.RETURN
-            wp = wp_end
-            message["ref"] = [float(wp[0]), float(wp[1])]
-
-        # Empty the bottles in the recycling station
-        if (state == states.RETURN):
-            if (norm(pose[0:-1] - wp_end) < 0.4):
-                state = states.EMPTY
 
         if (state == states.MOVING):  # state = 1: track waypoints
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
@@ -211,7 +204,7 @@ if __name__=='__main__':
 
                 else:
                     # if there is still time, set some random waypoint
-                    wp = np.random.randint(5,size=2)
+                    wp = np.ones(2)+np.random.randint(4,size=2)
 
             message["ref"] = [float(wp[0]), float(wp[1])]
             message["state"] = state
@@ -220,15 +213,17 @@ if __name__=='__main__':
         if (state != state_previous):
             if (state != states.CATCH) and (state_previous == states.CATCH):
                 is_catching = False
-                n_bottles += 1
-                print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED! Robot contains ",
-                      str(n_bottles), " bottles")
+                print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED!")
             message["state"] = state
-            state_previous = state
+            #state_previous = state
 
         if (state == states.RETURN):
+            # Empty the bottles in the recycling station
+            if (norm(pose[0:-1] - wp_end) < 0.4):
+                state_previous = state
+                state = states.EMPTY
 
-            if (state_previous == states.OBSTACLE) and track_int_WP:
+            if (state_previous == states.OBSTACLE) and tracks_int_WP:
                 if np.linalg.norm(pose[0:-1] - wp) < nav_tol:
                     tracks_int_WP = False
                     message["ref"] = [float(wp_end[0]), float(wp_end[1])]

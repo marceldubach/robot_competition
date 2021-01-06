@@ -118,8 +118,8 @@ int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
 //double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
 //double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double weight_left[] =  {20, 10, -20, -20, -20, -20, -20, 10};//{20, -10, -40, -40, -40, -40, -40, -10};
-double weight_right[] = {20, 10, -20, -20, -20, -20, -20, 10}; //{20, -10, -20, -20, -20, -20, -20, -10};
+double weight_left[] =  {20, 20, -30, -40, -40, -40, -30, 20};//{20, -10, -40, -40, -40, -40, -40, -10};
+double weight_right[] = {20, 20, -30, -40, -40, -40, -30, 20}; //{20, -10, -20, -20, -20, -20, -20, -10};
 double fr_dist = 70;
 double turn_dist = 30;
 double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
@@ -350,6 +350,9 @@ void loop()
     break;
 
   case RETURN:
+    microLeft.write(50);
+    microRight.write(162);
+    mainServo.write(160);
     if (foundObstacle)
     {
       old_macro_state = macro_state;
@@ -357,7 +360,8 @@ void loop()
     } else {
       enableMotors = true;
       double del_theta = 0.3;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);    
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
+          
     }
     break;
 
@@ -396,7 +400,7 @@ void loop()
       maxdist[5] = 0;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.45)
       {
         catch_state = LOWER;
         enableMotors = false;
@@ -405,7 +409,7 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(17);
+      mainServo.write(19);
       microLeft.write(100);
       microRight.write(100);
       if (millis() - t_catch > 1000)
