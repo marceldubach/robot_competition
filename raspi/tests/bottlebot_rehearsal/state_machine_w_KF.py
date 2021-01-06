@@ -288,7 +288,7 @@ if __name__=='__main__':
             radius_obstacle = 0.15 # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
-            for d,idx in zip(dist[2:6] ,range(0,5)):
+            for d,idx in zip(dist[1:7] ,range(0,7)):
                 d = d/100 # rescale distance to meters
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
