@@ -19,8 +19,8 @@ def kf_get_param():
     Pk = np.diag([0.1,0.1,0.1,0.1,0.05])
     Q = np.diag([0.05,0.05,0.1,0.02,0.01])
     #Q = 0.01*np.identity(5)
-    R = np.array([[0.5, 0, 0],
-                  [0, 0.5, 0],
+    R = np.array([[0.3, 0, 0],
+                  [0, 0.3, 0],
                   [0, 0, 0.1]])
     return Pk, Q, R
 

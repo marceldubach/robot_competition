@@ -246,7 +246,7 @@ if __name__=='__main__':
             # not updating previous state
 
         if (state != state_previous):
-            if (state == states.MOVING) and (state_previous == states.CATCH):
+            if (state != states.CATCH) and (state_previous == states.CATCH):
                 is_catching = False
                 n_bottles += 1
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED! Robot contains ",
@@ -315,7 +315,7 @@ if __name__=='__main__':
         if (state == states.OBSTACLE):
             #print("[MAIN] try to append obstacles to list")
             min_obst_dist = 0.7 # take the same value as in Arduino code!
-            radius_obstacle = 0.25 # radius of the obstacle size
+            radius_obstacle = 0.3 # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[2:6] ,range(0,5)):
@@ -339,6 +339,11 @@ if __name__=='__main__':
                         # clear precomputed waypoints that happen to be on obstacles
                         if np.linalg.norm(w-obstacle)<radius_obstacle:
                             waypoints.remove(w)
+                    """
+                    # clear bottle waypoint that happens to be on obstacles
+                    if np.linalg.norm(wp_bottle-obstacle)<radius_obstacle:
+                        wp_bottle.remove()
+                    """
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
@@ -404,8 +409,6 @@ if __name__=='__main__':
                     bottle_y = pose[1] + (distanceToBottle)*np.sin(pose[2]+angle)
                     if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
-
-
 
             del q_bottle
             del e_bottle
