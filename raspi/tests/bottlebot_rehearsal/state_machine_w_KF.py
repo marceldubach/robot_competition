@@ -73,7 +73,7 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 120
+    t_max = 60
     t_home = 120
 
     # initialize state of the robot
@@ -124,7 +124,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[4,3],[4,1],[6,2],[7,3]] #np.array()
+    waypoints = [[7,3],[6,1],[5,2],[7,3]] #np.array()
     i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[i_wp])
     nav_tol = 0.4
@@ -318,12 +318,12 @@ if __name__=='__main__':
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[2:6] ,range(0,5)):
-                d = d/100 # rescale distance to millimeters
+                d = d/100 # rescale distance to meters
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
                     R = np.array([[c, -s], [s, c]])
-                    obstacle = pose[0:1]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
+                    obstacle = pose[0:2]+R.dot(ultrasound_dist_to_rel_pos(d,idx))
                     already_obstacle = False
                     for obst in obst_list:
                         if (np.linalg.norm(obst-obstacle) < radius_obstacle):
@@ -331,7 +331,7 @@ if __name__=='__main__':
 
                     if not already_obstacle:
                         obst_list.append(obstacle)
-                        print("obstacle appended")
+                        print("obstacle appended at", obstacle)
 
                         # clear all waypoints close to that obstacle
                     for w in waypoints:
@@ -472,6 +472,6 @@ if __name__=='__main__':
     log_obstacles = {'obstacles': log_obstacle}
     obstacle_logfilename = "obstacles_" + date_time + ".csv"
     obstacle_df = pd.DataFrame(log_obstacles)
-    obstacle_df.to_csv(obstacle_logfilename)
+    obstacle_df.to_csv('logs/'+obstacle_logfilename)
 
     print("Saved logfile to: logs/"+logfile_name)

@@ -118,9 +118,10 @@ int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
 //double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
 //double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double weight_left[] =  {20, 10, -20, -30, -30, -30, -20, 10};//{20, -10, -40, -40, -40, -40, -40, -10};
-double weight_right[] = {20, 10, -20, -30, -30, -30, -20, 10}; //{20, -10, -20, -20, -20, -20, -20, -10};
+double weight_left[] =  {20, 10, -20, -20, -20, -20, -20, 10};//{20, -10, -40, -40, -40, -40, -40, -10};
+double weight_right[] = {20, 10, -20, -20, -20, -20, -20, 10}; //{20, -10, -20, -20, -20, -20, -20, -10};
 double fr_dist = 70;
+double turn_dist = 30;
 double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
@@ -312,7 +313,7 @@ void loop()
       // compute motor speeds
       enableMotors = true;
       double del_theta = 0.3;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
     } // end else obstacle found
     break;
 
@@ -364,7 +365,7 @@ void loop()
     } else {
       enableMotors = true;
       double del_theta = 0.3;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);    
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);    
     }
     break;
 
@@ -401,7 +402,7 @@ void loop()
       maxdist[3] = 0;
       maxdist[4] = 0;
       maxdist[5] = 0;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
       enableMotors = true;
       if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.5)
       {
