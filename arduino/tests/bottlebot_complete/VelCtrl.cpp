@@ -58,7 +58,7 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
       cmdRight = 150+dist*50;
     }
   }else{
-    double turn_dist = 50;
+    double turn_dist = 20; // 50 too high, blocks all the time
     max_dist[0] = turn_dist;
     max_dist[1] = turn_dist;
     max_dist[2] = turn_dist;

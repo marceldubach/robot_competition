@@ -153,6 +153,7 @@ if __name__=='__main__':
 
                     # 5. check if intermediate waypoint feasible (boundary condition ecc )
                     # 6. try until feasible -> change angle, failsafe default
+
                     to_center = (np.array([4,4])-pose[0:2])
 
                     # initialize with dummy wp that is always valid (but might be obstructed...)

@@ -406,7 +406,7 @@ void loop()
       maxdist[5] = 0;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.35)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
       {
         catch_state = LOWER;
         enableMotors = false;
@@ -429,7 +429,7 @@ void loop()
     case APPROACH_BOTTLE:
       cmdLeft = 150;
       cmdRight = 150;
-      if (millis() - t_catch > 3000)
+      if (millis() - t_catch > 4000)
       {
         enableMotors = false;
         catch_state = CLOSE;
@@ -438,8 +438,8 @@ void loop()
       break;
 
     case CLOSE:
-      microLeft.write(40);
-      microRight.write(160);
+      microLeft.write(38);
+      microRight.write(162);
       
       if (millis() - t_catch > 1000)
       {
