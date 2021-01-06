@@ -42,15 +42,15 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 300
-    t_home = 300
+    t_max = 600
+    t_home = 450
 
     # initialize state of the robot
     state = states.STARTING
     state_previous = 0
     n_bottles = 0
     is_catching = False
-    is_returning = False
+    tracks_int_WP = False
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
@@ -185,6 +185,7 @@ if __name__=='__main__':
                     #7. send waypoint and check if current waypoint has to be reached or bypassed
                     # TODO when to drop the current waypoint?
                     wp = new_wp
+                    tracks_int_WP = True
                     print("[MAiN] waypoint updated to:", wp)
 
         # Timeout expired: return to recycling station
@@ -225,11 +226,18 @@ if __name__=='__main__':
             message["state"] = state
             state_previous = state
 
-        if (state == states.RETURN): # if state is returning, then send waypoints
-            message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
-            if (message["state"]==states.OBSTACLE):
-                state_previous = state
-                state = states.OBSTACLE
+        if (state == states.RETURN):
+
+            if (state_previous == states.OBSTACLE) and track_int_WP:
+                if np.linalg.norm(pose[0:-1] - wp) < nav_tol:
+                    tracks_int_WP = False
+                    message["ref"] = [float(wp_end[0]), float(wp_end[1])]
+                else:
+                    message["ref"] = [float(wp[0]), float(wp[1])]
+
+            else:
+                message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
+
 
         if (pose_update_available):
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
@@ -256,7 +264,7 @@ if __name__=='__main__':
                     pose = np.round(np.array(data["pos"]),2)
                     # round the pose to 2 decimals (pose may be sent via serial)
                 if "state" in data:
-                    if (state != data["state"]) and ((state != states.RETURN) and (state!=states.EMPTY)):
+                    if (state != data["state"]) and (state!=states.EMPTY):
                         state_previous = state
                         state = data["state"]
                         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)
@@ -289,7 +297,7 @@ if __name__=='__main__':
         if (state == states.OBSTACLE):
             #print("[MAIN] try to append obstacles to list")
             min_obst_dist = 0.7 # take the same value as in Arduino code!
-            radius_obstacle = 0.15 # radius of the obstacle size
+            radius_obstacle = 0.3 # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[1:7] ,range(0,7)):
