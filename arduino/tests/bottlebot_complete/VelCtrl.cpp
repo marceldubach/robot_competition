@@ -58,7 +58,7 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
       cmdRight = 150+dist*50;
     }
   }else{
-    double turn_dist = 20; // 50 too high, blocks all the time
+    double turn_dist = 30; // 50 too high, blocks all the time
     max_dist[0] = turn_dist;
     max_dist[1] = turn_dist;
     max_dist[2] = turn_dist;
@@ -83,23 +83,31 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
         turnLeft = true;
       }
     }
-    if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)<2*PI-2*del_theta)){
+    if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)>2*PI-2*del_theta)){
       // turn slowly
       if (turnLeft){
-        cmdRight = 130+fabs(heading_ref-theta)*3;
-        cmdLeft = 126-fabs(heading_ref-theta)*3;
+        cmdRight = 135;
+        cmdLeft = 121;
       }else{ // turn right
-        cmdLeft = 130+fabs(heading_ref-theta)*3;
-        cmdRight = 126-fabs(heading_ref-theta)*3;
+        cmdLeft = 135;
+        cmdRight = 121;
+      }
+    } else if((fabs(heading_ref-theta)<4*del_theta)||(fabs(heading_ref-theta)>2*PI-4*del_theta)){
+      if (turnLeft){
+        cmdRight = 150;
+        cmdLeft = 106;
+      }else{ // turn right
+        cmdLeft = 150;
+        cmdRight = 106;
       }
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 168;
-        cmdLeft = 88;
+        cmdRight = 165;
+        cmdLeft = 91;
       } else {
-        cmdRight = 88;
-        cmdLeft = 168;
+        cmdRight = 91;
+        cmdLeft = 165;
       }
     }
   } // end else turn
@@ -143,23 +151,31 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
         turnLeft = true;
       }
     }
-    if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)<2*PI-2*del_theta)){
+    if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)>2*PI-2*del_theta)){
       // turn slowly
       if (turnLeft){
-        cmdRight = 130+fabs(heading_ref-theta)*3;
-        cmdLeft = 126-fabs(heading_ref-theta)*3;
+        cmdRight = 135;
+        cmdLeft = 121;
       }else{ // turn right
-        cmdLeft = 130+fabs(heading_ref-theta)*3;
-        cmdRight = 126-fabs(heading_ref-theta)*3;
+        cmdLeft = 135;
+        cmdRight = 121;
+      }
+    } else if((fabs(heading_ref-theta)<4*del_theta)||(fabs(heading_ref-theta)>2*PI-4*del_theta)){
+      if (turnLeft){
+        cmdRight = 150;
+        cmdLeft = 106;
+      }else{ // turn right
+        cmdLeft = 150;
+        cmdRight = 106;
       }
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 168;
-        cmdLeft = 88;
+        cmdRight = 165;
+        cmdLeft = 91;
       } else {
-        cmdRight = 88;
-        cmdLeft = 168;
+        cmdRight = 91;
+        cmdLeft = 165;
       }
     }
   } // end else turn

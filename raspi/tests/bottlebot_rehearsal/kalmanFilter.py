@@ -16,12 +16,12 @@ def kf_get_param():
                    [0.02, 0.02, 0, 0.05, 0],
                    [0, 0, 0.04, 0, 0.02]])
     """
-    Pk = np.diag([0.1,0.1,0.1,0.1,0.05])
-    Q = np.diag([0.05,0.05,0.1,0.02,0.01])
+    Pk = np.diag([0.5,0.5,0.4,0.1,0.05])
+    Q = np.diag([0.05,0.05,0.5,0.02,0.01])
     #Q = 0.01*np.identity(5)
-    R = np.array([[0.8, 0, 0],
-                  [0, 0.8, 0],
-                  [0, 0, 0.1]])
+    R = np.array([[0.5, 0, 0],
+                  [0, 0.5, 0],
+                  [0, 0, 0.05]])
     return Pk, Q, R
 
 def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):

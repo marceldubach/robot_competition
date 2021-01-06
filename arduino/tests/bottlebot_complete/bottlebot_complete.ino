@@ -297,7 +297,7 @@ void loop()
 
     // initialize position of servos;
     mainServo.write(160);
-    microLeft.write(80);
+    microLeft.write(82);
     microRight.write(120);
     backDoor.write(175);
     break;
@@ -352,7 +352,7 @@ void loop()
       maxdist[6] = 20;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
-      microLeft.write(80);
+      microLeft.write(82);
       microRight.write(120);
       mainServo.write(160);
       
@@ -415,7 +415,7 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(19);
+      mainServo.write(17);
       microLeft.write(100);
       microRight.write(100);
       if (millis() - t_catch > 1000)
@@ -438,7 +438,7 @@ void loop()
       break;
 
     case CLOSE:
-      microLeft.write(38);
+      microLeft.write(50);
       microRight.write(162);
       
       if (millis() - t_catch > 1000)
@@ -473,7 +473,7 @@ void loop()
       break;
 
     case OPEN:
-      microLeft.write(80);
+      microLeft.write(85);
       microRight.write(120);
       if (millis() - t_catch > 1000)
       {
@@ -494,7 +494,7 @@ void loop()
     {
     case ROTATE:
       enableMotors = true;
-      if (fabs(theta-PI/4)>0.7){
+      if (fabs(theta-PI/4)>0.5){
         if (theta<5.0/8*PI){
           cmdLeft = 150;
           cmdRight = 106;
@@ -643,6 +643,7 @@ void loop()
       dist.add(distances[4]);
       dist.add(distances[5]);
       dist.add(distances[6]);
+      dist.add(distances[7]); 
     } else {
       JsonArray reference = send_msg.createNestedArray("ref");
       reference.add(ref_x); //[m]

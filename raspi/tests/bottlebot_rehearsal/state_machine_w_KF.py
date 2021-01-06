@@ -42,8 +42,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 60
-    t_home = 100
+    t_max = 120
+    t_home = 300
 
     # initialize state of the robot
     state = states.STARTING
@@ -52,7 +52,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([4,1,0]) # estimated position
+    pose = np.array([5,3,0]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -93,7 +93,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[5,1],[7,1],[7,3],[7,1],[7,2],[6,4],[4,4],[2,4]] #np.array()
+    waypoints = [[6,1],[4,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
@@ -153,7 +153,7 @@ if __name__=='__main__':
                     wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
 
                     # random waypoint: turn by 90° or -90°
-                    if (np.random().rand()>0.5):
+                    if (np.random.rand()>0.5):
                         new_wp = pose[0:2] + R.dot(np.array([-1,0]))
                     else:
                         new_wp = pose[0:2] + R.dot(np.array([1, 0]))
