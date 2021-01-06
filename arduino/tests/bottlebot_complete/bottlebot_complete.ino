@@ -345,9 +345,11 @@ void loop()
 
   case CATCH: // lift bottles
     if (foundObstacle){
+      maxdist[2] = 20;
       maxdist[3] = fr_dist;
       maxdist[4] = fr_dist;
       maxdist[5] = fr_dist;
+      maxdist[6] = 20;
       old_macro_state = macro_state;
       macro_state = OBSTACLE;
       microLeft.write(80);
@@ -402,9 +404,9 @@ void loop()
       maxdist[3] = 0;
       maxdist[4] = 0;
       maxdist[5] = 0;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.5)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
       {
         catch_state = LOWER;
         enableMotors = false;

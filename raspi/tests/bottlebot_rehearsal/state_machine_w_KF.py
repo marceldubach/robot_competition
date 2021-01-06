@@ -73,8 +73,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 250
-    t_home = 300
+    t_max = 300
+    t_home = 200
 
     # initialize state of the robot
     state = states.STARTING

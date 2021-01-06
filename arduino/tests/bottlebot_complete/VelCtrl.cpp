@@ -95,11 +95,71 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 158;
-        cmdLeft = 98;
+        cmdRight = 168;
+        cmdLeft = 88;
       } else {
-        cmdRight = 98;
-        cmdLeft = 158;
+        cmdRight = 88;
+        cmdLeft = 168;
+      }
+    }
+  } // end else turn
+}
+
+void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double theta, double ref_x, double ref_y){
+  // assign correct values to ctrlLeft, ctrlRight, based on the waypoint
+
+  // calculate desired heading in [0,2*PI]
+  double heading_ref = atan2((ref_y-y), (ref_x-x));
+  if (heading_ref<0){ // rescale heading reference in [0,2*PI]
+    heading_ref += 2*PI;
+  }
+
+  // calculate distance to waypoint
+  double dist = sqrt(pow((ref_y-y),2)+pow((ref_x-x),2));
+
+  // if the heading is ok (difference < del_theta), then go straight
+  double del_theta = 0.3; // tolerance for angle: 0.3 rad = 17.8°
+  if ((fabs(heading_ref-theta)<del_theta) || (fabs(heading_ref-theta)>(2*PI-del_theta))){
+    // heading is good -> fast forward
+    if (dist>1){
+      cmdLeft = 220;
+      cmdRight = 220;
+    }else{
+      cmdLeft = 150+dist*50; // give some value between 150 and 200
+      cmdRight = 150+dist*50;
+    }
+  }else{
+    bool turnLeft; // get rotation sense
+    if ((heading_ref-theta)>0){
+      if (heading_ref-theta<PI){
+        turnLeft = true; // turn left
+      } else {
+        turnLeft = false; // turn right
+      }
+    } else { // theta > heading_ref
+      if ((theta - heading_ref)<PI){
+        turnLeft = false;
+      } else {
+        turnLeft = true;
+      }
+    }
+    if ((fabs(heading_ref-theta)<2*del_theta)||(fabs(heading_ref-theta)<2*PI-2*del_theta)){
+      // turn slowly
+      if (turnLeft){
+        cmdRight = 130+fabs(heading_ref-theta)*3;
+        cmdLeft = 126-fabs(heading_ref-theta)*3;
+      }else{ // turn right
+        cmdLeft = 130+fabs(heading_ref-theta)*3;
+        cmdRight = 126-fabs(heading_ref-theta)*3;
+      }
+    } else {
+      // turn faster
+      if (turnLeft){ 
+        cmdRight = 168;
+        cmdLeft = 88;
+      } else {
+        cmdRight = 88;
+        cmdLeft = 168;
       }
     }
   } // end else turn
