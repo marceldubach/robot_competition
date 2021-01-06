@@ -58,15 +58,15 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
       cmdRight = 150+dist*50;
     }
   }else{
-    double turn_dist = 30;
-    max_dist[0] = 30;
-    max_dist[1] = 30;
-    max_dist[2] = 30;
+    double turn_dist = 40;
+    max_dist[0] = turn_dist;
+    max_dist[1] = turn_dist;
+    max_dist[2] = turn_dist;
     max_dist[3] = turn_dist;
     max_dist[4] = turn_dist;
     max_dist[5] = turn_dist;
-    max_dist[6] = 30;
-    max_dist[7] = 30;
+    max_dist[6] = turn_dist;
+    max_dist[7] = turn_dist;
     // us_sensors at 45° are set to 30
     
     bool turnLeft; // get rotation sense
@@ -95,11 +95,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     } else {
       // turn faster
       if (turnLeft){ 
-        cmdRight = 148;
-        cmdLeft = 108;
+        cmdRight = 158;
+        cmdLeft = 98;
       } else {
-        cmdRight = 108;
-        cmdLeft = 148;
+        cmdRight = 98;
+        cmdLeft = 158;
       }
     }
   } // end else turn

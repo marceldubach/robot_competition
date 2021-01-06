@@ -73,8 +73,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 60
-    t_home = 120
+    t_max = 250
+    t_home = 300
 
     # initialize state of the robot
     state = states.STARTING
@@ -173,47 +173,48 @@ if __name__=='__main__':
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
 
-                # 4. set intermediate waypoint
-                obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
-                R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
+                if not closestObst is None:
+                    # 4. set intermediate waypoint
+                    obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
+                    R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
 
-                wp_CW = pose[0:2] + R.dot(np.array([1,1])) # clockwise
-                wp_CCW = pose[0:2] + R.dot(np.array([1,-1])) # counterclockwise
+                    wp_CW = pose[0:2] + R.dot(np.array([minDistToObst,0.75])) # clockwise
+                    wp_CCW = pose[0:2] + R.dot(np.array([minDistToObst,-0.75])) # counterclockwise
 
-                # 5. check if intermediate waypoint feasible (boundary condition ecc )
-                # 6. try until feasible -> change angle, failsafe default
-                to_center = (np.array([4,4])-pose[0:2])
+                    # 5. check if intermediate waypoint feasible (boundary condition ecc )
+                    # 6. try until feasible -> change angle, failsafe default
+                    to_center = (np.array([4,4])-pose[0:2])
 
-                # initialize with dummy wp that is always valid (but might be obstructed...)
-                new_wp = pose[0:2] + to_center/norm(to_center)
+                    # initialize with dummy wp that is always valid (but might be obstructed...)
+                    new_wp = pose[0:2] + to_center/norm(to_center)
 
-                # TODO does not work at -pi!!
-                if (obst_angle>des_angle):
-                    # set waypoint in clockwise direction along the path
-                    if (waypoint_is_valid(wp_CW)):
-                        angleToWP = pose[2]+np.pi/4
-                        c = np.cos(angleToWP)
-                        s = np.sin(angleToWP)
-                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
-                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
-                        if not remaining_obst:
-                            # no obstacle blocks the waypoint!
-                            new = wp_CW
-                else:
-                    if (waypoint_is_valid(wp_CCW)):
-                        angleToWP = pose[2] - np.pi / 4
-                        c = np.cos(angleToWP)
-                        s = np.sin(angleToWP)
-                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
-                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
-                        if not remaining_obst:
-                            # no obstacle blocks the waypoint!
-                            new = wp_CCW
+                    # TODO does not work at -pi!!
+                    if (obst_angle>des_angle):
+                        # set waypoint in clockwise direction along the path
+                        if (waypoint_is_valid(wp_CW)):
+                            angleToWP = pose[2]+np.pi/4
+                            c = np.cos(angleToWP)
+                            s = np.sin(angleToWP)
+                            pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                            remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                            if not remaining_obst:
+                                # no obstacle blocks the waypoint!
+                                new = wp_CW
+                    else:
+                        if (waypoint_is_valid(wp_CCW)):
+                            angleToWP = pose[2] - np.pi / 4
+                            c = np.cos(angleToWP)
+                            s = np.sin(angleToWP)
+                            pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                            remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                            if not remaining_obst:
+                                # no obstacle blocks the waypoint!
+                                new = wp_CCW
 
-                #7. send waypoint and check if current waypoint has to be reached or bypassed
-                # TODO when to drop the current waypoint?
-                wp = new_wp
-                print("[MAiN] waypoint updated!")
+                    #7. send waypoint and check if current waypoint has to be reached or bypassed
+                    # TODO when to drop the current waypoint?
+                    wp = new_wp
+                    print("[MAiN] waypoint updated!")
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
