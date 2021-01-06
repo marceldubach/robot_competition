@@ -83,7 +83,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([6,4,3*np.pi/2]) # estimated position
+    pose = np.array([0,0,np.pi/4]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -124,7 +124,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[7,3],[6,1],[5,2],[7,3]] #np.array()
+    waypoints = [[3,3],[5,3],[6,1],[7,1],[7,2],[6,4]] #np.array()
     i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[i_wp])
     nav_tol = 0.4
@@ -394,7 +394,6 @@ if __name__=='__main__':
             print("bottle position:", bottle_pos)
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
-                """
                 state_previous = state 
                 state = states.CATCH
                 if not (is_catching):
@@ -405,7 +404,7 @@ if __name__=='__main__':
                     bottle_y = pose[1] + (distanceToBottle)*np.sin(pose[2]+angle)
                     if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
                         wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
-                """
+
 
 
             del q_bottle
@@ -469,8 +468,9 @@ if __name__=='__main__':
     dataframe.to_csv("logs/"+logfile_name)
 
     # log obstacle to .csv
-    log_obstacle = obst_list
-    log_obstacles = {'obstacles': log_obstacle}
+    log_obstacle_x = [o[0] for o in obst_list]
+    log_obstacle_y = [o[1] for o in obst_list]
+    log_obstacles = {'x': log_obstacle_x, 'y': log_obstacle_y}
     obstacle_logfilename = "obstacles_" + date_time + ".csv"
     obstacle_df = pd.DataFrame(log_obstacles)
     obstacle_df.to_csv('logs/'+obstacle_logfilename)
