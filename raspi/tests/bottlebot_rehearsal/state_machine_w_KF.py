@@ -54,6 +54,14 @@ def waypoint_is_valid(waypoint):
             is_valid = True
     return is_valid
 
+def is_obstacle(waypoint, obst_list):
+    # check that the bottle waypoint is not on an obstacle 
+    radius = 0.3 # radius of influence of an obstacle
+    is_obstacle = False
+    for o in obst_list:
+        if (norm(o-waypoint)<radius):
+            is_obstacle = True
+    return is_obstacle
 
 if __name__=='__main__':
     # display all np-floats with 2 decimals
@@ -399,16 +407,17 @@ if __name__=='__main__':
             print("bottle position:", bottle_pos)
             p_bottle.join()
             if (bottle_pos[0] != -1 and bottle_pos[1] != -1):
-                state_previous = state 
-                state = states.CATCH
                 if not (is_catching):
                     is_catching = True
                     distanceToBottle = bottle_pos[0]
                     angle = bottle_pos[1]
                     bottle_x = pose[0] + (distanceToBottle)*np.cos(pose[2]+angle)
                     bottle_y = pose[1] + (distanceToBottle)*np.sin(pose[2]+angle)
-                    if (bottle_x > 0.5) and (bottle_x < 7.5) and (bottle_y > 0.5) and (bottle_y < 7.5):
-                        wp_bottle = np.round(np.array([bottle_x, bottle_y]),2)
+                    bottle_ref = np.array([bottle_x, bottle_y])
+                    if waypoint_is_valid(bottle_ref) and not is_obstacle(bottle_ref, obst_list):
+                        state_previous = state 
+                        state = states.CATCH
+                        wp_bottle = np.round(bottle_ref,2)
 
             del q_bottle
             del e_bottle
