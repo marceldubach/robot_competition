@@ -49,8 +49,8 @@ def get_close_obstacles(local_obstacles, waypoint, radius):
 def waypoint_is_valid(waypoint):
     # TODO adapt this to enlarge valid regions
     is_valid = False
-    if (waypoint[0]>0.5) and (waypoint[0]<6):
-        if (waypoint[1]>0.5) and (waypoint[1]<6):
+    if (waypoint[0]>0.5) and (waypoint[0]<7.5):
+        if (waypoint[1]>0.5) and (waypoint[1]<4.5):
             is_valid = True
     return is_valid
 
@@ -91,7 +91,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([1,1,np.pi/4]) # estimated position
+    pose = np.array([1,1,0]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -132,9 +132,9 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[3,3],[5,3],[6,1],[7,1],[7,2],[6,4]] #np.array()
-    i_wp = 0 # iterator over waypoints
-    wp = np.array(waypoints[i_wp])
+    waypoints = [[3,3],[5,3],[6,1],[7,1],[7,2],[6,4],[4,4],[2,4]] #np.array()
+    #i_wp = 0 # iterator over waypoints
+    wp = np.array(waypoints[0])
     nav_tol = 0.4
 
     # tolerance on how close to track waypoints
