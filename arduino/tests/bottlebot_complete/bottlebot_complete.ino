@@ -42,7 +42,7 @@ float radius = 0.04;
 float omega_deg;
 
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
-float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points
+float gyro_mean = 0.46; // mean noise on gyroscope gz lecture, averaged over 1000 data points
 
 //bool time_elapsed = false;
 
@@ -118,8 +118,8 @@ int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
 //double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
 //double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double weight_left[] =  {20, 10, -20, -20, -20, -20, -20, 10};//{20, -10, -40, -40, -40, -40, -40, -10};
-double weight_right[] = {20, 10, -20, -20, -20, -20, -20, 10}; //{20, -10, -20, -20, -20, -20, -20, -10};
+double weight_left[] =  {20, 20, -30, -40, -40, -40, -30, 20};//{20, -10, -40, -40, -40, -40, -40, -10};
+double weight_right[] = {20, 20, -30, -40, -40, -40, -30, 20}; //{20, -10, -20, -20, -20, -20, -20, -10};
 double fr_dist = 70;
 double turn_dist = 30;
 double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
@@ -271,14 +271,6 @@ void loop()
         threshold[idx_us] = 0;
       }
   }
-/*
-
-  idx_us = idx_us + 1;
-  if (idx_us==8)
-  {
-    idx_us = 0;
-  }
-*/
   // update the variable if there is an obstacle
   bool foundObstacle = false;
   for (int i = 0; i < n_US; i++)
@@ -331,14 +323,12 @@ void loop()
     }
     else
     { 
-      if (idx_us%2==0){
-        cmdLeft = 128;
-        cmdRight = 128;
-        for (int i = 0; i < n_US; i++)
-        {
-          cmdLeft += threshold[i] * weight_left[i];// / distances[i];
-          cmdRight += threshold[i] * weight_right[i];// / distances[i];
-        }
+      cmdLeft = 128;
+      cmdRight = 128;
+      for (int i = 0; i < n_US; i++)
+      {
+        cmdLeft += threshold[i] * weight_left[i];// / distances[i];
+        cmdRight += threshold[i] * weight_right[i];// / distances[i];
       }
     }
     break;
@@ -360,6 +350,9 @@ void loop()
     break;
 
   case RETURN:
+    microLeft.write(50);
+    microRight.write(162);
+    mainServo.write(160);
     if (foundObstacle)
     {
       old_macro_state = macro_state;
@@ -367,7 +360,8 @@ void loop()
     } else {
       enableMotors = true;
       double del_theta = 0.3;
-      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);    
+      calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
+          
     }
     break;
 
@@ -406,7 +400,7 @@ void loop()
       maxdist[5] = 0;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.45)
       {
         catch_state = LOWER;
         enableMotors = false;
@@ -415,7 +409,7 @@ void loop()
       break;
 
     case LOWER:
-      mainServo.write(17);
+      mainServo.write(19);
       microLeft.write(100);
       microRight.write(100);
       if (millis() - t_catch > 1000)
@@ -443,21 +437,6 @@ void loop()
       
       if (millis() - t_catch > 1000)
       {
-        digitalWrite(claw_trigger, LOW);
-        delayMicroseconds(5);
-        digitalWrite(claw_trigger, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(claw_trigger, LOW);
-        unsigned long claw_duration = pulseIn(claw_echo, HIGH, 3000); // 50 cm timeOut
-        claw_dist = (double)((claw_duration / 2) / 29.1);
-        if (claw_dist == 0)
-        {
-          claw_dist = 100;
-        }
-        if (claw_dist < 30)
-        {
-          cntBottles++;
-        }
         catch_state = RAISE;
         t_catch = millis();
       }
@@ -498,7 +477,11 @@ void loop()
         if (theta<5.0/8*PI){
           cmdLeft = 150;
           cmdRight = 106;
-        } else if(fabs(theta-PI/4)){
+        } else {
+          cmdLeft = 106;
+          cmdRight = 150;
+        }
+      } else if(fabs(theta-PI/4)>0.3){
           if (theta>PI/4){
             // turn right
             cmdLeft = 135;
@@ -507,7 +490,6 @@ void loop()
             cmdLeft = 121;
             cmdRight = 135;  
           }
-        }
       } else {
         enableMotors = false;
         empty_state = OPEN_DOOR;

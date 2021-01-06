@@ -44,11 +44,11 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     double forward_dist = 70;
     max_dist[0] = 30;
     max_dist[1] = 30;
-    max_dist[2] = 30;
+    max_dist[2] = 50;
     max_dist[3] = forward_dist;
     max_dist[4] = forward_dist;
     max_dist[5] = forward_dist;
-    max_dist[6] = 30;
+    max_dist[6] = 50;
     max_dist[7] = 30;
     if (dist>1){
       cmdLeft = 220;
