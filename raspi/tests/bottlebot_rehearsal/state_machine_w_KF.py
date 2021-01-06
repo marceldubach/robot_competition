@@ -50,6 +50,7 @@ if __name__=='__main__':
     state_previous = 0
     n_bottles = 0
     is_catching = False
+    is_returning = False
 
     # initial estimated position
     pose = np.array([1,1,0]) # estimated position
@@ -112,7 +113,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Calculate intermediate waypoint
-        if (state_previous == states.OBSTACLE) and (state == states.MOVING):
+        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)):
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
             path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
@@ -226,6 +227,9 @@ if __name__=='__main__':
 
         if (state == states.RETURN): # if state is returning, then send waypoints
             message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
+            if (message["state"]==states.OBSTACLE):
+                state_previous = state
+                state = states.OBSTACLE
 
         if (pose_update_available):
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
