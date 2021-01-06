@@ -42,7 +42,7 @@ float radius = 0.04;
 float omega_deg;
 
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
-float gyro_mean = 0.55; // mean noise on gyroscope gz lecture, averaged over 1000 data points
+float gyro_mean = 0.46; // mean noise on gyroscope gz lecture, averaged over 1000 data points
 
 //bool time_elapsed = false;
 
@@ -271,14 +271,6 @@ void loop()
         threshold[idx_us] = 0;
       }
   }
-/*
-
-  idx_us = idx_us + 1;
-  if (idx_us==8)
-  {
-    idx_us = 0;
-  }
-*/
   // update the variable if there is an obstacle
   bool foundObstacle = false;
   for (int i = 0; i < n_US; i++)
@@ -331,14 +323,12 @@ void loop()
     }
     else
     { 
-      if (idx_us%2==0){
-        cmdLeft = 128;
-        cmdRight = 128;
-        for (int i = 0; i < n_US; i++)
-        {
-          cmdLeft += threshold[i] * weight_left[i];// / distances[i];
-          cmdRight += threshold[i] * weight_right[i];// / distances[i];
-        }
+      cmdLeft = 128;
+      cmdRight = 128;
+      for (int i = 0; i < n_US; i++)
+      {
+        cmdLeft += threshold[i] * weight_left[i];// / distances[i];
+        cmdRight += threshold[i] * weight_right[i];// / distances[i];
       }
     }
     break;
@@ -443,21 +433,6 @@ void loop()
       
       if (millis() - t_catch > 1000)
       {
-        digitalWrite(claw_trigger, LOW);
-        delayMicroseconds(5);
-        digitalWrite(claw_trigger, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(claw_trigger, LOW);
-        unsigned long claw_duration = pulseIn(claw_echo, HIGH, 3000); // 50 cm timeOut
-        claw_dist = (double)((claw_duration / 2) / 29.1);
-        if (claw_dist == 0)
-        {
-          claw_dist = 100;
-        }
-        if (claw_dist < 30)
-        {
-          cntBottles++;
-        }
         catch_state = RAISE;
         t_catch = millis();
       }
@@ -498,7 +473,11 @@ void loop()
         if (theta<5.0/8*PI){
           cmdLeft = 150;
           cmdRight = 106;
-        } else if(fabs(theta-PI/4)){
+        } else {
+          cmdLeft = 106;
+          cmdRight = 150;
+        }
+      } else if(fabs(theta-PI/4)>0.3){
           if (theta>PI/4){
             // turn right
             cmdLeft = 135;
@@ -507,7 +486,6 @@ void loop()
             cmdLeft = 121;
             cmdRight = 135;  
           }
-        }
       } else {
         enableMotors = false;
         empty_state = OPEN_DOOR;

@@ -42,7 +42,7 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 120
+    t_max = 300
     t_home = 300
 
     # initialize state of the robot
@@ -52,7 +52,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([5,3,0]) # estimated position
+    pose = np.array([1,1,0]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
