@@ -142,7 +142,9 @@ if __name__=='__main__':
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
 
-                if not closestObst is None:
+                if minDistToObst>path_width:
+                    wp = pose[0:2] + path[-1]
+                else:
                     # 4. set intermediate waypoint
                     obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
                     R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
@@ -150,19 +152,17 @@ if __name__=='__main__':
                     wp_CW = pose[0:2] + R.dot(np.array([0.75,0.75])) # clockwise
                     wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
 
-                    # 5. check if intermediate waypoint feasible (boundary condition ecc )
-                    # 6. try until feasible -> change angle, failsafe default
-
-                    to_center = (np.array([4,4])-pose[0:2])
-
-                    # initialize with dummy wp that is always valid (but might be obstructed...)
-                    new_wp = pose[0:2] + to_center/norm(to_center)
+                    # random waypoint: turn by 90° or -90°
+                    if (np.random().rand()>0.5):
+                        new_wp = pose[0:2] + R.dot(np.array([-1,0]))
+                    else:
+                        new_wp = pose[0:2] + R.dot(np.array([1, 0]))
 
                     # TODO does not work at -pi!!
                     if (obst_angle>des_angle):
                         # set waypoint in clockwise direction along the path
                         if (waypoint_is_valid(wp_CW)):
-                            angleToWP = pose[2]+np.pi/4
+                            angleToWP = obst_angle+np.pi/4
                             c = np.cos(angleToWP)
                             s = np.sin(angleToWP)
                             pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
@@ -172,7 +172,7 @@ if __name__=='__main__':
                                 new = wp_CW
                     else:
                         if (waypoint_is_valid(wp_CCW)):
-                            angleToWP = pose[2] - np.pi / 4
+                            angleToWP = obst_angle - np.pi / 4
                             c = np.cos(angleToWP)
                             s = np.sin(angleToWP)
                             pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
@@ -184,7 +184,7 @@ if __name__=='__main__':
                     #7. send waypoint and check if current waypoint has to be reached or bypassed
                     # TODO when to drop the current waypoint?
                     wp = new_wp
-                    print("[MAiN] waypoint updated!")
+                    print("[MAiN] waypoint updated to:", wp)
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
@@ -285,7 +285,7 @@ if __name__=='__main__':
         if (state == states.OBSTACLE):
             #print("[MAIN] try to append obstacles to list")
             min_obst_dist = 0.7 # take the same value as in Arduino code!
-            radius_obstacle = 0.3 # radius of the obstacle size
+            radius_obstacle = 0.15 # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[2:6] ,range(0,5)):
