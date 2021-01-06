@@ -148,8 +148,8 @@ if __name__=='__main__':
                     obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
                     R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
 
-                    wp_CW = pose[0:2] + R.dot(np.array([minDistToObst,0.75])) # clockwise
-                    wp_CCW = pose[0:2] + R.dot(np.array([minDistToObst,-0.75])) # counterclockwise
+                    wp_CW = pose[0:2] + R.dot(np.array([0.75,0.75])) # clockwise
+                    wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
 
                     # 5. check if intermediate waypoint feasible (boundary condition ecc )
                     # 6. try until feasible -> change angle, failsafe default

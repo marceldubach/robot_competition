@@ -406,7 +406,7 @@ void loop()
       maxdist[5] = 0;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y);
       enableMotors = true;
-      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.4)
+      if (sqrt(pow((x - ref_x), 2) + pow((y - ref_y), 2)) < 0.35)
       {
         catch_state = LOWER;
         enableMotors = false;
