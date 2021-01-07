@@ -144,7 +144,7 @@ if __name__=='__main__':
 
                 if minDistToObst>path_width:
                     # TODO uncomment?
-                    # wp = pose[0:2] + path[-1]
+                    wp = pose[0:2] + np.random.rand(2)
                     print("None of the obstacles is close to path")
                 else:
                     # 4. set intermediate waypoint
