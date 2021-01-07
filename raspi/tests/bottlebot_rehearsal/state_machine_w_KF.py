@@ -119,10 +119,12 @@ if __name__=='__main__':
             for o in obst_list:
                 if norm(pose[0:-1]-o) < 1:
                     obst_close.append(o)
-
+            tracks_int_WP = True
             if not obst_close:
                 print("[OBST] WARNING: no obstacles found in vicinity... Leave waypoint unchanged")
             else:
+
+
                 # there is an obstacle in vicinity to the desired path
                 # 2. choose desired direction to current waypoint
                 des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # in [-pi, pi]
@@ -181,7 +183,6 @@ if __name__=='__main__':
                     #7. send waypoint and check if current waypoint has to be reached or bypassed
                     # TODO when to drop the current waypoint?
                     wp = new_wp
-                    tracks_int_WP = True
                     print("[MAiN] waypoint updated to:", wp)
 
 
