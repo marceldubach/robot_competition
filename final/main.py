@@ -42,8 +42,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 120
-    t_home = 300
+    t_max = 620
+    t_home = 450
 
     # initialize state of the robot
     state = states.STARTING
@@ -52,7 +52,7 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([5,3,0]) # estimated position
+    pose = np.array([1,1,np.pi/4]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -93,7 +93,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[6,1],[4,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
+    waypoints = [[2,2],[4,2],[5,1],[6,2],[7,1],[7,2],[6,3],[5,3],[4,3],[3,3],[1,3],[2,2]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
@@ -143,6 +143,7 @@ if __name__=='__main__':
                         closestObst = obst
 
                 if minDistToObst>path_width:
+                    # TODO uncomment?
                     # wp = pose[0:2] + path[-1]
                     print("None of the obstacles is close to path")
                 else:
@@ -219,9 +220,7 @@ if __name__=='__main__':
         if (state != state_previous):
             if (state != states.CATCH) and (state_previous == states.CATCH):
                 is_catching = False
-                n_bottles += 1
-                print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED! Robot contains ",
-                      str(n_bottles), " bottles")
+                print("{:6.2f}".format(get_time(t_s)), " [MAIN] BOTTLE CATCHED!")
             message["state"] = state
             state_previous = state
 
