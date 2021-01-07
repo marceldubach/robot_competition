@@ -16,13 +16,8 @@ from kalmanFilter import kalmanFilter, kf_get_param
 from utilities import detect_bottle, ultrasound_dist_to_rel_pos, get_close_obstacles, waypoint_is_valid, is_obstacle, get_time
 from picamera import PiCamera
 
-# TODO: on arduino: after changing back from OBSTACLE to MOVING, the old reference is still given
+# TODO: maybe decrease the distance of the detected bottles if the robot rolls on them...
 
-""" This scripts implements a bidirectional communication at ca. 10 Hz
-    Run this script together with 'bottlebot_complete' on Arduino.
-    
-    04.Jan.2020
-"""
 
 if __name__=='__main__':
     # display all np-floats with 2 decimals
@@ -42,7 +37,7 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 100
+    t_max =  20
     t_home = 50
 
     # initialize state of the robot
@@ -188,10 +183,7 @@ if __name__=='__main__':
                     tracks_int_WP = True
                     print("[MAiN] waypoint updated to:", wp)
 
-        # Timeout expired: return to recycling station
-        if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
-            state_previous = state
-            state = states.RETURN
+
 
         if (state == states.MOVING):  # state = 1: track waypoints
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
@@ -218,22 +210,30 @@ if __name__=='__main__':
             #state_previous = state
 
         if (state == states.RETURN):
-            # Empty the bottles in the recycling station
+            # If the state is RETURN, define the correct waypoint
+
+            # transition to EMPTY if the end position is achieved
             if (norm(pose[0:-1] - wp_end) < 0.4):
                 state_previous = state
                 state = states.EMPTY
 
+            # if the robot has found an obstacle, it might need to track an intermediate waypoint
             if (state_previous == states.OBSTACLE) and tracks_int_WP:
                 if np.linalg.norm(pose[0:-1] - wp) < nav_tol:
                     tracks_int_WP = False
                     message["ref"] = [float(wp_end[0]), float(wp_end[1])]
                 else:
                     message["ref"] = [float(wp[0]), float(wp[1])]
-
+            # else, just track the end waypoint (i.e. go to recycling area)
             else:
                 message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
 
+        # set state to return if time elapsed
+        if (state == states.CATCH) or (state == states.MOVING) and (time.time() - t_s > t_home):
+            state_previous = state
+            state = states.RETURN
 
+        # update the pose if an update is available (kalman filter)
         if (pose_update_available):
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
             pose_update_available = False
@@ -244,6 +244,7 @@ if __name__=='__main__':
 
         ser.flush()
 
+        # wait for response from arduino
         while not (ser.in_waiting > 0):
             time.sleep(0.02)
 
@@ -291,12 +292,12 @@ if __name__=='__main__':
         # CALCULATE OBSTACLE POSITONS:
         if (state == states.OBSTACLE):
             #print("[MAIN] try to append obstacles to list")
-            min_obst_dist = 0.7 # take the same value as in Arduino code!
-            radius_obstacle = 0.3 # radius of the obstacle size
+            min_obst_dist = 0.7  # take the same value as in Arduino code!
+            radius_obstacle = 0.3  # radius of the obstacle size
 
             # calculate all frontal obstacles (sensors 2 to 5)
             for d,idx in zip(dist[1:7] ,range(0,7)):
-                d = d/100 # rescale distance to meters
+                d = d/100  # rescale distance to meters
                 if d<min_obst_dist:
                     c = np.cos(pose[2])
                     s = np.sin(pose[2])
@@ -404,8 +405,6 @@ if __name__=='__main__':
         log_info.append(info)
         log_cov.append(Pk)
         log_update.append(x_update)
-
-
 
 
     # shut the motor down

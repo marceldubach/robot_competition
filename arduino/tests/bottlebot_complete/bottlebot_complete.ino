@@ -1,11 +1,7 @@
 /*
  * Run this script together with 'state_machine_w_KF.py'
- * Experimental: 
- *  - Add state trantions for returning to home and catching bottle
- * Todo: 
- *  - Add map for Obstacles and WP-navigation to avoid obstacles
- *  - Add movement to grab bottles
- *  date: 3.1..2020
+ * Final version. Bottles are not always avoided..
+ * date: 7.1..2020
  */
 
 #include "ArduinoJson.h"
@@ -43,8 +39,6 @@ float omega_deg;
 
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.46; // mean noise on gyroscope gz lecture, averaged over 1000 data points
-
-//bool time_elapsed = false;
 
 //MotorRight ports
 byte enableRight(51);
@@ -116,8 +110,6 @@ int n_US = 8;
 int idx_us = 0;
 int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
-//double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
-//double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
 double weight_left[] =  {20, 20, -30, -40, -40, -40, -30, 20};//{20, -10, -40, -40, -40, -40, -40, -10};
 double weight_right[] = {20, 20, -30, -40, -40, -40, -30, 20}; //{20, -10, -20, -20, -20, -20, -20, -10};
 double fr_dist = 70;
@@ -615,7 +607,7 @@ void loop()
     command.add(cmdLeft);
     command.add(cmdRight);
     */
-
+    /*
     if (macro_state == OBSTACLE){
       JsonArray dist = send_msg.createNestedArray("dist");
       dist.add(distances[0]);
@@ -631,7 +623,16 @@ void loop()
       reference.add(ref_x); //[m]
       reference.add(ref_y); //[m]
     }
-    
+    */
+    JsonArray dist = send_msg.createNestedArray("dist");
+    dist.add(distances[0]);
+    dist.add(distances[1]);
+    dist.add(distances[2]);
+    dist.add(distances[3]);
+    dist.add(distances[4]);
+    dist.add(distances[5]);
+    dist.add(distances[6]);
+    dist.add(distances[7]); 
     serializeJson(send_msg, Serial);
 
     Serial.println();
