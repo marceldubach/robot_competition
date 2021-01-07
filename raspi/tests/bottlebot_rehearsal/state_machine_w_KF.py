@@ -108,7 +108,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Calculate intermediate waypoint
-        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)) and not tracks_int_WP and can_define_int_wp:
+        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)) and not tracks_int_WP:
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
             path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
@@ -182,7 +182,6 @@ if __name__=='__main__':
                     # TODO when to drop the current waypoint?
                     wp = new_wp
                     tracks_int_WP = True
-                    can_define_int_wp = False
                     print("[MAiN] waypoint updated to:", wp)
 
 
@@ -206,7 +205,7 @@ if __name__=='__main__':
             # not updating previous state
 
         if (state == states.OBSTACLE):
-            can_define_int_wp = True
+            tracks_int_WP = False
 
         if (state != state_previous):
             if (state != states.CATCH) and (state_previous == states.CATCH):
