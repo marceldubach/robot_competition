@@ -89,7 +89,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[6,1],[4,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
+    waypoints = [[3,1],[4,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
