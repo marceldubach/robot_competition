@@ -37,8 +37,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max =  150
-    t_home = 100
+    t_max =  400
+    t_home = 250
 
     # initialize state of the robot
     state = states.STARTING
@@ -89,7 +89,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[5,2],[4,4],[6,2],[7,1],[7,3],[6,1],[5,4],[3,2],[1,4],[2,4]] #np.array()
+    waypoints = [[2,1],[3,3],[4,1],[6,2],[7,1],[7,3],[5,4],[1,3],[2,3],[5,4],[2,4]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
