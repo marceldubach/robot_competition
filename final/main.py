@@ -43,7 +43,7 @@ if __name__=='__main__':
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
     t_max = 620
-    t_home = 500
+    t_home = 440
 
     # initialize state of the robot
     state = states.STARTING
