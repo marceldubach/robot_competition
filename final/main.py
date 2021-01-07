@@ -21,7 +21,7 @@ from picamera import PiCamera
 """ This scripts implements a bidirectional communication at ca. 10 Hz
     Run this script together with 'bottlebot_complete' on Arduino.
     
-    04.Jan.2020
+    07.Jan.2020
 """
 
 if __name__=='__main__':
@@ -42,8 +42,8 @@ if __name__=='__main__':
     x_update = np.zeros(3)
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 100
-    t_home = 50
+    t_max = 620
+    t_home = 500
 
     # initialize state of the robot
     state = states.STARTING

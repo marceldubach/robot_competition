@@ -1,4 +1,0 @@
-UltrasoundSensors	KEYWORD1
-readUS			KEYWORD2
-readSensor		KEYWORD2
-convertToDistance	KEYWORD2
