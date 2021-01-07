@@ -134,8 +134,8 @@ unsigned long claw_dist = 100;
 int cntBottles = 0;
 
 // set default values
-double ref_x = 0.0;
-double ref_y = 0.0;
+double ref_x = 1.0;
+double ref_y = 1.0;
 int cmdRight = 128;
 int cmdLeft = 128;
 
@@ -615,7 +615,7 @@ void loop()
     command.add(cmdLeft);
     command.add(cmdRight);
     */
-
+  
     if (macro_state == OBSTACLE){
       JsonArray dist = send_msg.createNestedArray("dist");
       dist.add(distances[0]);
@@ -631,7 +631,7 @@ void loop()
       reference.add(ref_x); //[m]
       reference.add(ref_y); //[m]
     }
-    
+  
     serializeJson(send_msg, Serial);
 
     Serial.println();

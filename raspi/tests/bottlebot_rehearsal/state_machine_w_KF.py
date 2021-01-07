@@ -53,7 +53,7 @@ if __name__=='__main__':
     tracks_int_WP = False
 
     # initial estimated position
-    pose = np.array([1,1,0]) # estimated position
+    pose = np.array([1,1,np.pi/4]) # estimated position
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
@@ -94,7 +94,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[6,1],[4,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
+    waypoints = [[2,2],[4,2],[5,1],[6,2],[7,1],[7,2],[6,3],[5,3],[4,3],[3,3],[4,2],[4,3],[2,2]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
