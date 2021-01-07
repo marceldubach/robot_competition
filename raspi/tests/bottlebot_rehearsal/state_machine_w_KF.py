@@ -89,7 +89,7 @@ if __name__=='__main__':
 
     pose_KF = np.empty(3)
 
-    waypoints = [[5,4],[6,2],[5,4],[2,4],[7,3],[6,2],[6,4],[3,4],[6,4],[2,4]] #np.array()
+    waypoints = [[3,2],[4,4],[6,2],[7,1],[7,3],[6,1],[5,4],[3,2],[,4],[2,4]] #np.array()
     #i_wp = 0 # iterator over waypoints
     wp = np.array(waypoints[0])
     nav_tol = 0.4
@@ -182,6 +182,7 @@ if __name__=='__main__':
                     # TODO when to drop the current waypoint?
                     wp = new_wp
                     tracks_int_WP = True
+                    wp_is_intermediate = True
                     print("[MAiN] waypoint updated to:", wp)
 
 
@@ -190,7 +191,8 @@ if __name__=='__main__':
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached.")
                 tracked_wp.append(wp)
-                tracks_int_WP = False
+                if wp_is_intermediate:
+                    tracks_int_WP = False
 
                 if waypoints: # there are still waypoints to track
                     # remove waypoint from the list and set it as current waypoint
