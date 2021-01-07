@@ -46,7 +46,7 @@ if __name__=='__main__':
     n_bottles = 0
     is_catching = False
     tracks_int_WP = False
-
+    can_define_int_wp = True
     # initial estimated position
     pose = np.array([7,3,np.pi]) # estimated position
 
@@ -108,7 +108,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Calculate intermediate waypoint
-        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)) and not tracks_int_WP:
+        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)) and not tracks_int_WP and can_define_int_wp:
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
             path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
@@ -182,7 +182,7 @@ if __name__=='__main__':
                     # TODO when to drop the current waypoint?
                     wp = new_wp
                     tracks_int_WP = True
-                    wp_is_intermediate = True
+                    can_define_int_wp = False
                     print("[MAiN] waypoint updated to:", wp)
 
 
@@ -191,8 +191,7 @@ if __name__=='__main__':
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached.")
                 tracked_wp.append(wp)
-                if wp_is_intermediate:
-                    tracks_int_WP = False
+                tracks_int_WP = False
 
                 if waypoints: # there are still waypoints to track
                     # remove waypoint from the list and set it as current waypoint
@@ -205,6 +204,9 @@ if __name__=='__main__':
             message["ref"] = [float(wp[0]), float(wp[1])]
             message["state"] = state
             # not updating previous state
+
+        if (state == states.OBSTACLE):
+            can_define_int_wp = True
 
         if (state != state_previous):
             if (state != states.CATCH) and (state_previous == states.CATCH):
@@ -243,7 +245,7 @@ if __name__=='__main__':
             pose_update_available = False
 
         # write message to serial
-        print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
+        # print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
         ser.write(json.dumps(message).encode('ascii'))
 
         ser.flush()
