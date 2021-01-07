@@ -276,13 +276,21 @@ if __name__=='__main__':
 
                 if "dist" in data: # exists only if Arduino is in obstacle avoidance
                     dist = np.array(data["dist"])
-                    print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                          " pos: ", pose, " dist:", data["dist"], " info:", info)
+                    if "ref" in data:
+                        print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
+                          " pos: ", pose, " dist:", data["dist"], " ref:", ref, " info:", info)
+                    else:
+                        print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
+                              " pos: ", pose, " dist:", data["dist"], " info:", info)
+
+
+                """
                 elif "ref" in data:
                     ref = np.round(np.array(data["ref"]),2)
 
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " ref:", ref, " info:", info)
+                """
 
             except:
                 print("[ERROR] cannot deserialize string from arduino.")
