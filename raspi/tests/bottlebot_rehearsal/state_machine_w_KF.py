@@ -108,7 +108,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Calculate intermediate waypoint
-        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)):
+        if (state_previous == states.OBSTACLE) and ((state == states.MOVING) or (state == states.RETURN)) and not tracks_int_WP:
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
             path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
@@ -189,6 +189,7 @@ if __name__=='__main__':
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached.")
                 tracked_wp.append(wp)
+                tracks_int_WP = False
 
                 if waypoints: # there are still waypoints to track
                     # remove waypoint from the list and set it as current waypoint
