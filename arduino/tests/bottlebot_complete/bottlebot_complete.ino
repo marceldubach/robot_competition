@@ -629,21 +629,18 @@ void loop()
 
     
     JsonArray dist = send_msg.createNestedArray("dist");
-      dist.add(distances[0]);
-      dist.add(distances[1]);
-      dist.add(distances[2]);
-      dist.add(distances[3]);
-      dist.add(distances[4]);
-      dist.add(distances[5]);
-      dist.add(distances[6]);
-      dist.add(distances[7]); 
+    dist.add(distances[0]);
+    dist.add(distances[1]);
+    dist.add(distances[2]);
+    dist.add(distances[3]);
+    dist.add(distances[4]);
+    dist.add(distances[5]);
+    dist.add(distances[6]);
+    dist.add(distances[7]); 
     JsonArray reference = send_msg.createNestedArray("ref");
-      reference.add(ref_x); //[m]
-      reference.add(ref_y); //[m]
+    reference.add(ref_x); //[m]
+    reference.add(ref_y); //[m]
 
-
-
-    
     serializeJson(send_msg, Serial);
 
     Serial.println();

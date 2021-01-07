@@ -280,7 +280,7 @@ if __name__=='__main__':
                     dist = np.array(data["dist"])
                     if "ref" in data:
                         print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
-                          " pos: ", pose, " dist:", data["dist"], " ref:", ref, " info:", info)
+                          " pos: ", pose, " dist:", data["dist"], " ref:", data["ref"], " info:", info)
                     else:
                         print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                               " pos: ", pose, " dist:", data["dist"], " info:", info)
