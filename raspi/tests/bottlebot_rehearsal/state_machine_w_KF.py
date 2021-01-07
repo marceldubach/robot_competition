@@ -243,7 +243,7 @@ if __name__=='__main__':
             pose_update_available = False
 
         # write message to serial
-        #print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
+        print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
         ser.write(json.dumps(message).encode('ascii'))
 
         ser.flush()

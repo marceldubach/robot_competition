@@ -126,8 +126,8 @@ unsigned long claw_dist = 100;
 int cntBottles = 0;
 
 // set default values
-double ref_x = 0.0;
-double ref_y = 0.0;
+double ref_x = 1.0;
+double ref_y = 1.0;
 int cmdRight = 128;
 int cmdLeft = 128;
 
