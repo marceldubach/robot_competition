@@ -139,7 +139,8 @@ if __name__=='__main__':
                         closestObst = obst
 
                 if minDistToObst>path_width:
-                    wp = pose[0:2] + path[-1]
+                    # wp = pose[0:2] + path[-1]
+                    print("No obstacle found, dont update wp")
                 else:
                     # 4. set intermediate waypoint
                     obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]

@@ -607,7 +607,7 @@ void loop()
     command.add(cmdLeft);
     command.add(cmdRight);
     */
-    /*
+    
     if (macro_state == OBSTACLE){
       JsonArray dist = send_msg.createNestedArray("dist");
       dist.add(distances[0]);
@@ -623,16 +623,19 @@ void loop()
       reference.add(ref_x); //[m]
       reference.add(ref_y); //[m]
     }
-    */
+    
+
+    /*
     JsonArray dist = send_msg.createNestedArray("dist");
-    dist.add(distances[0]);
-    dist.add(distances[1]);
-    dist.add(distances[2]);
-    dist.add(distances[3]);
-    dist.add(distances[4]);
-    dist.add(distances[5]);
-    dist.add(distances[6]);
-    dist.add(distances[7]); 
+      dist.add(distances[0]);
+      dist.add(distances[1]);
+      dist.add(distances[2]);
+      dist.add(distances[3]);
+      dist.add(distances[4]);
+      dist.add(distances[5]);
+      dist.add(distances[6]);
+      dist.add(distances[7]); 
+    */
     serializeJson(send_msg, Serial);
 
     Serial.println();
