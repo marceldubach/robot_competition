@@ -113,7 +113,6 @@ if __name__=='__main__':
         # Calculate intermediate waypoint
         if (state_previous == states.OBSTACLE) and ((state == states.MOVING)or(state==states.RETURN)):
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
-            path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
             # redefine the waypoint to track
             #1. find obstacles in vicinity
@@ -140,8 +139,6 @@ if __name__=='__main__':
                     if (norm(obst-pose[0:2]) < minDistToObst):
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
-
-
 
                 # 4. set intermediate waypoint
                 obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
