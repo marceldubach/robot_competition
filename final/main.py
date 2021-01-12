@@ -298,11 +298,7 @@ if __name__=='__main__':
                         # clear precomputed waypoints that happen to be on obstacles
                         if np.linalg.norm(w-obstacle)<radius_obstacle:
                             waypoints.remove(w)
-                    """
-                    # clear bottle waypoint that happens to be on obstacles
-                    if np.linalg.norm(wp_bottle-obstacle)<radius_obstacle:
-                        wp_bottle.remove()
-                    """
+
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
