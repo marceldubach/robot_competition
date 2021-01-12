@@ -16,7 +16,6 @@ from kalmanFilter import kalmanFilter, kf_get_param
 from utilities import detect_bottle, ultrasound_dist_to_rel_pos, get_close_obstacles, waypoint_is_valid, is_obstacle, get_time
 from picamera import PiCamera
 
-# TODO: on arduino: after changing back from OBSTACLE to MOVING, the old reference is still given
 
 """ This scripts implements a bidirectional communication at ca. 10 Hz
     Run this script together with 'bottlebot_complete' on Arduino.
@@ -112,7 +111,7 @@ if __name__=='__main__':
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
         # Calculate intermediate waypoint
-        if (state_previous == states.OBSTACLE) and (state == states.MOVING):
+        if (state_previous == states.OBSTACLE) and ((state == states.MOVING)or(state==states.RETURN)):
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
             path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
 
@@ -142,51 +141,44 @@ if __name__=='__main__':
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
 
-                if minDistToObst>path_width:
-                    # TODO uncomment?
-                    wp = pose[0:2] + np.random.rand(2)
-                    print("None of the obstacles is close to path")
+
+
+                # 4. set intermediate waypoint
+                obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
+                R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
+
+                # candidate waypoints
+                wp_default = pose[0:2] + np.random.rand(2) # random waypoint as default
+                wp_CW = pose[0:2] + R.dot(np.array([0.75,0.75])) # clockwise
+                wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
+
+                new_wp = wp_default # assign default waypoint
+                if (obst_angle>des_angle):
+                    # set waypoint in clockwise direction along the path
+                    if (waypoint_is_valid(wp_CW)):
+                        angleToWP = obst_angle+np.pi/4
+                        c = np.cos(angleToWP)
+                        s = np.sin(angleToWP)
+                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                        if not remaining_obst:
+                            # no obstacle blocks the waypoint!
+                            new_wp = wp_CW
+
                 else:
-                    # 4. set intermediate waypoint
-                    obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
-                    R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
+                    if (waypoint_is_valid(wp_CCW)):
+                        angleToWP = obst_angle - np.pi / 4
+                        c = np.cos(angleToWP)
+                        s = np.sin(angleToWP)
+                        pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
+                        remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
+                        if not remaining_obst:
+                            # no obstacle blocks the waypoint!
+                            new_wp = wp_CCW
 
-                    wp_CW = pose[0:2] + R.dot(np.array([0.75,0.75])) # clockwise
-                    wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
-
-                    # random waypoint: turn by 90° or -90°
-                    if (np.random.rand()>0.5):
-                        new_wp = pose[0:2] + R.dot(np.array([-1,0]))
-                    else:
-                        new_wp = pose[0:2] + R.dot(np.array([1, 0]))
-
-                    # TODO does not work at -pi!!
-                    if (obst_angle>des_angle):
-                        # set waypoint in clockwise direction along the path
-                        if (waypoint_is_valid(wp_CW)):
-                            angleToWP = obst_angle+np.pi/4
-                            c = np.cos(angleToWP)
-                            s = np.sin(angleToWP)
-                            pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
-                            remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
-                            if not remaining_obst:
-                                # no obstacle blocks the waypoint!
-                                new = wp_CW
-                    else:
-                        if (waypoint_is_valid(wp_CCW)):
-                            angleToWP = obst_angle - np.pi / 4
-                            c = np.cos(angleToWP)
-                            s = np.sin(angleToWP)
-                            pathToNewWP = [d * np.array([c, s]) for d in np.arange(0, 0.25, 1.6)]
-                            remaining_obst = get_close_obstacles(obst_close, pathToNewWP, 0.4)
-                            if not remaining_obst:
-                                # no obstacle blocks the waypoint!
-                                new = wp_CCW
-
-                    #7. send waypoint and check if current waypoint has to be reached or bypassed
-                    # TODO when to drop the current waypoint?
-                    wp = new_wp
-                    print("[MAiN] waypoint updated to:", wp)
+                #7. send waypoint and check if current waypoint has to be reached or bypassed
+                wp = new_wp
+                print("[MAiN] waypoint updated to:", wp)
 
         # Timeout expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
@@ -389,7 +381,7 @@ if __name__=='__main__':
             e_bottle = mp.Event()
             p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
             p_bottle.start()
-            # TODO send bottle detected to arduino and commands
+
 
         log_time.append(get_time(t_s))
         log_pos.append(pose)
