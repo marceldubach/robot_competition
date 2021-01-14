@@ -58,7 +58,7 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
       cmdRight = 150+dist*50;
     }
   }else{
-    double turn_dist = 30; // 50 too high, blocks all the time
+    double turn_dist = 30; 
     max_dist[0] = turn_dist;
     max_dist[1] = turn_dist;
     max_dist[2] = turn_dist;
@@ -67,7 +67,6 @@ void calculate_Commands(int& cmdLeft,int& cmdRight, double x, double y, double t
     max_dist[5] = turn_dist;
     max_dist[6] = turn_dist;
     max_dist[7] = turn_dist;
-    // us_sensors at 45° are set to 30
     
     bool turnLeft; // get rotation sense
     if ((heading_ref-theta)>0){

@@ -1,10 +1,7 @@
 #ifndef VelCtrl_h
 #define VelCtrl_h
-
-#include "Arduino.h"
-
-
 #define PI 3.1415
+#include "Arduino.h"
 
 void set_Commands(bool enableMotors, int ctrlRight, int ctrlLeft,byte pwmRight, byte pwmLeft, byte enableRight, byte enableLeft);
 

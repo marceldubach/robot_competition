@@ -2,13 +2,11 @@
     main states of the state machine:
     0: starting
     1: moving
-    2: obstacle avoidance*
+    2: obstacle avoidance
     3: catch bottle
-    4: return to home*
+    4: return to home
     5: empty container
-    6: finished*
-
-    *=not implemented on arduino yet
+    6: finished
 """
 # define states as global variables
 STARTING = 0

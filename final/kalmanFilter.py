@@ -9,24 +9,14 @@ import imutils
 import time 
 
 def kf_get_param():
-    """
-    Pk = np.array([[0.5, 0, 0.02, 0.02, 0],
-                   [0, 0.5, 0.02, 0.02, 0],
-                   [0.02, 0.02, 0.1, 0, 0.04],
-                   [0.02, 0.02, 0, 0.05, 0],
-                   [0, 0, 0.04, 0, 0.02]])
-    """
-    Pk = np.diag([0.5,0.5,0.4,0.1,0.05])
-    Q = np.diag([0.2,0.2,0.5,0.02,0.1])
-    #Q = 0.01*np.identity(5)
-    R = np.array([[0.5, 0, 0],
-                  [0, 0.5, 0],
-                  [0, 0, 0.05]])
+    Pk = np.diag([0.5, 0.5, 0.4, 0.1, 0.05])
+    Q = np.diag([0.2, 0.2, 0.5, 0.02, 0.1])
+    R = np.diag([0.5, 0.5, 0.05])
     return Pk, Q, R
 
 def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     """
-    state_vector: column vector{
+    prediction: column vector{
     x: x position in global reference [m]
     y: y position in global reference [m]
     yaw: absolute angle wrt global reference [rad]
@@ -39,13 +29,14 @@ def kalmanFilter(prediction, measurements_vector, dT, Pk, Q, R):
     yaw_beacons: absolute yaw angle 
     }
     dT: time elapsed between two measurements
-    Pk: state uncertainty at time k
-    Q: environment uncertainty(untrucked noise)
-    R: covariance of sensors noise 
+    Pk: covariance of state uncertainty at time k
+    Q: covariance of process noise 
+    R: covariance of measurements noise  
     """
     yaw = prediction[2]
     measured_angle = measurements_vector[2]
 
+    # deal with singularities in angles (i.e 0.01 rad and 6.27 rad around 2pi rad)
     if abs(measured_angle - yaw) > np.pi:
         if measured_angle - yaw > 0:
             measurements_vector[2] -= 2*np.pi

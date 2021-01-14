@@ -9,7 +9,6 @@ from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
 import os
 import pandas as pd
-
 import multiprocessing as mp
 from localization import triangulation
 from kalmanFilter import kalmanFilter, kf_get_param
@@ -17,10 +16,15 @@ from utilities import detect_bottle, ultrasound_dist_to_rel_pos, get_close_obsta
 from picamera import PiCamera
 
 
-""" This scripts implements a bidirectional communication at ca. 10 Hz
-    Run this script together with 'bottlebot_complete' on Arduino.
-    
-    04.Jan.2020
+""" This scripts implements a bidirectional communication at ca. 10 Hz.
+    In addition to receiving informations from the Arduino, 
+    it manages the processes associated with the frontal camera and the 
+    webcam for the localization, hence it updates the robot state and pose based
+    on such information and communicates back relevant data.
+    Run this script together with 'final' on Arduino.
+    07.Jan.2021
+    Dubach Marcel, Vollmin Olivier, Panchetti Lorenzo
+    Group 6 
 """
 
 if __name__=='__main__':
@@ -36,12 +40,17 @@ if __name__=='__main__':
     log_info = []
     log_update = []
 
+    # additional variables initialization
     ref = np.zeros(2)
     info = np.zeros(3)
     x_update = np.zeros(3)
+    x = np.zeros(5)
+    wp_bottle = np.array([1,1])
+    wp_end = np.array([1,1])
+    dT = 0
 
     # define runtime (t_max), and time after which the robot returns to home (t_home)
-    t_max = 620
+    t_max = 600
     t_home = 450
 
     # initialize state of the robot
@@ -51,26 +60,22 @@ if __name__=='__main__':
     is_catching = False
 
     # initial estimated position
-    pose = np.array([1,1,np.pi/4]) # estimated position
+    pose = np.array([1,1,0])
 
     # get (initial) parameters of the Kalman Filter
     Pk, Q, R = kf_get_param()
 
-    x = np.zeros(5)
-    wp_bottle = np.array([1,1])
-    wp_end = np.array([1,1])
-    dT = 0
-
-    data = "" # data string for serial communication
+    # data string for serial communication
+    data = "" 
 
     # initalize time for display
     t_s = time.time()
 
     print("Start simulation. Duration: ", t_max ," seconds")
+    # initialize serial communication
     ser = serial.Serial('/dev/ttyACM0', 38400, timeout = 0.5)
     
     if (ser.isOpen()):
-        #ser.reset_input_buffer()
         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] serial successfully initialized")
         state = states.MOVING
     else:
@@ -84,16 +89,16 @@ if __name__=='__main__':
     e_img_loc = mp.Event() # event when an image is saved
     e_location = mp.Event() # event when triangulation has finished
 
+    # processes initialization and call
     p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
     p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
     p_bottle.start()
     p_triang.start()
-    pose_update_available = False
 
+    pose_update_available = False
     pose_KF = np.empty(3)
 
-    waypoints = [[2,2],[4,2],[5,1],[6,2],[7,1],[7,2],[6,3],[5,3],[4,3],[3,3],[1,3],[2,2]] #np.array()
-    #i_wp = 0 # iterator over waypoints
+    waypoints = [[2,1],[4,1],[5,1],[6,2],[7,1],[7,2],[6,3],[5,3],[4,3],[3,3],[1,3],[2,2]] 
     wp = np.array(waypoints[0])
     nav_tol = 0.4
 
@@ -103,17 +108,18 @@ if __name__=='__main__':
 
     while (time.time() - t_s < t_max):
         message = {}
-        if data == "": # send the position from python to arduino in the first iteration
+        if data == "": 
+            # send the position from python to arduino in the first iteration
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
 
-        # We have seen a bottle 
+        # the robot has seen a bottle 
         if (state == states.CATCH):
             message["ref"] = [float(wp_bottle[0]), float(wp_bottle[1])]
 
-        # Calculate intermediate waypoint
+        # calculate intermediate waypoint
         if (state_previous == states.OBSTACLE) and ((state == states.MOVING)or(state==states.RETURN)):
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
-            path_width = 0.4 # width of the tube along the desired direction in which there should be no obstacle
+            path_width = 0.4 
 
             # redefine the waypoint to track
             #1. find obstacles in vicinity
@@ -128,7 +134,7 @@ if __name__=='__main__':
             else:
                 # there is an obstacle in vicinity to the desired path
                 # 2. choose desired direction to current waypoint
-                des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) # in [-pi, pi]
+                des_angle = np.arctan2(wp[0] - pose[0], wp[1] - pose[1]) 
                 c = np.cos(des_angle)
                 s = np.sin(des_angle)
                 path = [d*np.array([c, s]) for d in np.arange(0, 0.25, 1.1)]
@@ -141,10 +147,8 @@ if __name__=='__main__':
                         minDistToObst = norm(obst-pose[0:2])
                         closestObst = obst
 
-
-
                 # 4. set intermediate waypoint
-                obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) # in  [-pi,pi]
+                obst_angle = np.arctan2(closestObst[0] - pose[0], closestObst[1] - pose[1]) 
                 R = np.array([[np.cos(obst_angle), -np.sin(obst_angle)], [np.sin(obst_angle), np.cos(obst_angle)]])
 
                 # candidate waypoints
@@ -152,7 +156,8 @@ if __name__=='__main__':
                 wp_CW = pose[0:2] + R.dot(np.array([0.75,0.75])) # clockwise
                 wp_CCW = pose[0:2] + R.dot(np.array([0.75,-0.75])) # counterclockwise
 
-                new_wp = wp_default # assign default waypoint
+                # assign default waypoint
+                new_wp = wp_default 
                 if (obst_angle>des_angle):
                     # set waypoint in clockwise direction along the path
                     if (waypoint_is_valid(wp_CW)):
@@ -166,6 +171,7 @@ if __name__=='__main__':
                             new_wp = wp_CW
 
                 else:
+                     # set waypoint in counterclockwise direction along the path
                     if (waypoint_is_valid(wp_CCW)):
                         angleToWP = obst_angle - np.pi / 4
                         c = np.cos(angleToWP)
@@ -180,24 +186,25 @@ if __name__=='__main__':
                 wp = new_wp
                 print("[MAiN] waypoint updated to:", wp)
 
-        # Timeout expired: return to recycling station
+        # timeout has expired: return to recycling station
         if (state != states.OBSTACLE) and (state!=states.EMPTY) and (time.time()- t_s > t_home):
             state_previous = state
             state = states.RETURN
             wp = wp_end
             message["ref"] = [float(wp[0]), float(wp[1])]
 
-        # Empty the bottles in the recycling station
+        # empty the bottles in the recycling station
         if (state == states.RETURN):
             if (norm(pose[0:-1] - wp_end) < 0.4):
                 state = states.EMPTY
 
-        if (state == states.MOVING):  # state = 1: track waypoints
+        if (state == states.MOVING):  
             if np.linalg.norm(pose[0:-1]-wp)<nav_tol:
+                # need to update waypoint
                 print("{:6.2f}".format(get_time(t_s)), " [MAIN] waypoint ", wp, " reached.")
                 tracked_wp.append(wp)
-
-                if waypoints: # there are still waypoints to track
+                # there are still waypoints to track
+                if waypoints: 
                     # remove waypoint from the list and set it as current waypoint
                     wp = waypoints.pop(0)
 
@@ -207,7 +214,6 @@ if __name__=='__main__':
 
             message["ref"] = [float(wp[0]), float(wp[1])]
             message["state"] = state
-            # not updating previous state
 
         if (state != state_previous):
             if (state != states.CATCH) and (state_previous == states.CATCH):
@@ -216,17 +222,17 @@ if __name__=='__main__':
             message["state"] = state
             state_previous = state
 
-        if (state == states.RETURN): # if state is returning, then send waypoints
-            message["ref"] = [float(wp_end[0]), float(wp_end[1])]  # conversion to float is necessary!
+        if (state == states.RETURN): 
+            # if state is returning, then send end waypoint
+            message["ref"] = [float(wp_end[0]), float(wp_end[1])]  
 
         if (pose_update_available):
+            # if kalman filter information is available: update pose in Arduino
             message["pose"] = [float(pose[0]), float(pose[1]), float(pose[2])]
             pose_update_available = False
 
         # write message to serial
-        #print("{:6.2f}".format(get_time(t_s)), "[SER] send: ", json.dumps(message))
         ser.write(json.dumps(message).encode('ascii'))
-
         ser.flush()
 
         while not (ser.in_waiting > 0):
@@ -234,7 +240,6 @@ if __name__=='__main__':
 
         # READ THE SERIAL INFORMATION FROM ARDUINO
         if (ser.in_waiting > 0):
-            t0 = time.time()
 
             try:
                 line = ser.readline().decode('ascii').rstrip()
@@ -242,17 +247,19 @@ if __name__=='__main__':
                 data = json.loads(line)
                 if "pos" in data:
                     pose = np.round(np.array(data["pos"]),2)
-                    # round the pose to 2 decimals (pose may be sent via serial)
+                
                 if "state" in data:
                     if (state != data["state"]) and ((state != states.RETURN) and (state!=states.EMPTY)):
                         state_previous = state
                         state = data["state"]
                         print("{:6.2f}".format(get_time(t_s)) + " [MAIN] state changed to ",state)
+
                 if "nBot" in data:
                     if (n_bottles != data["nBot"]):
                         n_bottles = data["nBot"]
                         print("{:6.2f}".format(get_time(t_s)) + "Bottle catched! Robot contains now ",
                               n_bottles, " bottles")
+
                 if "info" in data:
                     info = np.array(data["info"])
 
@@ -260,9 +267,9 @@ if __name__=='__main__':
                     dist = np.array(data["dist"])
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " dist:", data["dist"], " info:", info)
+
                 elif "ref" in data:
                     ref = np.round(np.array(data["ref"]),2)
-
                     print("{:6.2f}".format(get_time(t_s)) + " [SER] state:", state,
                           " pos: ", pose, " ref:", ref, " info:", info)
 
@@ -275,11 +282,11 @@ if __name__=='__main__':
 
         # CALCULATE OBSTACLE POSITONS:
         if (state == states.OBSTACLE):
-            #print("[MAIN] try to append obstacles to list")
-            min_obst_dist = 0.7 # take the same value as in Arduino code!
+           
+            min_obst_dist = 0.7 
             radius_obstacle = 0.15 # radius of the obstacle size
 
-            # calculate all frontal obstacles (sensors 2 to 5)
+            # calculate all obstacles (sensors 1 to 7)
             for d,idx in zip(dist[1:7] ,range(0,7)):
                 d = d/100 # rescale distance to meters
                 if d<min_obst_dist:
@@ -296,16 +303,10 @@ if __name__=='__main__':
                         obst_list.append(obstacle)
                         print("obstacle appended at", obstacle)
 
-                        # clear all waypoints close to that obstacle
                     for w in waypoints:
                         # clear precomputed waypoints that happen to be on obstacles
                         if np.linalg.norm(w-obstacle)<radius_obstacle:
                             waypoints.remove(w)
-                    """
-                    # clear bottle waypoint that happens to be on obstacles
-                    if np.linalg.norm(wp_bottle-obstacle)<radius_obstacle:
-                        wp_bottle.remove()
-                    """
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
@@ -325,12 +326,9 @@ if __name__=='__main__':
         if (e_location.is_set()):
             
             e_location.clear()
-            
             measure = q_triang.get()
             print("measure:", measure)
-            print("{:6.2f}".format(get_time(t_s)), "Time join start")
             p_triang.join()
-            print("{:6.2f}".format(get_time(t_s)), "Time join end")
 
             if (e_img_loc.is_set()):
                 if (measure[0]!=-1) and (measure[1]!=-1):
@@ -341,7 +339,8 @@ if __name__=='__main__':
                     pose[2] = x_update[2] + delta[2]
                     pose_update_available = True
                     print("{:6.2f}".format(get_time(t_s)), "[KF] update position to ",pose)
-
+            
+            # delete variable associated to the process
             del q_triang
             del e_location
             del e_img_loc
@@ -350,7 +349,7 @@ if __name__=='__main__':
             q_triang = mp.Queue()
             e_location = mp.Event()
             e_img_loc = mp.Event()
-
+            # call next process
             p_triang = mp.Process(target=triangulation, args=(q_triang, e_img_loc, e_location, pose[2]))
             p_triang.start()
 
@@ -373,15 +372,16 @@ if __name__=='__main__':
                         state = states.CATCH
                         wp_bottle = np.round(bottle_ref,2)
 
+             # delete variable associated to the process
             del q_bottle
             del e_bottle
             del p_bottle
 
             q_bottle = mp.Queue()
             e_bottle = mp.Event()
+            # call next process
             p_bottle = mp.Process(target=detect_bottle, args=(q_bottle, e_bottle))
             p_bottle.start()
-
 
         log_time.append(get_time(t_s))
         log_pos.append(pose)
@@ -389,9 +389,6 @@ if __name__=='__main__':
         log_info.append(info)
         log_cov.append(Pk)
         log_update.append(x_update)
-
-
-
 
     # shut the motor down
     state = states.FINISH
@@ -411,18 +408,16 @@ if __name__=='__main__':
             print("Nothing received as last message")
     
     print("{:6.2f}".format(get_time(t_s)) + " [MAIN] Time elapsed. Program ending.")
+    # close serial port at the end of the code
     ser.reset_input_buffer()
-    ser.close() # close serial port at the end of the code
+    ser.close() 
 
     # join the processes to close them correctly
     p_triang.join()
     p_bottle.join()
 
-    print("Generating logfile...")
-
+    # logfile generation
     log_data = {'time': log_time, 'pos': log_pos, 'ref': log_ref}
-
-
     dataframe = pd.DataFrame(log_data)
     if not os.path.exists('logs'):
         os.makedirs('logs')
@@ -440,5 +435,3 @@ if __name__=='__main__':
     obstacle_logfilename = "obstacles_" + date_time + ".csv"
     obstacle_df = pd.DataFrame(log_obstacles)
     obstacle_df.to_csv('logs/'+obstacle_logfilename)
-
-    print("Saved logfile to: logs/"+logfile_name)

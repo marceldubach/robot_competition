@@ -1,11 +1,14 @@
 /*
- * Run this script together with 'state_machine_w_KF.py'
- * Experimental: 
- *  - Add state trantions for returning to home and catching bottle
- * Todo: 
- *  - Add map for Obstacles and WP-navigation to avoid obstacles
- *  - Add movement to grab bottles
- *  date: 3.1..2020
+ * This script implements a bidirectional communication at ca. 10 Hz.
+ * In addition to processing the messages coming from the Raspberry Pi,
+ * it features the odometry computation and the state machines that 
+ * perform the bottle catching and the maneuvers to empty the container.
+ * If an obstacle is detected, it starts avoidng it with a Braitemberg
+ * behavior and communicates the change of state to the Pi.
+ * Run this script together with 'main.py'
+ * 7.Jan.2021
+ * Dubach Marcel, Vollmin Olivier, Panchetti Lorenzo 
+ * Group 6
  */
 
 #include "ArduinoJson.h"
@@ -16,12 +19,16 @@
 #include "VelCtrl.h"
 
 #define PI 3.1415
-
-byte dutyCycle;
+#define avSpeedRight A1 // Hall sensor reading
+#define avSpeedLeft A3  // Hall sensor reading
+#define claw_trigger 37
+#define claw_echo 36
 
 // timestep variables (for integration of IMU)
 unsigned long t0 = 0;
 
+// additional variables initialization
+byte dutyCycle;
 float dt;
 float v = 0;
 float omega_rad;
@@ -29,30 +36,24 @@ float omega_rad;
 // definition of an IMU object with associated variables
 MPU6050 IMU;
 int16_t gx, gy, gz;
-
-#define avSpeedRight A1 // Hall sensor reading
-#define avSpeedLeft A3  // Hall sensor reading
-float speedRight = 0;
-float speedLeft = 0;
-
-float wLeft = 0;
-float wRight = 0;
-
-float radius = 0.04;
 float omega_deg;
-
 float gyro_sf = 131.00; //[LSB/(°/s)] gain at ±250 configuration DEFAULT ONE
 float gyro_mean = 0.46; // mean noise on gyroscope gz lecture, averaged over 1000 data points
 
-//bool time_elapsed = false;
-
-//MotorRight ports
+// motor right ports
 byte enableRight(51);
 byte pwmRight(3); // changed from define
 
-//MotorLeft ports
+// motor left ports
 byte enableLeft(50);
 byte pwmLeft(2); // changed from define
+
+// motor velocity variables
+float speedRight = 0;
+float speedLeft = 0;
+float wLeft = 0;
+float wRight = 0;
+float radius = 0.04;
 
 // estimated position of the robot
 double x = 1;
@@ -82,7 +83,7 @@ enum catch_states
   RAISE,
   OPEN
 };
-int catch_state = 0; // state for catching bottle
+int catch_state = 0; 
 unsigned long t_catch = 0;
 
 enum empty_states
@@ -97,38 +98,22 @@ int cnt_shakes = 0;
 bool cam_is_up = false;
 unsigned long t_empty = 0;
 
-// braitenberg
-// pin declaration for the braitenberg vehicle
-//uint8_t trigger[7] = {25, 23, 27, 29, 31, 33, 35};
-//uint8_t echo[7] = {24, 22, 26, 28, 30, 32, 34};
-
-//int n_US = 7;
-//int idx_us = 0;
-//double distances[] = {100, 100, 100, 100, 100, 100, 100};
-//int threshold[] = {0, 0, 0, 0, 0, 0, 0};
-//double weight_left[] = {1000, -400, -300, -1200, -1200, -300, -400}; // old: double
-//double weight_right[] = {1000, -400, -500, -1400, -1400, -500, -400}; // double
-//double maxdist[] = {30,30,40,70,70,40,30}; // initialize maxdist at less than default distances!
-
+// ultrasounds sensors pins
 uint8_t trigger[8] = {25, 23, 27, 29, 37, 31, 33, 35};
 uint8_t echo[8] = {24, 22, 26, 28, 36,30, 32, 34};
 int n_US = 8;
 int idx_us = 0;
 int threshold[] = {0, 0, 0, 0, 0,  0, 0, 0};
 double distances[] = {100, 100, 100, 100,100, 100, 100, 100};
-//double weight_left[] = {1000, -400, -400, -1200, -1200, -400, -400}; // old: double
-//double weight_right[] = {1000, -400, -600, -1400, -1400, -600, -400}; // double
-double weight_left[] =  {20, 20, -30, -40, -40, -40, -30, 20};//{20, -10, -40, -40, -40, -40, -40, -10};
-double weight_right[] = {20, 20, -30, -40, -40, -40, -30, 20}; //{20, -10, -20, -20, -20, -20, -20, -10};
-double fr_dist = 70;
-double turn_dist = 30;
-double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
 unsigned long maxPulseIn = 7000; // 50 cm range
 unsigned long duration;
 
-//initialize distances at values bigger than the threshold
-#define claw_trigger 37
-#define claw_echo 36
+// Braitemberg related variables 
+double weight_left[] =  {20, 20, -30, -40, -40, -40, -30, 20};
+double weight_right[] = {20, 20, -30, -40, -40, -40, -30, 20}; 
+double fr_dist = 70;
+double turn_dist = 30;
+double maxdist[] = {30,30,50,fr_dist,fr_dist,fr_dist,50,30};
 
 unsigned long claw_dist = 100;
 int cntBottles = 0;
@@ -138,7 +123,6 @@ double ref_x = 1.0;
 double ref_y = 1.0;
 int cmdRight = 128;
 int cmdLeft = 128;
-
 bool enableMotors;
 
 StaticJsonDocument<200> receive_msg;
@@ -151,21 +135,22 @@ Servo backDoor;   // servo at back door
 
 void setup()
 {
-  // put your setup code here, to run once:
+ 
   Wire.begin();
 
-  mainServo.attach(11, 400, 2550); //400us-2550us DFROBOT high torque
-  microLeft.attach(10, 900, 2100); // (pin, min, max) // for HC-82 left
-  microRight.attach(9, 900, 2100); // (pin, min, max) // for HC-82 right
-  camServo.attach(8, 750, 2250);   // (pin, min, max) // for camshaft servo
-  backDoor.attach(7,750,2250);   // (pin, min, max) // for back door
+  mainServo.attach(11, 400, 2550); // (pin, min, max) DFROBOT high torque
+  microLeft.attach(10, 900, 2100); // (pin, min, max) for HC-82 left
+  microRight.attach(9, 900, 2100); // (pin, min, max) for HC-82 right
+  camServo.attach(8, 750, 2250);   // (pin, min, max) for camshaft servo
+  backDoor.attach(7,750,2250);     // (pin, min, max) for back door
 
+  // set up Echo and Trigger pins
   for (int i = 0; i < n_US; i++)
-  { // set up Echo and Trigger pins
+  { 
     pinMode(trigger[i], OUTPUT);
     pinMode(echo[i], INPUT);
   }
-  pinMode(claw_trigger, OUTPUT); // for the claw
+  pinMode(claw_trigger, OUTPUT); 
   pinMode(claw_echo, INPUT);
 
   pinMode(avSpeedRight, INPUT); //analog input -> average speed motorRight
@@ -177,19 +162,20 @@ void setup()
   digitalWrite(enableRight, LOW);
   digitalWrite(enableLeft, LOW);
 
+  // initialize serial communication
   Serial.begin(38400);
-  Serial.setTimeout(100); //
+  Serial.setTimeout(100); 
   while (!Serial)
     continue;
+    
+  // initialize IMU
   IMU.initialize();
   while (!IMU.testConnection())
     continue;
 
   t0 = millis();
-  
   macro_state = STARTING;
   enableMotors = false;
-  //Serial.println("ready"); // Arduino setup completed
 }
 
 void loop()
@@ -202,15 +188,12 @@ void loop()
   }
   else
   {
-    // read the obtained string
-    // old_macro_state = macro_state;
-
-    // python prints the state if it has changed
+    // read the obtained string from the Pi
     if (receive_msg.containsKey("state"))
     { 
       int new_state = receive_msg["state"];
       if (new_state == FINISH){
-        macro_state = receive_msg["state"]; // do shutdown ALWAYS
+        macro_state = receive_msg["state"]; 
         enableMotors = false;
       }
       else if (macro_state != OBSTACLE){ // else change state only if not in obstacle avoidance
@@ -223,24 +206,20 @@ void loop()
           catch_state = TRACK_WP;
           enableMotors = true;
         }
-        // if PYTHON sets state to RETURN: set time_elapsed to true
-        if ((macro_state == RETURN)&&(old_macro_state != RETURN)){
-          //time_elapsed = true;
-        }
         // if PYTHON sets to EMPTY: initialize substate
         if ((macro_state == EMPTY)&&(old_macro_state != EMPTY)){
           t_empty = millis();
           empty_state = ROTATE;
-        }// end else if macro_state != OBSTACLE
+        }
       }
-    } // end if key "state" contained in message
+    }
     
     if (receive_msg.containsKey("ref"))
     {
       ref_x = receive_msg["ref"][0];
       ref_y = receive_msg["ref"][1];
     }
-    // reset the pose if a KF update is done in python
+    // reset the pose if a KF update is available in python
     if (receive_msg.containsKey("pose"))
     {
       x = receive_msg["pose"][0];
@@ -260,7 +239,8 @@ void loop()
       distances[idx_us] = (double)((duration / 2) / 29.1);
       if (distances[idx_us] == 0)
       {
-        distances[idx_us] = 1000; // set the distance to 10m otherwise
+        // set the distance to 10m 
+        distances[idx_us] = 1000; 
       }
       if (distances[idx_us] < maxdist[idx_us])
       {
@@ -284,9 +264,7 @@ void loop()
   switch (macro_state)
   {
   case STARTING:
-    // turn motors off
-    //enableMotors = false;
-
+   
     // initialize position of servos;
     mainServo.write(160);
     microLeft.write(82);
@@ -294,11 +272,12 @@ void loop()
     backDoor.write(175);
     break;
 
-  case MOVING: // moving
+  case MOVING: 
     if (foundObstacle)
-    {
+    { 
+      // if foundObstacle, switch to state OBSTACLE
       old_macro_state = macro_state;
-      macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+      macro_state = OBSTACLE; 
     }
     else
     {
@@ -306,7 +285,7 @@ void loop()
       enableMotors = true;
       double del_theta = 0.3;
       calculate_Commands(cmdLeft, cmdRight, x, y, theta, ref_x, ref_y,maxdist);
-    } // end else obstacle found
+    } 
     break;
 
   case OBSTACLE:
@@ -327,13 +306,14 @@ void loop()
       cmdRight = 128;
       for (int i = 0; i < n_US; i++)
       {
-        cmdLeft += threshold[i] * weight_left[i];// / distances[i];
-        cmdRight += threshold[i] * weight_right[i];// / distances[i];
+        cmdLeft += threshold[i] * weight_left[i];
+        cmdRight += threshold[i] * weight_right[i];
       }
     }
     break;
 
-  case CATCH: // lift bottles
+  case CATCH: 
+    // lift bottles
     if (foundObstacle){
       maxdist[2] = 20;
       maxdist[3] = fr_dist;
@@ -345,7 +325,6 @@ void loop()
       microLeft.write(82);
       microRight.write(120);
       mainServo.write(160);
-      
     }
     break;
 
@@ -355,8 +334,9 @@ void loop()
     mainServo.write(160);
     if (foundObstacle)
     {
+      // if foundObstacle, switch to state OBSTACLE
       old_macro_state = macro_state;
-      macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+      macro_state = OBSTACLE; 
     } else {
       enableMotors = true;
       double del_theta = 0.3;
@@ -368,8 +348,9 @@ void loop()
   case EMPTY:
     if (foundObstacle)
     { 
+      // if foundObstacle, switch to state OBSTACLE
       old_macro_state = macro_state;
-      macro_state = OBSTACLE; // if foundObstacle, switch to state OBSTACLE
+      macro_state = OBSTACLE; 
     }
     break;
 
@@ -388,13 +369,7 @@ void loop()
     switch (catch_state)
     {
     case TRACK_WP:
-      /*
-      double distance_to_WP = sqrt(pow(x-ref_x,2)+pow(y-ref_y,2));
-      double del_theta = 0.3;
-      if (distance_to_WP<1){
-        del_theta = 0.3+ (1-distance_to_WP);
-      }
-      */
+ 
       maxdist[3] = 0;
       maxdist[4] = 0;
       maxdist[5] = 0;
@@ -434,7 +409,6 @@ void loop()
     case CLOSE:
       microLeft.write(50);
       microRight.write(162);
-      
       if (millis() - t_catch > 1000)
       {
         catch_state = RAISE;
@@ -554,13 +528,10 @@ void loop()
 
   if ((enableMotors) && (millis() - t0 > 20))
   {
-    // Do odometry each 20 ms (independent of state!
+    // compute odometry each 20 ms (independent of state!)
     dt = (float)(millis() - t0) / 1000;
     t0 = millis();
-
-    //the following function does not work for some reason
-    //update_Odometry(gz, x, y, theta, v, omega_rad, dt);
-
+    
     // read motorspeeds
     speedRight = analogRead(avSpeedRight);
     speedLeft = analogRead(avSpeedLeft);
@@ -594,28 +565,21 @@ void loop()
   if (!error){
     const int capacity = 200;
     StaticJsonDocument<capacity> send_msg;
-
+    
     send_msg["state"] = macro_state;
     send_msg["nBot"] = cntBottles;
-    
-    //send_msg["cnt"] = cnt_shakes; // counter for camshaft movements
+   
     JsonArray position = send_msg.createNestedArray("pos");
     position.add(x);     //[m]
     position.add(y);     //[m]
-    position.add(theta); // remember to put [rad/s]
+    position.add(theta); //[rad/s]
 
     // info to add in the json document for Kalman filter
     JsonArray info = send_msg.createNestedArray("info");
     info.add(v);         //[m/s]
     info.add(omega_rad); //[rad/s]
     info.add(dt);        //[s]
-
-    /*
-    JsonArray command = send_msg.createNestedArray("cmd");
-    command.add(cmdLeft);
-    command.add(cmdRight);
-    */
-  
+    
     if (macro_state == OBSTACLE){
       JsonArray dist = send_msg.createNestedArray("dist");
       dist.add(distances[0]);

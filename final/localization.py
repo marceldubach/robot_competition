@@ -9,19 +9,27 @@ import json
 import os
 
 def triangulation(queue, e_img_loc, e_loc_finished, yaw):
-    # filename = savePicture(webcam)
-    # set event to tell the readingOdometry to read the serial information
+    """
+    Function called in the python process p_triang(), it sets up the webcam, checks if the 
+    webcam has been well opened, takes a picture and then computes the robot's center of mass 
+    position from the extracted beacon centroids.
+    The event e_img_loc is set right after the picture has been taken to tell the main program 
+    to stock the current odometry in a variable that will be used as prediction for the 
+    Kalman filter, while the e_loc_finished event is set when the function completes in order
+    to tell the main program that it can proceed with the sensor fusion and reinitialize the 
+    process for the next image.
+    The data containing the absolute pose of the robot is passed to the main program through 
+    the queue.
+    """
     filename = 0
-    webcam = cv.VideoCapture(0) #ID 0
+    webcam = cv.VideoCapture(0) 
     webcam.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
     webcam.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     time.sleep(0.3)
-
     try:
         if (webcam.isOpened()):
             filename = savePicture(webcam)
             e_img_loc.set()
-            # print("Set Event")
             centroids = extractCentroids(filename)
             xCenterM, yCenterM, yaw = computePosition(centroids, yaw)
             data = np.array([xCenterM, yCenterM, yaw])
@@ -36,17 +44,20 @@ def triangulation(queue, e_img_loc, e_loc_finished, yaw):
         webcam.release()
         if (e_img_loc.is_set()):
             e_loc_finished.set()
-        return queue  # if fails the queue will be empty
+        # if fails the queue will be empty
+        return queue 
 
 def savePicture(webcam):
-
+    """
+    Function that uses the object webcam as argument for taking and saving a picture 
+    in the Raspberry Pi memory. The image is overwritten at each function call.
+    """
     try:
         check, frame = webcam.read()
         if check:
             filename = 'img.jpg'
             time.sleep(0.1)
             cv.imwrite(filename, img=frame)
-            print("Image saved!")
         else:
             filename = 0
     except:
@@ -56,15 +67,18 @@ def savePicture(webcam):
 
 
 def extractCentroids(filename):
-    # load image RGB
-    #img = plt.imread(filename)
-
+    """
+    Reads the image associated to the filename, converts to grayscale and computes the masks 
+    on the regions of no interest, converts the image in the HSV space and applies the inRange 
+    threshold to extract targeted colors. IThen it calculates the contours around the color
+    masks and if multiple clusters of the same color are found, it merges the clusters that 
+    are closer to each other than 100 pixels and then it chooses the most important cluster 
+    for such color. Finally, the centroids of the beacons are returned.
+    """
     # load image BGR
     img_BGR = cv.imread(filename)  
 
     # rotate images
-    #img_flip = cv.flip(img,1)
-    #output = img_flip.copy()
     img_BGR_flip = cv.flip(img_BGR,1)
     output = img_BGR_flip.copy()
 
@@ -72,9 +86,7 @@ def extractCentroids(filename):
     gray = cv.cvtColor(img_BGR_flip, cv.COLOR_BGR2GRAY)
 
     # masking region of no interest 
-    # detect circles (attention to parameters)
     circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1.4, 1000, minRadius = 400, maxRadius = 650)
-    #print("circle", circles) # print how many circles are found 
 
     # ensure at least some circles were found
     if circles is not None:
@@ -99,7 +111,7 @@ def extractCentroids(filename):
     # remove some noise 
     blurred = cv.GaussianBlur(result, (5,5), 0)
 
-    # Convert BGR to HSV
+    # convert BGR to HSV
     hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
 
     # define range of red color in HSV
@@ -120,18 +132,17 @@ def extractCentroids(filename):
     lower_blue = np.array([108,130,70])
     upper_blue = np.array([110,255,255])
 
-    # Threshold the HSV image to get only magenta colors
+    # Threshold the HSV image to extract only magenta colors
     mask_Magenta = cv.inRange(hsv, lower_magenta, upper_magenta)
 
-    # Threshold the HSV image to get only red colors
+    # Threshold the HSV image to extract only red colors
     mask_Red = cv.inRange(hsv, lower_red, upper_red)
-
     mask_Red2 = cv.inRange(hsv, lower_red2, upper_red2)
 
-    # Threshold the HSV image to get only green colors
+    # Threshold the HSV image to extract only green colors
     mask_Green = cv.inRange(hsv, lower_green, upper_green)
 
-    # Threshold the HSV image to get only blue colors
+    # Threshold the HSV image to extract only blue colors
     mask_Blue = cv.inRange(hsv, lower_blue, upper_blue)
 
     sum_Red = mask_Red + mask_Red2
@@ -166,7 +177,8 @@ def extractCentroids(filename):
             # loop over the contours
             for c in cnts:
                 # compute the center of the contour
-                M = cv.moments(c) # image moment
+                M = cv.moments(c) 
+                # reject noise and light artifacts
                 if(M["m00"] > 100): 
                     cX = int(M["m10"] / M["m00"]) 
                     cY = int(M["m01"] / M["m00"]) 
@@ -183,6 +195,7 @@ def extractCentroids(filename):
                         mom0.append(M["m00"])
                         mom10.append(M["m10"])
                         mom01.append(M["m01"])
+                    #get the index of the most important color cluster
                     idx = mom0.index(max(mom0))
                     cX = int(mom10[idx] / mom0[idx])
                     cY = int(mom01[idx] / mom0[idx]) 
@@ -194,7 +207,7 @@ def extractCentroids(filename):
                         clr = [0, 0, 255]
                     elif(color == 'magenta'):
                         clr = [255, 0, 255]
-            # do not count features inside or ourside certain image readius 
+            # do not count features inside or outside certain image radius 
             if(np.sqrt((cX-960)**2 + (cY-540)**2) < 280 or np.sqrt((cX-960)**2 + (cY-540)**2) > 580):
                 pass
             else:
@@ -209,7 +222,7 @@ def extractCentroids(filename):
 
 def getReference(centroids):
     """
-    understand which beacon centroids are available and so choose 
+    Understand which beacon centroids are available and so choose 
     a suitable reference to be consistent 
     """
     red = 0
@@ -245,16 +258,17 @@ def computePosition(centroids, yaw):
     l = 0.32
     # calculate the reference to which the angles are computed
     reference = getReference(centroids)
-    #print(reference)
     if len(centroids) < 3:
-        print("Not enough beacons or not able to get reference")
+        print("Not enough beacons")
         return -1, -1,  yaw 
 
+    # if all beacons available, choose red, magenta, blue as triad
     if len(centroids) == 4:
         c1 = centroids[1]
         c2 = centroids[0]
         c3 = centroids[3]
     else:
+    # if only 3 out of 4 beacons available
         if (reference == 'm'):
             c1 = centroids[1]
             c2 = centroids[0]
@@ -276,9 +290,8 @@ def computePosition(centroids, yaw):
     yc = 540
     depAlpha = 0
     depBeta = 0
-   
     """
-    if centroids are in the same quadrant, then the angle is computed with 
+    If centroids are in the same quadrant, then the angle is computed with 
     respect to the same reference and the difference in phase is 0, otherwise 
     the difference in phase is 2pi because arctan2 gives an angle between [-pi, pi]
     """
@@ -294,11 +307,11 @@ def computePosition(centroids, yaw):
 
     beta = np.arctan2((c1[1]-yc),(c1[0]-xc)) - np.arctan2((c2[1]-yc),(c2[0]-xc)) + depBeta
     alpha = np.arctan2((c2[1]-yc),(c2[0]-xc)) - np.arctan2((c3[1]-yc),(c3[0]-xc)) + depAlpha
-    #print(beta*180/np.pi)
-    #print(alpha*180/np.pi)
     if (reference == 'm' and alpha < 55*np.pi/180 and beta < 55*np.pi/180):
-        # the robot has climbed up the platform, not reliable to reference to the 
-        # recycling station reference == 'm'
+        """
+        The robot has climbed up the platform, not reliable to reference to the 
+        recycling station reference == 'm', pick up 'g' as reference
+        """
         reference = "g"
         
     xA = 4
@@ -317,12 +330,7 @@ def computePosition(centroids, yaw):
     y1 = N-x1*M
     x2 = (-B - math.sqrt(discriminant))/(2*A)
     y2 = N-x2*M
-    #print(x1)
-    #print(y1)
-    #print(x2)
-    #print(y2)
     if(x1>0 and x1<8 and y1>0 and y1<8):
-    
         # translate to true arena origin  
         if (reference == 'm'):
             x = x1
@@ -369,7 +377,7 @@ def computePosition(centroids, yaw):
 
 def getAbsoluteAngle(centroids, xCenterM, yCenterM):
     """
-    calculate the absolute orientation of the robot wrt
+    Calculate the absolute orientation of the robot wrt
     to the global reference frame 
     """
     if len(centroids) < 3:
@@ -389,21 +397,13 @@ def getAbsoluteAngle(centroids, xCenterM, yCenterM):
                 break
         if origin:
             robotAngle = np.arctan((yCenterM)/(xCenterM))
-            #print("robotAngle", robotAngle*180/np.pi)
             angle = np.arctan2((origin[1]-yc),(origin[0]-xc)) - np.arctan2((1080-yc),(960-xc))
-            # shift of 2pi to bring the reference on the green beacon
-            rel_forward_dir = angle - np.pi/4 + 2*np.pi
-            #print("opposite angle", rel_forward_dir*180/np.pi)
 
         elif opposite:
             robotAngle = np.arctan((8-yCenterM)/(8-xCenterM))
-            #print("robotAngle", robotAngle*180/np.pi)
             angle = np.arctan2((opposite[1]-yc),(opposite[0]-xc)) - np.arctan2((0-yc),(960-xc)) 
-            rel_forward_dir = angle - np.pi/4
-            #print("opposite angle", rel_forward_dir*180/np.pi)
+            
+        rel_forward_dir = angle - np.pi/4
         absolute_angle = (robotAngle + rel_forward_dir)%(2*np.pi)
-        #if (absolute_angle > np.pi):
-        #    absolute_angle -= 2*np.pi
-        print("absolute angle [deg]", absolute_angle*180/np.pi)
         return absolute_angle
 

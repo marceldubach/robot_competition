@@ -3,7 +3,6 @@ import argparse
 import cv2 as cv
 import time
 from picamera import PiCamera
-
 from utilities import *
 
 
