@@ -119,7 +119,10 @@ if __name__=='__main__':
         # calculate intermediate waypoint
         if (state_previous == states.OBSTACLE) and ((state == states.MOVING)or(state==states.RETURN)):
             print("{:6.2f}".format(get_time(t_s)),"[MAIN] Obstacle avoided, redefine the tracked WP!")
+<<<<<<< HEAD
             path_width = 0.4 
+=======
+>>>>>>> c12b0bbd8d931bc9ef0933c05feda6bd7bf47935
 
             # redefine the waypoint to track
             #1. find obstacles in vicinity
@@ -307,6 +310,10 @@ if __name__=='__main__':
                         # clear precomputed waypoints that happen to be on obstacles
                         if np.linalg.norm(w-obstacle)<radius_obstacle:
                             waypoints.remove(w)
+<<<<<<< HEAD
+=======
+
+>>>>>>> c12b0bbd8d931bc9ef0933c05feda6bd7bf47935
 
         # condition to read odometry when image is taken by webcam for localization
         if (e_img_loc.is_set()):
