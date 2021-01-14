@@ -24,7 +24,7 @@ def corner_detection(img_grey):
     """
     This function implements the openCV goodFeaturesToTrack() function to detect the
     most relevant corners in the ROI of the image, in particular it is asked to return 
-    the 10 most important corners with each one separated by at least 10 pixels.
+    the 10 most important corners with each one separated by at least 10 pixels
     """
     corners = cv.goodFeaturesToTrack(img_grey,10,0.05,10)
     found_corner = False
