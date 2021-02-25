@@ -1,5 +1,5 @@
 # bottlebot
-Code repository for the bottle bot project
+ARCHIVED Code repository for the bottle bot project
 
 
 ## Create a virtual environment called 'venv':
