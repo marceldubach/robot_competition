@@ -1,3 +1,0 @@
-Copy the following command in the command line to test the deep neural network performance on the images dataset. NOTE: change "image to analyse" with a valid image filename.
-
-python deep_learning_object_detection.py --prototxt MobileNetSSD_deploy.prototxt.txt --model MobileNetSSD_deploy.caffemodel --image images/"image to analyse"
